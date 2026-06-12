@@ -1,0 +1,88 @@
+:root {
+  --bg: #0d1117;
+  --bg-2: #161b22;
+  --fg: #c9d1d9;
+  --accent: #3fb950;
+  --muted: #6e7681;
+  --border: #30363d;
+}
+
+* { box-sizing: border-box; }
+
+body, html, #root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  font-size: 14px;
+}
+
+.terminal {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: var(--bg-2);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+}
+
+.brand {
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar li {
+  padding: 6px 0;
+  color: var(--muted);
+}
+
+.check {
+  color: var(--accent);
+  margin-right: 6px;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.output {
+  flex: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.line {
+  padding: 2px 0;
+}
+
+.input-bar {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.prompt { color: var(--accent); }
+
+.input-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg);
+  font: inherit;
+}

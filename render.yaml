@@ -1,0 +1,29 @@
+# Placeholder Render config — finalized in task #43.
+services:
+  - type: web
+    name: elliot-ai-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -e .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+  - type: web
+    name: elliot-ai-terminal
+    runtime: static
+    rootDir: terminal
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+
+  - type: web
+    name: elliot-ai-dashboard
+    runtime: static
+    rootDir: dashboard
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
