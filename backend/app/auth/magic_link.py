@@ -5,7 +5,7 @@ Token is a single-use opaque random string mapped to (email, expires_at).
 """
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.config import get_settings
 
@@ -26,7 +26,7 @@ def issue_link(email: str) -> tuple[str, int]:
     ttl = timedelta(minutes=settings.magic_link_ttl_min)
     _store[token] = MagicLink(
         email=email,
-        expires_at=datetime.now(timezone.utc) + ttl,
+        expires_at=datetime.now(UTC) + ttl,
     )
     return token, int(ttl.total_seconds())
 
@@ -37,7 +37,7 @@ def redeem(token: str) -> str:
         raise ValueError("unknown token")
     if link.used:
         raise ValueError("token already used")
-    if datetime.now(timezone.utc) > link.expires_at:
+    if datetime.now(UTC) > link.expires_at:
         raise ValueError("token expired")
     link.used = True
     return link.email
