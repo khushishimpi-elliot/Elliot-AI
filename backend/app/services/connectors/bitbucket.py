@@ -1,4 +1,5 @@
 import httpx
+
 from app.services.oauth import decrypt_token
 
 BITBUCKET_API_BASE = "https://api.bitbucket.org/2.0"
