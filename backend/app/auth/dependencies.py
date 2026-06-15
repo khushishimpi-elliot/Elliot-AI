@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth.jwt import decode_access_token
@@ -7,7 +7,7 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """Extract and verify JWT token from Authorization header.
 
@@ -20,13 +20,6 @@ async def get_current_user(
     Raises:
         HTTPException: If token is missing, invalid, or expired
     """
-    if not credentials:
-        raise HTTPException(
-            status_code=401,
-            detail="missing authorization header",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
     try:
         payload = decode_access_token(credentials.credentials)
         return payload
