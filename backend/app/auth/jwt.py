@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
 
@@ -8,11 +8,11 @@ from app.config import get_settings
 def issue_access_token(email: str) -> tuple[str, int]:
     settings = get_settings()
     expires_delta = timedelta(minutes=settings.jwt_expire_min)
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     payload = {
         "sub": email,
         "exp": int(expire.timestamp()),
-        "iat": int(datetime.now(timezone.utc).timestamp()),
+        "iat": int(datetime.now(UTC).timestamp()),
         "typ": "access",
     }
     token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algo)
