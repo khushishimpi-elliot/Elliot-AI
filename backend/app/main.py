@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.router import router as auth_router
-from app.routers import connectors, organisation, sdlc
+from app.routers import bitbucket, connectors, organisation, sdlc, slack
 
 app = FastAPI(title="Elliot-AI", version="0.1.0")
 
@@ -18,6 +18,8 @@ app.include_router(auth_router)
 app.include_router(organisation.router)
 app.include_router(sdlc.router)
 app.include_router(connectors.router)
+app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
+app.include_router(slack.router, prefix="/slack", tags=["slack"])
 
 
 @app.get("/health")

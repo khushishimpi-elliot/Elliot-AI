@@ -3,4 +3,4 @@ from app.models.connector import Connector
 from app.models.organisation import Member, Organisation, Role
 from app.models.sdlc import SDLCProfile
 
-__all__ = ["Base", "Organisation", "Role", "Member", "SDLCProfile", "Connector"]
+__all__ = ["Base", "Connector", "Organisation", "Role", "Member", "SDLCProfile"]
