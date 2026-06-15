@@ -1,6 +1,7 @@
-from uuid import UUID
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -8,8 +9,8 @@ class OrganisationCreate(BaseModel):
     tenant_id: UUID
     org_name: str
     domain: str
-    team_size: Optional[str] = None
-    data_residency: Optional[str] = "US"
+    team_size: str | None = None
+    data_residency: str | None = "US"
 
 
 class OrganisationResponse(BaseModel):
@@ -17,7 +18,7 @@ class OrganisationResponse(BaseModel):
     tenant_id: UUID
     org_name: str
     domain: str
-    team_size: Optional[str]
+    team_size: str | None
     data_residency: str
     created_at: datetime
     updated_at: datetime
@@ -29,14 +30,14 @@ class OrganisationResponse(BaseModel):
 class RoleCreate(BaseModel):
     tenant_id: UUID
     name: str
-    permissions: Optional[Dict[str, Any]] = None
+    permissions: dict[str, Any] | None = None
 
 
 class RoleResponse(BaseModel):
     id: UUID
     tenant_id: UUID
     name: str
-    permissions: Dict[str, Any]
+    permissions: dict[str, Any]
     created_at: datetime
 
     class Config:
