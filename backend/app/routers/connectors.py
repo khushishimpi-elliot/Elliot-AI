@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.models.connector import Connector
-from app.schemas.connector import ConnectorResponse, ConnectorAuthorizeResponse
+from app.schemas.connector import ConnectorAuthorizeResponse, ConnectorResponse
 from app.services.connector_registry import get_connector_config
 from app.services.oauth import (
     encrypt_token,
