@@ -1,41 +1,40 @@
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
 
 class SDLCCreate(BaseModel):
     tenant_id: UUID
-    stack: Optional[str] = None
-    branching_model: Optional[str] = None
-    test_framework: Optional[str] = None
-    coverage_gate: Optional[int] = None
-    ci_cd_platform: Optional[str] = None
-    review_policy: Optional[str] = None
-    arch_style: Optional[str] = None
+    stack: str | None = None
+    branching_model: str | None = None
+    test_framework: str | None = None
+    coverage_gate: int | None = None
+    ci_cd_platform: str | None = None
+    review_policy: str | None = None
+    arch_style: str | None = None
 
 
 class SDLCUpdate(BaseModel):
-    stack: Optional[str] = None
-    branching_model: Optional[str] = None
-    test_framework: Optional[str] = None
-    coverage_gate: Optional[int] = None
-    ci_cd_platform: Optional[str] = None
-    review_policy: Optional[str] = None
-    arch_style: Optional[str] = None
+    stack: str | None = None
+    branching_model: str | None = None
+    test_framework: str | None = None
+    coverage_gate: int | None = None
+    ci_cd_platform: str | None = None
+    review_policy: str | None = None
+    arch_style: str | None = None
 
 
 class SDLCResponse(BaseModel):
     id: UUID
     tenant_id: UUID
-    stack: Optional[str]
-    branching_model: Optional[str]
-    test_framework: Optional[str]
-    coverage_gate: Optional[int]
-    ci_cd_platform: Optional[str]
-    review_policy: Optional[str]
-    arch_style: Optional[str]
+    stack: str | None
+    branching_model: str | None
+    test_framework: str | None
+    coverage_gate: int | None
+    ci_cd_platform: str | None
+    review_policy: str | None
+    arch_style: str | None
     created_at: datetime
     updated_at: datetime
 

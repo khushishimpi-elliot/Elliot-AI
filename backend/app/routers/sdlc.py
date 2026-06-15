@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.models.sdlc import SDLCProfile
-from app.schemas.sdlc import SDLCCreate, SDLCUpdate, SDLCResponse
+from app.schemas.sdlc import SDLCCreate, SDLCResponse, SDLCUpdate
 
 router = APIRouter(tags=["sdlc"])
 
