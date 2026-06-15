@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import UUID, Column, Integer, Text, TIMESTAMP, ForeignKey
+from sqlalchemy import TIMESTAMP, UUID, Column, ForeignKey, Integer, Text
 from sqlalchemy.sql import func
 
 from app.models.base import Base
