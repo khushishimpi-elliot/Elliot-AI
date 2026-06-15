@@ -17,7 +17,7 @@ class WorkspaceResponse(BaseModel):
     name: str
     domain: str
     team_size: str | None
-    residency: str
+    residency: Literal["US", "EU", "UK", "APAC"]
     created_at: datetime
 
     model_config = {"from_attributes": True}

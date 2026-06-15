@@ -1,5 +1,3 @@
-import uuid
-
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +15,6 @@ async def create_workspace(
     db: AsyncSession = Depends(get_db),
 ) -> WorkspaceResponse:
     tenant = Tenant(
-        id=uuid.uuid4(),
         name=payload.name,
         domain=payload.domain,
         team_size=payload.team_size,
