@@ -1,17 +1,18 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.models.organisation import Organisation, Role, Member
+from app.models.organisation import Member, Organisation, Role
 from app.schemas.organisation import (
+    MemberCreate,
+    MemberResponse,
     OrganisationCreate,
     OrganisationResponse,
     RoleCreate,
     RoleResponse,
-    MemberCreate,
-    MemberResponse,
 )
 
 router = APIRouter(tags=["organisation"])

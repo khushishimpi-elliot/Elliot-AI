@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import organisation
 
 from app.auth.router import router as auth_router
+from app.routers import organisation
 
 app = FastAPI(title="Elliot-AI", version="0.1.0")
 
