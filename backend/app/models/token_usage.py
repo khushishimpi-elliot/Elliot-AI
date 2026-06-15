@@ -1,6 +1,3 @@
-from datetime import datetime
-from uuid import UUID
-
 from sqlalchemy import Column, DateTime, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
