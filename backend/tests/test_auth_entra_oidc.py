@@ -35,3 +35,46 @@ def test_build_authorization_url_includes_required_params(configured_entra):
     assert "openid" in url
     assert "state=my-state-token" in url
     assert "response_type=code" in url
+
+
+# ---- Unit: exchange_code_for_tokens ---------------------------------------
+
+def test_exchange_code_raises_on_http_error(configured_entra):
+    class FakeResp:
+        status_code = 400
+        text = "bad request"
+        def json(self): return {}
+
+    class FakeClient:
+        def post(self, *a, **kw): return FakeResp()
+        def close(self): pass
+
+    with pytest.raises(sso_entra.OIDCError, match="token exchange failed"):
+        sso_entra.exchange_code_for_tokens("bad-code", http_client=FakeClient())
+
+
+def test_exchange_code_raises_when_id_token_missing(configured_entra):
+    class FakeResp:
+        status_code = 200
+        def json(self): return {"access_token": "x"}
+
+    class FakeClient:
+        def post(self, *a, **kw): return FakeResp()
+        def close(self): pass
+
+    with pytest.raises(sso_entra.OIDCError, match="missing id_token"):
+        sso_entra.exchange_code_for_tokens("code", http_client=FakeClient())
+
+
+# ---- Unit: verify_id_token ------------------------------------------------
+
+def test_verify_id_token_raises_on_jwks_fetch_failure(configured_entra):
+    class FakeResp:
+        status_code = 500
+
+    class FakeClient:
+        def get(self, *a, **kw): return FakeResp()
+        def close(self): pass
+
+    with pytest.raises(sso_entra.OIDCError, match="failed to fetch entra JWKS"):
+        sso_entra.verify_id_token("fake.token.here", http_client=FakeClient())
