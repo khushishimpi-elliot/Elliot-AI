@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     # Where to send the browser after we issue our JWT
     google_login_success_url: str = "http://localhost:5173/auth/success"
 
+    entra_tenant_id: str = ""
+    entra_client_id: str = ""
+    entra_client_secret: str = ""
+    entra_redirect_uri: str = "http://localhost:8000/auth/entra/callback"
+    entra_login_success_url: str = "http://localhost:5173/auth/success"
+
 
 @lru_cache
 def get_settings() -> Settings:
