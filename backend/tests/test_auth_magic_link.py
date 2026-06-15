@@ -60,11 +60,11 @@ def test_callback_rejects_reused_token():
 
 
 def test_callback_rejects_expired_token():
-    from datetime import datetime, timedelta, timezone
+    from datetime import UTC, datetime, timedelta
 
     email = "khushi@elliotsystems.com"
     token, _ = magic_link.issue_link(email)
-    magic_link._store[token].expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    magic_link._store[token].expires_at = datetime.now(UTC) - timedelta(seconds=1)
 
     r = client.get(f"/auth/callback?token={token}")
     assert r.status_code == 400
