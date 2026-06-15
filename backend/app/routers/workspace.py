@@ -34,8 +34,12 @@ async def create_workspace(
     )
     db.add(org)
 
-    await db.commit()
-    await db.refresh(tenant)
+    try:
+        await db.commit()
+        await db.refresh(tenant)
+    except Exception:
+        await db.rollback()
+        raise
 
     return WorkspaceResponse(
         tenant_id=tenant.id,
