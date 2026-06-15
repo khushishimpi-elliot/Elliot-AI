@@ -29,7 +29,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_organisations_tenant_id'), 'organisations', ['tenant_id'], unique=False)
+    op.create_index(
+        op.f('ix_organisations_tenant_id'),
+        'organisations',
+        ['tenant_id'],
+        unique=False,
+    )
 
     op.create_table(
         'roles',
