@@ -76,7 +76,8 @@ def verify_id_token(token: str, http_client: httpx.Client | None = None) -> dict
 
     Returns verified claims dict with at minimum 'email' and 'groups' keys.
     """
-    from jose import JWTError, jwt as jose_jwt
+    from jose import JWTError
+    from jose import jwt as jose_jwt
 
     s = get_settings()
     jwks_url = ENTRA_JWKS_URL.format(tenant_id=s.entra_tenant_id)
