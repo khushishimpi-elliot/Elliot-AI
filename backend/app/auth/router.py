@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
 from app.auth import email as email_sender
-from app.auth import magic_link, oauth_state, sso_google
+from app.auth import magic_link, oauth_state, sso_entra, sso_google
 from app.auth.jwt import issue_access_token
 from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
 from app.config import get_settings
@@ -52,6 +52,36 @@ def google_callback(code: str = Query(...), state: str = Query(...)) -> TokenRes
         tokens = sso_google.exchange_code_for_tokens(code)
         claims = sso_google.verify_id_token(tokens["id_token"])
     except sso_google.OIDCError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    email = claims["email"]
+    access_token, ttl = issue_access_token(email)
+    return TokenResponse(
+        access_token=access_token,
+        expires_in_seconds=ttl,
+        email=email,
+    )
+
+
+@router.get("/entra/login")
+def entra_login() -> RedirectResponse:
+    settings = get_settings()
+    if not settings.entra_client_id:
+        raise HTTPException(status_code=503, detail="entra sso not configured")
+    state = oauth_state.issue()
+    url = sso_entra.build_authorization_url(state)
+    return RedirectResponse(url=url, status_code=302)
+
+
+@router.get("/entra/callback", response_model=TokenResponse)
+def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
+    if not oauth_state.consume(state):
+        raise HTTPException(status_code=400, detail="invalid or expired state")
+
+    try:
+        tokens = sso_entra.exchange_code_for_tokens(code)
+        claims = sso_entra.verify_id_token(tokens["id_token"])
+    except sso_entra.OIDCError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     email = claims["email"]

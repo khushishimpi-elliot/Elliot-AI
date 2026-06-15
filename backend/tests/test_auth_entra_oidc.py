@@ -78,3 +78,77 @@ def test_verify_id_token_raises_on_jwks_fetch_failure(configured_entra):
 
     with pytest.raises(sso_entra.OIDCError, match="failed to fetch entra JWKS"):
         sso_entra.verify_id_token("fake.token.here", http_client=FakeClient())
+
+
+# ---- Routes ---------------------------------------------------------------
+
+def test_login_returns_503_when_not_configured():
+    get_settings.cache_clear()
+    r = client.get("/auth/entra/login", follow_redirects=False)
+    assert r.status_code == 503
+    assert "not configured" in r.json()["detail"]
+
+
+def test_login_redirects_to_microsoft(configured_entra):
+    r = client.get("/auth/entra/login", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers["location"]
+    assert "login.microsoftonline.com" in location
+    assert "test-tenant-id" in location
+    assert "client_id=test-client-id" in location
+    assert "openid" in location
+    assert "state=" in location
+
+
+def test_callback_rejects_unknown_state(configured_entra):
+    r = client.get("/auth/entra/callback?code=anything&state=never-issued")
+    assert r.status_code == 400
+    assert "invalid or expired state" in r.json()["detail"]
+
+
+def test_callback_happy_path(configured_entra):
+    state = oauth_state.issue()
+
+    fake_tokens = {"id_token": "fake.jwt.here", "access_token": "fake-access"}
+    fake_claims = {
+        "email": "astika@elliotsystems.com",
+        "preferred_username": "astika@elliotsystems.com",
+        "tid": "test-tenant-id",
+        "groups": ["group-id-1"],
+    }
+
+    with (
+        patch.object(sso_entra, "exchange_code_for_tokens", return_value=fake_tokens),
+        patch.object(sso_entra, "verify_id_token", return_value=fake_claims),
+    ):
+        r = client.get(f"/auth/entra/callback?code=auth-code&state={state}")
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["email"] == "astika@elliotsystems.com"
+    assert body["token_type"] == "bearer"
+    assert body["access_token"]
+
+
+def test_callback_rejects_on_oidc_error(configured_entra):
+    state = oauth_state.issue()
+
+    with (
+        patch.object(sso_entra, "exchange_code_for_tokens", return_value={"id_token": "x"}),
+        patch.object(
+            sso_entra,
+            "verify_id_token",
+            side_effect=sso_entra.OIDCError("tenant mismatch"),
+        ),
+    ):
+        r = client.get(f"/auth/entra/callback?code=x&state={state}")
+
+    assert r.status_code == 400
+    assert "tenant mismatch" in r.json()["detail"]
+
+
+def test_state_is_single_use(configured_entra):
+    state = oauth_state.issue()
+    assert oauth_state.consume(state) is True
+    r = client.get(f"/auth/entra/callback?code=x&state={state}")
+    assert r.status_code == 400
