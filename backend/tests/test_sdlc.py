@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.db.session import get_db
@@ -37,6 +36,7 @@ def make_mock_db(profile=None):
     mock_result.scalar_one_or_none.return_value = profile
     db.execute = AsyncMock(return_value=mock_result)
     db.add = MagicMock()
+    db.commit = AsyncMock()
 
     async def fake_refresh(obj):
         pass
