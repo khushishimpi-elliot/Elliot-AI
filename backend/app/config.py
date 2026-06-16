@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     github_client_secret: str = ""
     github_webhook_secret: str = ""
 
+    jira_client_id: str = ""
+    jira_client_secret: str = ""
+
     openai_api_key: str = ""
 
 
