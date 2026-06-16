@@ -32,7 +32,10 @@ class JiraConnector:
                         "jql": jql,
                         "startAt": start_at,
                         "maxResults": max_results,
-                        "fields": "summary,description,status,assignee,priority,issuetype,created,updated",
+                        "fields": (
+                            "summary,description,status,assignee,"
+                            "priority,issuetype,created,updated"
+                        ),
                     },
                 )
                 response.raise_for_status()
@@ -76,7 +79,10 @@ class JiraConnector:
                 f"{self.base_url}/issue/{issue_key}",
                 headers=self.headers,
                 params={
-                    "fields": "summary,description,status,assignee,priority,issuetype,created,updated"
+                    "fields": (
+                        "summary,description,status,assignee,"
+                        "priority,issuetype,created,updated"
+                    )
                 },
             )
             response.raise_for_status()
