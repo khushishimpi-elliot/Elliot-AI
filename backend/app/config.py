@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     jira_client_id: str = ""
     jira_client_secret: str = ""
 
+    clickup_client_id: str = ""
+    clickup_client_secret: str = ""
+
     openai_api_key: str = ""
 
 
