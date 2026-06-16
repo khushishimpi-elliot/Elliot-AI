@@ -371,3 +371,31 @@ async def log_usage_node(
         logger.warning(f"Error logging usage: {str(e)}")
         # Don't fail the request if logging fails
         return state
+
+
+async def get_context_only(
+    state: AgentState, db: AsyncSession
+) -> AgentState:
+    """Run context planning and fetch nodes without LLM call"""
+    try:
+        # Step 1: Context planning
+        state = context_planner_node(state)
+
+        # Step 2: Run all fetch nodes
+        state = await fetch_code_context_node(state, db)
+        state = await fetch_jira_context_node(state, db)
+        state = await fetch_slack_context_node(state, db)
+        state = await fetch_sdlc_node(state, db)
+
+        # Step 3: Build prompt
+        state = prompt_builder_node(state)
+
+        logger.info("Context prepared for streaming")
+        return state
+
+    except Exception as e:
+        logger.error(f"Error preparing context: {str(e)}")
+        return {
+            **state,
+            "error": f"Context preparation failed: {str(e)}",
+        }
