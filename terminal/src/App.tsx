@@ -1,43 +1,36 @@
 import { useState } from "react";
 
-import InputBar from "./InputBar";
+import LaunchScreen from "./LaunchScreen";
+import Terminal from "./Terminal";
 
-const STEPS = ["Sign in", "Workspace", "SDLC", "Sources", "Index", "Launch"];
+/**
+ * Top-level route gate.
+ *
+ * Until the user clicks "Launch Elliot terminal" on LaunchScreen we render
+ * that. After they click, we mount the main Terminal view.
+ *
+ * Backend `/launch` endpoint is task #27 (Astika); until it lands, we run
+ * with `useMock={true}` so the UI works in isolation. Set
+ * `VITE_API_BASE=https://...` to switch to the real fetch.
+ */
+const USE_MOCK = !import.meta.env.VITE_API_BASE;
 
 export default function App() {
-  const [transcript, setTranscript] = useState<string[]>([
-    "$ elliot",
-    "Welcome to Elliot-AI. Type a question to get started.",
-  ]);
-  const [queryHistory, setQueryHistory] = useState<string[]>([]);
+  const [launched, setLaunched] = useState(false);
+  const token =
+    typeof localStorage !== "undefined"
+      ? localStorage.getItem("elliot_token") ?? undefined
+      : undefined;
 
-  function handleSubmit(query: string) {
-    setTranscript((t) => [...t, `$ elliot ask "${query}"`, "[stub] backend not wired yet"]);
-    setQueryHistory((h) => [...h, query]);
+  if (!launched) {
+    return (
+      <LaunchScreen
+        token={token}
+        useMock={USE_MOCK}
+        onLaunch={() => setLaunched(true)}
+      />
+    );
   }
 
-  return (
-    <div className="terminal">
-      <aside className="sidebar">
-        <div className="brand">$ elliot</div>
-        <ul>
-          {STEPS.map((s) => (
-            <li key={s}>
-              <span className="check">[ ]</span> {s}
-            </li>
-          ))}
-        </ul>
-      </aside>
-      <main className="main">
-        <div className="output">
-          {transcript.map((line, i) => (
-            <div key={i} className="line">
-              {line}
-            </div>
-          ))}
-        </div>
-        <InputBar history={queryHistory} onSubmit={handleSubmit} />
-      </main>
-    </div>
-  );
+  return <Terminal />;
 }
