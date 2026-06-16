@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     entra_redirect_uri: str = "http://localhost:8000/auth/entra/callback"
     entra_login_success_url: str = "http://localhost:5173/auth/success"
 
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    github_webhook_secret: str = ""
+
     openai_api_key: str = ""
 
 
