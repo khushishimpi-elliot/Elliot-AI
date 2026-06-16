@@ -11,6 +11,7 @@ from app.routers import (
     slack,
     usage,
 )
+from app.routers.workspace import router as workspace_router
 
 app = FastAPI(title="Elliot-AI", version="0.1.0")
 
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(organisation.router)
 app.include_router(sdlc.router)
+app.include_router(workspace_router)
 app.include_router(connectors.router)
 app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
