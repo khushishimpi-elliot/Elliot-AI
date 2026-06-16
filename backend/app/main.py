@@ -6,6 +6,7 @@ from app.routers import (
     bitbucket,
     connectors,
     indexing,
+    linear,
     organisation,
     sdlc,
     slack,
@@ -28,6 +29,7 @@ app.include_router(sdlc.router)
 app.include_router(connectors.router)
 app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
+app.include_router(linear.router, prefix="/linear", tags=["linear"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
 
