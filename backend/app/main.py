@@ -9,6 +9,7 @@ from app.routers import (
     indexing,
     jira,
     organisation,
+    query,
     sdlc,
     slack,
     usage,
@@ -38,6 +39,7 @@ app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
 app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
+app.include_router(query.router, prefix="/query", tags=["query"])
 
 
 @app.get("/health")
