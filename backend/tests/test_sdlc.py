@@ -64,3 +64,82 @@ def test_delete_sdlc_profile_not_found():
         assert "not found" in r.json()["detail"]
     finally:
         del app.dependency_overrides[get_db]
+
+
+def test_create_sdlc_profile():
+    mock_db = make_mock_db()
+
+    async def fake_refresh(obj):
+        obj.id = uuid.uuid4()
+        obj.created_at = datetime(2026, 6, 16, 12, 0, 0)
+        obj.updated_at = datetime(2026, 6, 16, 12, 0, 0)
+
+    mock_db.refresh = AsyncMock(side_effect=fake_refresh)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = client.post(
+            "/sdlc",
+            json={
+                "tenant_id": str(TENANT_ID),
+                "stack": "Python/FastAPI",
+                "branching_model": "trunk",
+                "test_framework": "pytest",
+                "coverage_gate": 80,
+                "ci_cd_platform": "GitHub Actions",
+                "review_policy": "2-approvals",
+                "arch_style": "monolith",
+            },
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert body["tenant_id"] == str(TENANT_ID)
+        assert body["stack"] == "Python/FastAPI"
+    finally:
+        del app.dependency_overrides[get_db]
+
+
+def test_get_sdlc_profile():
+    profile = make_profile()
+    mock_db = make_mock_db(profile=profile)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = client.get(f"/sdlc/{TENANT_ID}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["tenant_id"] == str(TENANT_ID)
+        assert body["stack"] == "Python/FastAPI"
+    finally:
+        del app.dependency_overrides[get_db]
+
+
+def test_get_sdlc_profile_not_found():
+    mock_db = make_mock_db(profile=None)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = client.get(f"/sdlc/{TENANT_ID}")
+        assert r.status_code == 404
+        assert "not found" in r.json()["detail"]
+    finally:
+        del app.dependency_overrides[get_db]
+
+
+def test_update_sdlc_profile():
+    profile = make_profile()
+    mock_db = make_mock_db(profile=profile)
+
+    async def fake_refresh(obj):
+        pass
+
+    mock_db.refresh = AsyncMock(side_effect=fake_refresh)
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = client.put(
+            f"/sdlc/{TENANT_ID}",
+            json={"stack": "Go/Gin", "coverage_gate": 90},
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert body["stack"] == "Go/Gin"
+        assert body["coverage_gate"] == 90
+    finally:
+        del app.dependency_overrides[get_db]
