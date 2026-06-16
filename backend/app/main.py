@@ -5,6 +5,7 @@ from app.auth.router import router as auth_router
 from app.routers import (
     bitbucket,
     connectors,
+    gitlab,
     indexing,
     organisation,
     sdlc,
@@ -27,6 +28,7 @@ app.include_router(organisation.router)
 app.include_router(sdlc.router)
 app.include_router(connectors.router)
 app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
+app.include_router(gitlab.router, prefix="/gitlab", tags=["gitlab"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
