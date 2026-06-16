@@ -1,19 +1,19 @@
 import { useState } from "react";
 
+import InputBar from "./InputBar";
+
 const STEPS = ["Sign in", "Workspace", "SDLC", "Sources", "Index", "Launch"];
 
 export default function App() {
-  const [query, setQuery] = useState("");
-  const [history, setHistory] = useState<string[]>([
+  const [transcript, setTranscript] = useState<string[]>([
     "$ elliot",
     "Welcome to Elliot-AI. Type a question to get started.",
   ]);
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-    setHistory((h) => [...h, `$ elliot ask "${query}"`, "[stub] backend not wired yet"]);
-    setQuery("");
+  function handleSubmit(query: string) {
+    setTranscript((t) => [...t, `$ elliot ask "${query}"`, "[stub] backend not wired yet"]);
+    setQueryHistory((h) => [...h, query]);
   }
 
   return (
@@ -30,21 +30,13 @@ export default function App() {
       </aside>
       <main className="main">
         <div className="output">
-          {history.map((line, i) => (
+          {transcript.map((line, i) => (
             <div key={i} className="line">
               {line}
             </div>
           ))}
         </div>
-        <form className="input-bar" onSubmit={submit}>
-          <span className="prompt">$</span>
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ask anything..."
-          />
-        </form>
+        <InputBar history={queryHistory} onSubmit={handleSubmit} />
       </main>
     </div>
   );
