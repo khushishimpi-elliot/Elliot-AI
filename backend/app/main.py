@@ -12,6 +12,7 @@ from app.routers import (
     sdlc,
     slack,
     usage,
+    webhook,
 )
 from app.routers.workspace import router as workspace_router
 
@@ -36,6 +37,7 @@ app.include_router(jira.router, prefix="/jira", tags=["jira"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
+app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
 
 
 @app.get("/health")
