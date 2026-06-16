@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     entra_redirect_uri: str = "http://localhost:8000/auth/entra/callback"
     entra_login_success_url: str = "http://localhost:5173/auth/success"
 
+    openai_api_key: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:
