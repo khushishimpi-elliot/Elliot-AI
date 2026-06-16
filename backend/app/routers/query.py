@@ -1,7 +1,10 @@
+import json
 import logging
 from uuid import UUID
 
+from anthropic import Anthropic
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,8 +17,9 @@ from app.schemas.query import (
     TokenUsage,
 )
 from app.services.orchestration.graph import build_graph
+from app.services.orchestration.nodes import get_context_only
 from app.services.orchestration.state import AgentState
-from app.services.token_logger import calculate_cost
+from app.services.token_logger import calculate_cost, log_token_usage
 
 router = APIRouter(tags=["query"])
 logger = logging.getLogger(__name__)
@@ -150,3 +154,132 @@ async def query_history(
             status_code=500,
             detail="Failed to fetch query history",
         ) from e
+
+
+@router.post("/stream")
+async def query_stream(
+    request: QueryRequest,
+    db: AsyncSession = Depends(get_db),
+) -> StreamingResponse:
+    """Stream response tokens in real-time"""
+
+    async def token_generator():
+        """Generate tokens as Server-Sent Events"""
+        try:
+            logger.info(
+                f"Streaming query from user {request.user_id}: "
+                f"{request.query[:100]}"
+            )
+
+            # Prepare context (context planning + fetch nodes + prompt builder)
+            initial_state: AgentState = {
+                "query": request.query,
+                "tenant_id": request.tenant_id,
+                "user_id": request.user_id,
+                "team_id": request.team_id,
+                "repo": request.repo,
+                "branch": request.branch,
+                "needs_code": False,
+                "needs_jira": False,
+                "needs_slack": False,
+                "needs_docs": False,
+                "query_type": "general",
+                "code_chunks": [],
+                "jira_tickets": [],
+                "slack_messages": [],
+                "sdlc_profile": None,
+                "prompt": None,
+                "response": None,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "error": None,
+            }
+
+            state = await get_context_only(initial_state, db)
+
+            if state.get("error"):
+                error_msg = state["error"]
+                logger.error(f"Context preparation failed: {error_msg}")
+                yield 'data: {"error": "Failed to prepare context"}\n\n'
+                return
+
+            if not state.get("prompt"):
+                logger.error("No prompt generated")
+                yield 'data: {"error": "Failed to generate prompt"}\n\n'
+                return
+
+            # Stream tokens from Claude
+            client = Anthropic()
+            input_tokens = 0
+            output_tokens = 0
+            response_text = ""
+
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=2000,
+                messages=[{"role": "user", "content": state["prompt"]}],
+            ) as stream:
+                for text in stream.text_stream:
+                    response_text += text
+                    # Send token as SSE event
+                    event_data = json.dumps({"token": text})
+                    yield f"data: {event_data}\n\n"
+
+                # Get final token counts from response
+                if stream.get_final_message():
+                    final = stream.get_final_message()
+                    input_tokens = final.usage.input_tokens
+                    output_tokens = final.usage.output_tokens
+
+            # Log token usage
+            try:
+                await log_token_usage(
+                    db,
+                    request.user_id,
+                    request.tenant_id,
+                    request.team_id,
+                    "claude-sonnet-4-6",
+                    input_tokens,
+                    output_tokens,
+                    state["query_type"],
+                )
+
+                logger.info(
+                    f"Streaming query completed: "
+                    f"{input_tokens} input, {output_tokens} output tokens"
+                )
+            except Exception as e:
+                logger.warning(f"Error logging usage: {str(e)}")
+
+            # Send completion event with metadata
+            completion_data = {
+                "done": True,
+                "query_type": state["query_type"],
+                "sources_used": {
+                    "code_chunks": len(state["code_chunks"]),
+                    "jira_tickets": len(state["jira_tickets"]),
+                    "slack_messages": len(state["slack_messages"]),
+                },
+                "tokens": {
+                    "input": input_tokens,
+                    "output": output_tokens,
+                    "cost_usd": float(
+                        calculate_cost(
+                            "claude-sonnet-4-6",
+                            input_tokens,
+                            output_tokens,
+                        )
+                    ),
+                },
+            }
+            yield f"data: {json.dumps(completion_data)}\n\n"
+
+        except Exception as e:
+            logger.error(f"Error in token streaming: {str(e)}")
+            # Don't expose error details to client
+            yield 'data: {"error": "Streaming interrupted"}\n\n'
+
+    return StreamingResponse(
+        token_generator(),
+        media_type="text/event-stream",
+    )
