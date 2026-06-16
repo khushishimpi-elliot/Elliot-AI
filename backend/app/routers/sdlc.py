@@ -83,6 +83,6 @@ async def delete_sdlc_profile(
     profile = result.scalar_one_or_none()
     if not profile:
         raise HTTPException(status_code=404, detail="SDLC profile not found")
-    await db.delete(profile)
+    db.delete(profile)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
