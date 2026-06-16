@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth.router import router as auth_router
 from app.routers import (
     bitbucket,
+    clickup,
     connectors,
     github,
     indexing,
@@ -38,6 +39,7 @@ app.include_router(workspace_router)
 app.include_router(connectors.router)
 app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
 app.include_router(github.router, prefix="/github", tags=["github"])
+app.include_router(clickup.router, prefix="/clickup", tags=["clickup"])
 app.include_router(jira.router, prefix="/jira", tags=["jira"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
