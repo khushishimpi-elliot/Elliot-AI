@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { UsageTab } from "./components/UsageTab";
 
 const TABS = ["Overview", "Teams", "Usage", "Connectors", "Settings"] as const;
 type Tab = (typeof TABS)[number];
@@ -26,7 +27,9 @@ export default function App() {
       <section className="content">
         {tab === "Overview" && <Overview />}
         {tab === "Teams" && <Placeholder name="Teams" />}
-        {tab === "Usage" && <Placeholder name="Usage" />}
+        {tab === "Usage" && (
+          <UsageTab tenantId="00000000-0000-0000-0000-000000000001" />
+        )}
         {tab === "Connectors" && <Placeholder name="Connectors" />}
         {tab === "Settings" && <Placeholder name="Settings" />}
       </section>
