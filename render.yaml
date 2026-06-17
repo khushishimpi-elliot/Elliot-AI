@@ -1,5 +1,5 @@
-# Placeholder Render config — finalized in task #43.
 services:
+  # Backend API
   - type: web
     name: elliot-ai-backend
     runtime: python
@@ -13,17 +13,35 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: FERNET_KEY
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+      - key: OAUTH_REDIRECT_BASE_URL
+        sync: false
+      - key: APP_ENV
+        value: production
 
+  # Developer Terminal UI
   - type: web
     name: elliot-ai-terminal
     runtime: static
     rootDir: terminal
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
 
+  # Admin Dashboard UI
   - type: web
     name: elliot-ai-dashboard
     runtime: static
     rootDir: dashboard
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
