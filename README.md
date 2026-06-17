@@ -8,6 +8,7 @@ AI coding assistant for engineering teams at Elliot Systems.
 backend/      FastAPI + LangGraph + pgvector (Python 3.11+)
 terminal/     Developer terminal UI (React + Vite, dark theme)
 dashboard/    Admin dashboard UI (React + Vite, light theme)
+onboarding/   New-tenant signup flow (React 19 + Vite 8, JSX)
 ```
 
 ## Quick start
@@ -38,6 +39,14 @@ npm install
 npm run dev
 ```
 Opens at http://localhost:5174
+
+### Onboarding UI
+```bash
+cd onboarding
+npm install
+npm run dev
+```
+Opens at http://localhost:5175
 
 ## Project tracking
 
