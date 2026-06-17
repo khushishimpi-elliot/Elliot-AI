@@ -46,10 +46,10 @@ All work is tracked in ClickUp: `Elliot-AI v1.0` List.
 
 ## Team
 
-- Khushi Shimpi (lead)
+- Khushi Shimpi 
 - Shrushti Kadam
 - Astika Mhaisgawali
-- Krishna Nischal
+
 
 ## Branch + PR conventions
 
