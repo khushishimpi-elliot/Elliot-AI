@@ -1,8 +1,8 @@
 interface Step6Props {
-  onComplete: () => void;
+  onComplete?: () => void;
 }
 
-export default function Step6Launch({ onComplete }: Step6Props) {
+export default function Step6Launch({ onComplete = () => {} }: Step6Props) {
   return (
     <div className="step-content">
       <div className="step-header">

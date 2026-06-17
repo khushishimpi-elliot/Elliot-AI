@@ -1,6 +1,9 @@
+import { useState } from "react";
 import Onboarding from "./Onboarding";
+import Terminal from "./Terminal";
 
 export default function App() {
-  // TODO: Add logic to switch to Terminal after onboarding completes
-  return <Onboarding />;
+  const [isOnboarded, setIsOnboarded] = useState(false);
+
+  return isOnboarded ? <Terminal /> : <Onboarding onComplete={() => setIsOnboarded(true)} />;
 }

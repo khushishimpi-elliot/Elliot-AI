@@ -12,6 +12,10 @@ interface Step {
   subtitle: string;
 }
 
+interface OnboardingProps {
+  onComplete?: () => void;
+}
+
 const STEPS: Step[] = [
   { id: 1, title: "Sign in", subtitle: "SSO / identity" },
   { id: 2, title: "Workspace", subtitle: "Org setup" },
@@ -21,7 +25,7 @@ const STEPS: Step[] = [
   { id: 6, title: "Launch", subtitle: "Setup complete" },
 ];
 
-export default function Onboarding() {
+export default function Onboarding({ onComplete }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
@@ -53,7 +57,7 @@ export default function Onboarding() {
       case 5:
         return <Step5IndexKnowledge onContinue={handleContinue} onBack={handleBack} />;
       case 6:
-        return <Step6Launch onComplete={handleBack} />;
+        return <Step6Launch onComplete={onComplete} />;
       default:
         return null;
     }

@@ -19,6 +19,85 @@
   --accent-teal: #5eead4;
   --accent-green: #22c55e;
   --accent-green-lt: #4ade80;
+
+  /* Terminal vars */
+  --bg: #0A0D13;
+  --panel: #10131C;
+  --elevated: #151A28;
+  --elevated-2: #1C2233;
+  --border: #252A36;
+  --border-soft: #1F2430;
+  --border-glow: #3F4A5C;
+  --text: #E8E8E8;
+  --text-faint: #9CA3AF;
+  --text-dim: #6B7280;
+  --text-ghost: #3F4A5C;
+  --accent: #7AA2F7;
+  --ai: #5eead4;
+  --success: #5DD89B;
+  --success-soft: rgba(93,216,155,0.08);
+  --warning: #F59E0B;
+  --warning-soft: rgba(245,158,11,0.08);
+  --error: #EF4444;
+  --cyan: #06B6D4;
+  --mono: "JetBrains Mono", "Courier New", monospace;
+  --statusbar: 44px;
+  --col-left: 200px;
+  --col-right: 160px;
+  --gut: 16px;
+  --fs: 13px;
+  --radius: 6px;
+  --radius-sm: 4px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.mono-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 * { box-sizing: border-box; }
