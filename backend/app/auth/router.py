@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import email as email_sender
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
 from app.auth.jwt import issue_access_token
 from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
 from app.config import get_settings
+from app.db.session import get_db
+from app.services.auth0 import Auth0Service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -91,3 +96,87 @@ def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResp
         expires_in_seconds=ttl,
         email=email,
     )
+
+
+@router.get("/auth0/login", response_model=None)
+def auth0_login():
+    """Auth0 SSO login with mock fallback"""
+    settings = get_settings()
+    auth0_service = Auth0Service()
+
+    # Mock mode when Auth0 is not configured
+    if not settings.auth0_domain:
+        return {
+            "jwt_token": "mock-jwt-token-dev-mode",
+            "user": {
+                "email": "dev@elliotsystems.com",
+                "role": "developer",
+                "tenant_id": "00000000-0000-0000-0000-000000000001",
+            },
+            "message": "Mock SSO — set AUTH0_DOMAIN for real login",
+            "mode": "mock",
+        }
+
+    # Real Auth0 flow
+    state = oauth_state.issue()
+    auth_url = auth0_service.get_authorization_url(state)
+    return RedirectResponse(url=auth_url, status_code=302)
+
+
+@router.get("/auth0/callback")
+async def auth0_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Auth0 OAuth callback handler"""
+    settings = get_settings()
+    auth0_service = Auth0Service()
+
+    if not settings.auth0_domain:
+        raise HTTPException(status_code=503, detail="Auth0 not configured")
+
+    if not oauth_state.consume(state):
+        raise HTTPException(status_code=400, detail="Invalid or expired state")
+
+    try:
+        # Exchange code for tokens
+        token_response = await auth0_service.exchange_code_for_token(code)
+        access_token = token_response.get("access_token")
+
+        # Get user info
+        user_info = await auth0_service.get_user_info(access_token)
+
+        # Use default tenant for Auth0 users
+        default_tenant_id = UUID("00000000-0000-0000-0000-000000000001")
+
+        # Create or get user
+        user = await auth0_service.create_or_get_user(
+            db, default_tenant_id, user_info
+        )
+
+        # Create JWT
+        jwt_token = auth0_service.create_jwt(user)
+
+        return {
+            "jwt_token": jwt_token,
+            "user": {
+                "email": user["email"],
+                "role": user["role"],
+                "tenant_id": user["tenant_id"],
+            },
+            "message": "Successfully authenticated with Auth0",
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Auth0 login failed") from e
+
+
+@router.get("/auth0/logout")
+def auth0_logout(return_to: str | None = None) -> RedirectResponse:
+    """Auth0 logout"""
+    auth0_service = Auth0Service()
+    logout_url = auth0_service.get_logout_url(return_to)
+    return RedirectResponse(url=logout_url, status_code=302)
