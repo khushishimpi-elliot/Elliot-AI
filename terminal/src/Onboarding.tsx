@@ -6,20 +6,26 @@ import Step4Sources from "./steps/Step4Sources";
 import Step5IndexKnowledge from "./steps/Step5IndexKnowledge";
 import Step6Launch from "./steps/Step6Launch";
 
+interface Step {
+  id: number;
+  title: string;
+  subtitle: string;
+}
+
+const STEPS: Step[] = [
+  { id: 1, title: "Sign in", subtitle: "SSO / identity" },
+  { id: 2, title: "Workspace", subtitle: "Org setup" },
+  { id: 3, title: "SDLC Profile", subtitle: "Engineering standards" },
+  { id: 4, title: "Connect Sources", subtitle: "Integrations" },
+  { id: 5, title: "Index Knowledge", subtitle: "Knowledge base" },
+  { id: 6, title: "Launch", subtitle: "Setup complete" },
+];
+
 export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
-  const steps = [
-    { number: 1, name: "Sign in", subtitle: "SSO / identity" },
-    { number: 2, name: "Workspace", subtitle: "Org & client" },
-    { number: 3, name: "SDLC profile", subtitle: "Engineering standards" },
-    { number: 4, name: "Connect sources", subtitle: "Repos · tickets · docs" },
-    { number: 5, name: "Index knowledge", subtitle: "Build the RAG" },
-    { number: 6, name: "Launch", subtitle: "Setup complete" },
-  ];
-
-  const handleStepComplete = () => {
+  const handleContinue = () => {
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps([...completedSteps, currentStep]);
     }
@@ -37,73 +43,85 @@ export default function Onboarding() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1SignIn onContinue={handleStepComplete} />;
+        return <Step1SignIn onContinue={handleContinue} />;
       case 2:
-        return <Step2Workspace onContinue={handleStepComplete} onBack={handleBack} />;
+        return <Step2Workspace onContinue={handleContinue} onBack={handleBack} />;
       case 3:
-        return <Step3SDLC onContinue={handleStepComplete} onBack={handleBack} />;
+        return <Step3SDLC onContinue={handleContinue} onBack={handleBack} />;
       case 4:
-        return <Step4Sources onContinue={handleStepComplete} onBack={handleBack} />;
+        return <Step4Sources onContinue={handleContinue} onBack={handleBack} />;
       case 5:
-        return <Step5IndexKnowledge onContinue={handleStepComplete} onBack={handleBack} />;
+        return <Step5IndexKnowledge onContinue={handleContinue} onBack={handleBack} />;
       case 6:
-        return <Step6Launch onComplete={() => {}} />;
+        return <Step6Launch onComplete={handleBack} />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="onboarding-container">
-      <aside className="onboarding-sidebar">
-        <div className="onboarding-logo">
-          <span className="logo-icon">[·]</span>
-          <span className="logo-text">ELLIOT-AI</span>
+    <div className="app-container">
+      <div className="sidebar">
+        <div className="sidebar-logo">
+          <span className="sidebar-logo-icon">[·]</span>
+          <span className="sidebar-logo-text">ELLIOT-AI</span>
         </div>
-        <div className="onboarding-init">$ elliot init</div>
+        <div className="sidebar-subtitle">$ elliot init</div>
 
-        <ul className="onboarding-steps">
-          {steps.map((step) => {
-            const isCompleted = completedSteps.includes(step.number);
-            const isActive = currentStep === step.number;
+        <div className="steps-list">
+          {STEPS.map((step) => {
+            const isActive = step.id === currentStep;
+            const isCompleted = completedSteps.includes(step.id);
+            const isInactive = step.id > currentStep && !isCompleted;
 
             return (
-              <li
-                key={step.number}
-                className={`onboarding-step ${isActive ? "active" : ""} ${
+              <div
+                key={step.id}
+                className={`step-item ${isActive ? "active" : ""} ${
                   isCompleted ? "completed" : ""
-                }`}
+                } ${isInactive ? "inactive" : ""}`}
               >
-                <div className="onboarding-step-circle">
-                  {isCompleted ? "✓" : step.number}
+                <div className="step-circle">
+                  {isCompleted ? "✓" : step.id}
                 </div>
-                <div className="onboarding-step-content">
-                  <div className="onboarding-step-name">{step.name}</div>
-                  <div className="onboarding-step-subtitle">{step.subtitle}</div>
+                <div className="step-label-group">
+                  <div className="step-title">{step.title}</div>
+                  <div className="step-subtitle">{step.subtitle}</div>
                 </div>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
 
-        <div className="onboarding-footer">
-          <span className="footer-dot">●</span>
+        <div className="sidebar-bottom">
+          <span className="sidebar-bottom-dot" />
           Secure setup · SOC 2 · encrypted at rest
         </div>
-      </aside>
+      </div>
 
-      <main className="onboarding-main">
-        <div className="onboarding-top-bar">
-          <div className="onboarding-status">
-            <span className="status-dot">●</span>
+      <div className="main-content">
+        <div className="top-bar">
+          {currentStep > 1 && (
+            <button className="top-bar-back" onClick={handleBack}>
+              ← Back
+            </button>
+          )}
+          {currentStep === 1 && <div />}
+          <div className="top-bar-status">
+            <span className="status-dot" />
             elliot-ai.cloud · tenant provisioning
           </div>
         </div>
 
-        <div className="onboarding-content">
-          {renderStep()}
+        {renderStep()}
+      </div>
+
+      <div className="right-panel">
+        <div className="panel-section">
+          <div className="panel-title">Status</div>
+          <div className="panel-item">Initializing workspace...</div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

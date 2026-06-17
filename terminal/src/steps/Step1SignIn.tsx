@@ -69,7 +69,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
       },
       google: {
         name: "Google Workspace",
-        scopes: ["openid", "email", "profile", "https://www.googleapis.com/auth/admin.directory.group.readonly"],
+        scopes: ["openid", "email", "profile", "admin.directory.group.readonly"],
       },
     };
     return info[provider];
@@ -128,7 +128,9 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
           </button>
         </div>
 
-        <div className="auth-divider">or with email</div>
+        <div className="auth-divider">
+          <span>or with email</span>
+        </div>
 
         <div className="email-input-group">
           <input
@@ -155,7 +157,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
         <div className="oauth-modal-overlay" onClick={() => setOAuthModal({ provider: null, authorized: false })}>
           <div className="oauth-modal" onClick={(e) => e.stopPropagation()}>
             <button
-              className="modal-close"
+              className="oauth-modal-close"
               onClick={() => setOAuthModal({ provider: null, authorized: false })}
             >
               ×
@@ -163,11 +165,11 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
 
             {!oauthModal.authorized ? (
               <>
+                <div className="oauth-label">OAUTH 2.0 · secure handshake</div>
                 <div className="oauth-header">
                   <span className="oauth-icon">E</span>
                   <span className="oauth-divider">↔</span>
                   <span className="oauth-icon">⚙</span>
-                  <div className="oauth-label">OAUTH 2.0 · secure handshake</div>
                 </div>
 
                 <h2>Authorize Elliot-AI for {getProviderInfo(oauthModal.provider).name}</h2>
@@ -176,16 +178,13 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
                 <div className="oauth-scopes">
                   {getProviderInfo(oauthModal.provider).scopes.map((scope) => (
                     <div key={scope} className="oauth-scope">
-                      › {scope}
+                      {scope}
                     </div>
                   ))}
                 </div>
 
                 <div className="oauth-actions">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleAuthorizeOAuth}
-                  >
+                  <button className="btn btn-primary" onClick={handleAuthorizeOAuth}>
                     Authorize
                   </button>
                   <button
@@ -197,6 +196,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
                 </div>
 
                 <p className="oauth-footer">
+                  <span className="oauth-footer-dot" />
                   Read-only by default · revocable anytime · no source code leaves your tenancy
                 </p>
               </>
