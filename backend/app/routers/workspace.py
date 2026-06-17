@@ -15,10 +15,10 @@ async def create_workspace(
     db: AsyncSession = Depends(get_db),
 ) -> WorkspaceResponse:
     tenant = Tenant(
-        name=payload.name,
+        org_name=payload.name,
         domain=payload.domain,
         team_size=payload.team_size,
-        residency=payload.residency,
+        data_residency=payload.residency,
     )
     db.add(tenant)
 
@@ -40,9 +40,9 @@ async def create_workspace(
 
     return WorkspaceResponse(
         tenant_id=tenant.id,
-        name=tenant.name,
+        name=tenant.org_name,
         domain=tenant.domain,
         team_size=tenant.team_size,
-        residency=tenant.residency,
+        residency=tenant.data_residency,
         created_at=tenant.created_at,
     )
