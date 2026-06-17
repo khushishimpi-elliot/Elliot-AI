@@ -1,4 +1,5 @@
-from typing import TypedDict
+import operator
+from typing import Annotated, TypedDict
 
 
 class AgentState(TypedDict):
@@ -19,10 +20,10 @@ class AgentState(TypedDict):
     needs_docs: bool
     query_type: str
 
-    # Retrieved context
-    code_chunks: list[dict]
-    jira_tickets: list[dict]
-    slack_messages: list[dict]
+    # Retrieved context — use Annotated with operator.add for parallel updates
+    code_chunks: Annotated[list[dict], operator.add]
+    jira_tickets: Annotated[list[dict], operator.add]
+    slack_messages: Annotated[list[dict], operator.add]
     sdlc_profile: dict | None
 
     # Output

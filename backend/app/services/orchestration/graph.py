@@ -63,17 +63,12 @@ def build_graph(db: AsyncSession) -> Callable:
     # Set entry point
     graph.set_entry_point("context_planner")
 
-    # Context planner → all fetch nodes run in parallel
-    graph.add_edge("context_planner", "fetch_code")
-    graph.add_edge("context_planner", "fetch_jira")
-    graph.add_edge("context_planner", "fetch_slack")
+    # Sequential flow to avoid state conflicts
     graph.add_edge("context_planner", "fetch_sdlc")
-
-    # All fetch nodes → prompt builder
-    graph.add_edge("fetch_code", "prompt_builder")
-    graph.add_edge("fetch_jira", "prompt_builder")
+    graph.add_edge("fetch_sdlc", "fetch_code")
+    graph.add_edge("fetch_code", "fetch_jira")
+    graph.add_edge("fetch_jira", "fetch_slack")
     graph.add_edge("fetch_slack", "prompt_builder")
-    graph.add_edge("fetch_sdlc", "prompt_builder")
 
     # Prompt builder → LLM
     graph.add_edge("prompt_builder", "llm")
