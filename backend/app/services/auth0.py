@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 import httpx
@@ -89,7 +89,7 @@ class Auth0Service:
                 email=email,
                 role="developer",
                 sso_provider="auth0",
-                last_active=datetime.now(timezone.utc),
+                last_active=datetime.now(UTC),
             )
             db.add(user)
             await db.commit()
