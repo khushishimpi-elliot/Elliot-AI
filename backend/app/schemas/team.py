@@ -9,16 +9,16 @@ class TeamCreate(BaseModel):
 
     tenant_id: UUID
     name: str
-    repos: list | None = None
-    members: list | None = None
+    repos: list[str] | None = None
+    members: list[UUID] | None = None
 
 
 class TeamUpdate(BaseModel):
     """Request to update a team"""
 
     name: str | None = None
-    repos: list | None = None
-    members: list | None = None
+    repos: list[str] | None = None
+    members: list[UUID] | None = None
 
 
 class TeamResponse(BaseModel):
@@ -27,8 +27,8 @@ class TeamResponse(BaseModel):
     id: UUID
     tenant_id: UUID
     name: str
-    repos: list
-    members: list
+    repos: list[str] | None
+    members: list[UUID] | None
     created_at: datetime
     updated_at: datetime
 

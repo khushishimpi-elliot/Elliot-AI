@@ -20,8 +20,14 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("tenant_id", sa.UUID(), nullable=False),
         sa.Column("email", sa.Text(), nullable=False, unique=True),
+        sa.Column("role", sa.Text(), nullable=False, server_default="developer"),
         sa.Column("sso_provider", sa.Text(), nullable=True),
-        sa.Column("last_active", sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column(
+            "last_active",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+            server_default=sa.func.now(),
+        ),
         sa.Column(
             "created_at",
             sa.TIMESTAMP(timezone=True),

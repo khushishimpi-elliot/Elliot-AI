@@ -1,6 +1,7 @@
 import uuid
 
-from sqlalchemy import TIMESTAMP, UUID, Column, ForeignKey, JSON, Text
+from sqlalchemy import TIMESTAMP, UUID, Column, ForeignKey, Text
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import func
 
 from app.models.base import Base
@@ -16,8 +17,8 @@ class Team(Base):
         nullable=False,
     )
     name = Column(Text, nullable=False)
-    repos = Column(JSON, default=[])
-    members = Column(JSON, default=[])
+    repos = Column(ARRAY(Text), nullable=True)
+    members = Column(ARRAY(UUID(as_uuid=True)), nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(
         TIMESTAMP(timezone=True),

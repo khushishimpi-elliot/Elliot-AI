@@ -7,6 +7,7 @@ Create Date: 2026-06-17 00:00:00.000000
 """
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision = "008"
 down_revision = "007"
@@ -20,8 +21,16 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("tenant_id", sa.UUID(), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
-        sa.Column("repos", sa.JSON(), nullable=True, server_default="[]"),
-        sa.Column("members", sa.JSON(), nullable=True, server_default="[]"),
+        sa.Column(
+            "repos",
+            postgresql.ARRAY(sa.Text()),
+            nullable=True,
+        ),
+        sa.Column(
+            "members",
+            postgresql.ARRAY(sa.UUID()),
+            nullable=True,
+        ),
         sa.Column(
             "created_at",
             sa.TIMESTAMP(timezone=True),

@@ -23,6 +23,7 @@ async def create_user(
         user = User(
             tenant_id=request.tenant_id,
             email=request.email,
+            role=request.role,
             sso_provider=request.sso_provider,
         )
 

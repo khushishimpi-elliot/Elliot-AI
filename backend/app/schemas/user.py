@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
 
     tenant_id: UUID
     email: str
+    role: str = "developer"
     sso_provider: str | None = None
 
 
@@ -18,6 +19,7 @@ class UserResponse(BaseModel):
     id: UUID
     tenant_id: UUID
     email: str
+    role: str
     sso_provider: str | None
     last_active: datetime | None
     created_at: datetime
