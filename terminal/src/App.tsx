@@ -1,4 +1,5 @@
 import { useState } from "react";
+import FileExplorer from "./components/FileExplorer";
 
 const STEPS = ["Sign in", "Workspace", "SDLC", "Sources", "Index", "Launch"];
 
@@ -12,8 +13,16 @@ export default function App() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
-    setHistory((h) => [...h, `$ elliot ask "${query}"`, "[stub] backend not wired yet"]);
+    setHistory((h) => [
+      ...h,
+      `$ elliot ask "${query}"`,
+      "[stub] backend not wired yet",
+    ]);
     setQuery("");
+  }
+
+  function handleFileSelect(path: string) {
+    setQuery(`ask about ${path}`);
   }
 
   return (
@@ -27,6 +36,7 @@ export default function App() {
             </li>
           ))}
         </ul>
+        <FileExplorer onFileSelect={handleFileSelect} />
       </aside>
       <main className="main">
         <div className="output">

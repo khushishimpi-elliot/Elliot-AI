@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -69,3 +69,20 @@ async def update_sdlc_profile(
     await db.commit()
     await db.refresh(profile)
     return profile
+
+
+@router.delete("/sdlc/{tenant_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_sdlc_profile(
+    tenant_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Delete SDLC profile for a tenant"""
+    result = await db.execute(
+        select(SDLCProfile).where(SDLCProfile.tenant_id == tenant_id)
+    )
+    profile = result.scalar_one_or_none()
+    if not profile:
+        raise HTTPException(status_code=404, detail="SDLC profile not found")
+    db.delete(profile)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
