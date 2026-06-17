@@ -5,6 +5,7 @@ interface Props {
   onSubmit: (query: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  disabled?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ export default function InputBar({
   onSubmit,
   placeholder = "ask anything...",
   autoFocus = true,
+  disabled = false,
 }: Props) {
   const [value, setValue] = useState("");
   // -1 means "not navigating; showing draft". 0..n-1 indexes from the end.
@@ -82,6 +84,7 @@ export default function InputBar({
       <input
         ref={inputRef}
         value={value}
+        disabled={disabled}
         onChange={(e) => {
           setValue(e.target.value);
           if (historyOffset !== -1) {
