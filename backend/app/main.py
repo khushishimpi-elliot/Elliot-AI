@@ -7,6 +7,7 @@ from app.routers import (
     clickup,
     connectors,
     github,
+    gitlab,
     indexing,
     jira,
     launch,
@@ -40,6 +41,7 @@ app.include_router(workspace_router)
 app.include_router(connectors.router)
 app.include_router(bitbucket.router, prefix="/bitbucket", tags=["bitbucket"])
 app.include_router(github.router, prefix="/github", tags=["github"])
+app.include_router(gitlab.router, prefix="/gitlab", tags=["gitlab"])
 app.include_router(clickup.router, prefix="/clickup", tags=["clickup"])
 app.include_router(jira.router, prefix="/jira", tags=["jira"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
