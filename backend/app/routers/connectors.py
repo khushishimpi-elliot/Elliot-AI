@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.db.session import get_db
 from app.models.connector import Connector
 from app.schemas.connector import ConnectorAuthorizeResponse, ConnectorResponse
@@ -121,8 +122,9 @@ async def oauth_callback(
 
     await db.commit()
 
+    settings = get_settings()
     redirect_url = (
-        f"http://localhost:5173/connectors/callback?"
+        f"{settings.terminal_url}/connectors/callback?"
         f"{urlencode({'provider': provider, 'status': 'success'})}"
     )
     return RedirectResponse(url=redirect_url)

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.router import router as auth_router
+from app.config import get_settings
 from app.routers import (
     bitbucket,
     clickup,
@@ -26,13 +27,13 @@ from app.routers.workspace import router as workspace_router
 
 app = FastAPI(title="Elliot-AI", version="0.1.0")
 
+# Parse CORS origins from environment variable
+settings = get_settings()
+cors_origins = [origin.strip() for origin in settings.cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "https://elliot-ai.onrender.com",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
