@@ -221,14 +221,3 @@ export default function App() {
   );
 }
 
-function Placeholder({
-  name,
-}: {
-  name: string;
-}) {
-  return (
-    <div className="placeholder">
-      {name} — coming soon
-    </div>
-  );
-}
