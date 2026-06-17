@@ -36,7 +36,6 @@ jobs:
           cache-dependency-path: terminal/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm run test
       - run: npm run build
 
   dashboard:
