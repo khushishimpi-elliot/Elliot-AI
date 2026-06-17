@@ -19,7 +19,6 @@ export default function App() {
   const [transcript, setTranscript] = useState<TranscriptLine[]>([
     { type: "response", text: "Welcome to Elliot-AI. Type a question to get started." },
   ]);
-  const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [responseFiles, setResponseFiles] = useState<string[]>([]);
   const [responseContext, setResponseContext] = useState<ResponseContext>({});
@@ -43,7 +42,6 @@ export default function App() {
     const userQuery = query;
     setQuery("");
     setTranscript((t) => [...t, { type: "user", text: `$ elliot ask "${userQuery}"` }]);
-    setQueryHistory((h) => [...h, userQuery]);
     setLoading(true);
     setResponseFiles([]);
     setResponseContext({});
