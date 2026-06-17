@@ -9,8 +9,8 @@ import sqlalchemy as sa
 from alembic import op
 from pgvector.sqlalchemy import Vector
 
-revision = "003"
-down_revision = "002"
+revision = "007"
+down_revision = "006"
 branch_labels = None
 depends_on = None
 
