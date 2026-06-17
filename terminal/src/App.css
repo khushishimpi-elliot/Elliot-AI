@@ -87,6 +87,87 @@ body, html, #root {
   font: inherit;
 }
 
+.launch {
+  max-width: 640px;
+  margin: 64px auto;
+  padding: 32px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.launch h1 {
+  margin: 0 0 4px;
+  color: var(--accent);
+}
+
+.launch .lead {
+  color: var(--muted);
+  margin: 0 0 24px;
+}
+
+.launch .summary-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px 16px;
+  margin: 16px 0 24px;
+}
+
+.launch .summary-grid dt {
+  color: var(--muted);
+}
+
+.launch .connectors {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 24px;
+}
+
+.launch .connectors li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.launch .connectors .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #444;
+}
+
+.launch .connectors li.connected .dot {
+  background: var(--accent);
+}
+
+.launch .connectors .status {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.launch-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.launch-button:hover {
+  filter: brightness(1.1);
+}
+
+.launch .hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .file-explorer {
   margin-top: 16px;
   padding-top: 16px;
