@@ -86,3 +86,44 @@ body, html, #root {
   color: var(--fg);
   font: inherit;
 }
+
+.file-explorer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.file-explorer-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.tree-item {
+  padding: 3px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--fg);
+  user-select: none;
+}
+
+.tree-folder {
+  color: var(--fg);
+}
+
+.tree-toggle {
+  color: var(--muted);
+  margin-right: 6px;
+  font-size: 10px;
+}
+
+.tree-file {
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.tree-file:hover {
+  color: var(--accent);
+}
