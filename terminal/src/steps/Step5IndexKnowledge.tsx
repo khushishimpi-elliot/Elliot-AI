@@ -1,101 +1,65 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface Step5Props {
   onContinue: () => void;
   onBack?: () => void;
 }
 
-interface IndexSource {
-  name: string;
-  progress: number;
-  status: "indexing" | "indexed";
-}
-
-export default function Step5IndexKnowledge({ onContinue, onBack }: Step5Props) {
-  const [sources, setSources] = useState<IndexSource[]>([
-    { name: "GitHub", progress: 100, status: "indexed" },
-    { name: "GitLab", progress: 100, status: "indexed" },
-    { name: "Bitbucket", progress: 100, status: "indexed" },
-    { name: "Jira", progress: 100, status: "indexed" },
-    { name: "Google Drive", progress: 100, status: "indexed" },
-    { name: "PostgreSQL", progress: 100, status: "indexed" },
-    { name: "Slack", progress: 100, status: "indexed" },
-  ]);
+export default function Step5IndexKnowledge({ onContinue }: Step5Props) {
+  const [progress, setProgress] = useState([0, 0, 0, 0, 0]);
 
   useEffect(() => {
-    // Simulate indexing process
-    const interval = setInterval(() => {
-      setSources((prev) =>
-        prev.map((src) =>
-          src.progress < 100
-            ? { ...src, progress: Math.min(src.progress + 10, 100) }
-            : { ...src, status: "indexed" }
-        )
-      );
-    }, 300);
+    const intervals = progress.map((p, i) =>
+      p < 100 ? setInterval(() => setProgress((prev) => [...prev.slice(0, i), Math.min(100, prev[i] + Math.random() * 15), ...prev.slice(i + 1)]), 150) : null
+    );
+    return () => intervals.forEach((i) => i && clearInterval(i));
+  }, [progress]);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  const allIndexed = sources.every((src) => src.status === "indexed");
+  const sources = ["GitHub", "Jira", "Confluence", "Slack", "PostgreSQL"];
 
   return (
-    <div className="step-content">
-      <div className="step-header">
-        <button className="step-back" onClick={onBack}>←</button>
-        <div className="step-label">INDEX KNOWLEDGE · STEP 5 OF 6</div>
-        <h1>Building organizational intelligence</h1>
-        <p className="step-description">
+    <div>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-blue)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+          KNOWLEDGE BASE · STEP 5 OF 6
+        </div>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+          Building organizational intelligence
+        </h1>
+        <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
           Elliot ingests, chunks and embeds your connected sources into a private vector index.
-          Code symbols, docs and tickets become retrievable context.
         </p>
       </div>
 
-      <div className="step-body">
-        <div className="index-sources">
-          {sources.map((source) => (
-            <div key={source.name} className="index-source">
-              <div className="source-icon">{source.name.charAt(0)}</div>
-              <div className="source-info">
-                <div className="source-name">{source.name}</div>
-                <div className="source-progress">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${source.progress}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="source-status">
-                {source.status === "indexed" ? "✓ indexed" : `${source.progress}%`}
-              </div>
+      {/* Sources with Progress */}
+      <div style={{ maxWidth: "600px", marginBottom: "24px" }}>
+        {sources.map((source, i) => (
+          <div key={source} style={{ marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>{source}</span>
+              <span style={{ fontSize: "12px", fontWeight: "500", color: "var(--accent-green)", fontFamily: "var(--font-sans)" }}>indexed</span>
             </div>
-          ))}
-        </div>
-
-        {allIndexed && (
-          <div className="index-summary">
-            <div className="summary-row">
-              <div className="summary-label">EMBEDDED CHUNKS</div>
-              <div className="summary-value">542.0k</div>
+            <div style={{ height: "3px", background: "var(--surface-2)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", background: "var(--accent-green)", width: `${progress[i]}%`, transition: "width 0.3s ease" }} />
             </div>
-            <div className="summary-row">
-              <div className="summary-label">VECTOR INDEX</div>
-              <div className="summary-value">pgvector · elliot-index</div>
-            </div>
-            <div className="summary-badge">✓ Ready</div>
           </div>
-        )}
-
-        <button
-          onClick={onContinue}
-          className="btn btn-primary"
-          disabled={!allIndexed}
-        >
-          Finish setup →
-        </button>
+        ))}
       </div>
+
+      {/* Stats */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "6px", padding: "16px 20px", maxWidth: "500px", marginBottom: "24px", display: "flex", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", fontFamily: "var(--font-sans)", marginBottom: "6px" }}>Embedded Chunks</div>
+          <div style={{ fontSize: "26px", fontWeight: "700", color: "var(--accent-blue)", fontFamily: "var(--font-mono)" }}>542.0k</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: "10px", fontWeight: "700", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", fontFamily: "var(--font-sans)", marginBottom: "6px" }}>Vector Index</div>
+          <div style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>pgvector · elliot-index</div>
+          <div style={{ fontSize: "12px", fontWeight: "500", color: "var(--accent-green)", marginTop: "4px", fontFamily: "var(--font-sans)" }}>✓ Ready</div>
+        </div>
+      </div>
+
+      <button onClick={onContinue} style={{ background: "var(--accent-blue)", color: "white", border: "none", borderRadius: "5px", fontSize: "14px", fontWeight: "600", padding: "10px 20px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>Finish setup →</button>
     </div>
   );
 }

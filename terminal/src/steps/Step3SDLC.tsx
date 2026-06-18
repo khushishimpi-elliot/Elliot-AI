@@ -5,132 +5,77 @@ interface Step3Props {
   onBack?: () => void;
 }
 
-export default function Step3SDLC({ onContinue, onBack }: Step3Props) {
-  const [stack, setStack] = useState(["TypeScript/Node"]);
+export default function Step3SDLC({ onContinue }: Step3Props) {
+  const [stack, setStack] = useState<string[]>(["TypeScript/Node"]);
   const [branching, setBranching] = useState("trunk-based");
-  const [testing, setTesting] = useState("vitest-90");
-  const [cicd, setCicd] = useState(["GitHub Actions"]);
-  const [review, setReview] = useState("2-approvals");
+  const [testing, setTesting] = useState("vitest");
+  const [cicd, setCicd] = useState<string[]>(["GitHub Actions"]);
+  const [review, setReview] = useState("2 approvals");
 
-  const toggleMultiSelect = (value: string, current: string[]) => {
-    if (current.includes(value)) {
-      return current.filter((v) => v !== value);
-    }
-    return [...current, value];
-  };
+  const handleContinue = () => onContinue();
 
   return (
-    <div className="step-content">
-      <div className="step-header">
-        <button className="step-back" onClick={onBack}>←</button>
-        <div className="step-label">SDLC PROFILE · STEP 3 OF 6</div>
-        <h1>Teach Elliot your SDLC</h1>
-        <p className="step-description">
-          Elliot adapts every plan, diff and test to these standards — and enforces them
-          automatically. Pre-filled from detected signals; adjust anything.
+    <div>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-blue)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+          ENGINEERING PROFILE · STEP 3 OF 6
+        </div>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+          Teach Elliot your SDLC
+        </h1>
+        <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
+          Elliot adapts every plan, diff and test to these standards.
         </p>
       </div>
 
-      <div className="step-body">
-        <div className="form-group">
-          <label className="form-label">PRIMARY STACK</label>
-          <div className="toggle-group multi">
-            {["TypeScript/Node", "Python", "Go", "Java/Kotlin", ".NET/C#", "Ruby", "Rust"].map(
-              (lang) => (
-                <button
-                  key={lang}
-                  className={`toggle-btn ${stack.includes(lang) ? "active" : ""}`}
-                  onClick={() => setStack(toggleMultiSelect(lang, stack))}
-                >
-                  {lang}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">BRANCHING MODEL</label>
-          <div className="toggle-group">
-            {[
-              { value: "trunk-based", label: "Trunk-based" },
-              { value: "github-flow", label: "GitHub Flow" },
-              { value: "gitflow", label: "GitFlow" },
-              { value: "release", label: "Release branches" },
-            ].map((mode) => (
-              <button
-                key={mode.value}
-                className={`toggle-btn ${branching === mode.value ? "active" : ""}`}
-                onClick={() => setBranching(mode.value)}
-              >
-                {mode.label}
-              </button>
+      <div style={{ maxWidth: "600px", marginBottom: "32px" }}>
+        <div style={{ marginBottom: "28px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>Primary stack</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["TypeScript/Node", "Python", "Go", "Java/Kotlin", ".NET/C#", "Ruby", "Rust"].map((opt) => (
+              <button key={opt} onClick={() => setStack(stack.includes(opt) ? stack.filter(s => s !== opt) : [...stack, opt])} style={{ padding: "6px 14px", background: stack.includes(opt) ? "var(--surface-2)" : "transparent", border: `1px solid ${stack.includes(opt) ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: stack.includes(opt) ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
             ))}
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">TEST FRAMEWORK & COVERAGE GATE</label>
-          <div className="toggle-group">
-            {[
-              { value: "vitest-90", label: "Vitest · 90% gate" },
-              { value: "jest-80", label: "Jest · 80% gate" },
-              { value: "pytest-85", label: "PyTest · 85% gate" },
-              { value: "junit-80", label: "JUnit · 80% gate" },
-              { value: "no-gate", label: "No hard gate" },
-            ].map((test) => (
-              <button
-                key={test.value}
-                className={`toggle-btn ${testing === test.value ? "active" : ""}`}
-                onClick={() => setTesting(test.value)}
-              >
-                {test.label}
-              </button>
+        <div style={{ marginBottom: "28px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>Branching model</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["Trunk-based", "GitHub Flow", "GitFlow", "Release branches"].map((opt) => (
+              <button key={opt} onClick={() => setBranching(opt)} style={{ padding: "6px 14px", background: branching === opt ? "var(--surface-2)" : "transparent", border: `1px solid ${branching === opt ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: branching === opt ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
             ))}
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">CI / CD PLATFORM</label>
-          <div className="toggle-group multi">
-            {["GitHub Actions", "GitLab CI", "Jenkins", "CircleCI", "Azure Pipelines"].map(
-              (platform) => (
-                <button
-                  key={platform}
-                  className={`toggle-btn ${cicd.includes(platform) ? "active" : ""}`}
-                  onClick={() => setCicd(toggleMultiSelect(platform, cicd))}
-                >
-                  {platform}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">CODE REVIEW POLICY</label>
-          <div className="toggle-group">
-            {[
-              { value: "1-approval", label: "1 approval" },
-              { value: "2-approvals", label: "2 approvals" },
-              { value: "codeowners", label: "CODEOWNERS required" },
-              { value: "approval-green", label: "Approval + green CI" },
-            ].map((policy) => (
-              <button
-                key={policy.value}
-                className={`toggle-btn ${review === policy.value ? "active" : ""}`}
-                onClick={() => setReview(policy.value)}
-              >
-                {policy.label}
-              </button>
+        <div style={{ marginBottom: "28px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>Test framework & coverage gate</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["Vitest · 90%", "Jest · 80%", "PyTest · 85%", "JUnit · 80%"].map((opt) => (
+              <button key={opt} onClick={() => setTesting(opt)} style={{ padding: "6px 14px", background: testing === opt ? "var(--surface-2)" : "transparent", border: `1px solid ${testing === opt ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: testing === opt ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
             ))}
           </div>
         </div>
 
-        <button onClick={onContinue} className="btn btn-primary">
-          Continue →
-        </button>
+        <div style={{ marginBottom: "28px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>CI / CD platform</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["GitHub Actions", "GitLab CI", "Jenkins", "CircleCI", "Azure Pipelines"].map((opt) => (
+              <button key={opt} onClick={() => setCicd(cicd.includes(opt) ? cicd.filter(c => c !== opt) : [...cicd, opt])} style={{ padding: "6px 14px", background: cicd.includes(opt) ? "var(--surface-2)" : "transparent", border: `1px solid ${cicd.includes(opt) ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: cicd.includes(opt) ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "24px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>Code review policy</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["1 approval", "2 approvals", "CODEOWNERS required", "Approval + green CI"].map((opt) => (
+              <button key={opt} onClick={() => setReview(opt)} style={{ padding: "6px 14px", background: review === opt ? "var(--surface-2)" : "transparent", border: `1px solid ${review === opt ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: review === opt ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
+            ))}
+          </div>
+        </div>
       </div>
+
+      <button onClick={handleContinue} style={{ background: "var(--accent-blue)", color: "white", border: "none", borderRadius: "5px", fontSize: "14px", fontWeight: "600", padding: "10px 20px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>Continue →</button>
     </div>
   );
 }
