@@ -2,7 +2,7 @@ import { useState } from "react";
 
 interface Step4Props {
   onContinue: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 interface Provider {

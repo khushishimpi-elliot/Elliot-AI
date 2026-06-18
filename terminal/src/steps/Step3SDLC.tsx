@@ -2,7 +2,7 @@ import { useState } from "react";
 
 interface Step3Props {
   onContinue: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function Step3SDLC({ onContinue, onBack }: Step3Props) {

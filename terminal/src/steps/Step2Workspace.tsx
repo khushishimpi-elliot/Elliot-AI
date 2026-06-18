@@ -2,7 +2,7 @@ import { useState } from "react";
 
 interface Step2Props {
   onContinue: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function Step2Workspace({ onContinue, onBack }: Step2Props) {

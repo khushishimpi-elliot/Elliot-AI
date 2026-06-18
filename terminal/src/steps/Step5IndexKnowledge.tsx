@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 interface Step5Props {
   onContinue: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 interface IndexSource {
