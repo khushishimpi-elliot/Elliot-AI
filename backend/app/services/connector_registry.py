@@ -77,6 +77,15 @@ CONNECTOR_REGISTRY = {
         scopes=["read_content", "read_user"],
         redirect_uri=f"{BASE_URL}/connectors/callback/notion",
     ),
+    "sharepoint": OAuthConfig(
+        provider_name="sharepoint",
+        client_id=os.getenv("SHAREPOINT_CLIENT_ID", ""),
+        client_secret=os.getenv("SHAREPOINT_CLIENT_SECRET", ""),
+        authorization_url="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+        token_url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        scopes=["Sites.Read.All", "Files.Read.All"],
+        redirect_uri=f"{BASE_URL}/connectors/callback/sharepoint",
+    ),
 }
 
 
