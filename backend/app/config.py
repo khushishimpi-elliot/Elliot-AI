@@ -80,6 +80,10 @@ class Settings(BaseSettings):
     sharepoint_client_id: str = ""
     sharepoint_client_secret: str = ""
 
+    # ── Google Drive ─────────────────────────────────────
+    gdrive_client_id: str = ""
+    gdrive_client_secret: str = ""
+
     # ── AI APIs ──────────────────────────────────────
     openai_api_key: str = ""
     anthropic_api_key: str = ""

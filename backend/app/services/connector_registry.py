@@ -86,6 +86,15 @@ CONNECTOR_REGISTRY = {
         scopes=["Sites.Read.All", "Files.Read.All"],
         redirect_uri=f"{BASE_URL}/connectors/callback/sharepoint",
     ),
+    "gdrive": OAuthConfig(
+        provider_name="gdrive",
+        client_id=os.getenv("GDRIVE_CLIENT_ID", ""),
+        client_secret=os.getenv("GDRIVE_CLIENT_SECRET", ""),
+        authorization_url="https://accounts.google.com/o/oauth2/v2/auth",
+        token_url="https://oauth2.googleapis.com/token",
+        scopes=["https://www.googleapis.com/auth/drive.readonly"],
+        redirect_uri=f"{BASE_URL}/connectors/callback/gdrive",
+    ),
 }
 
 
