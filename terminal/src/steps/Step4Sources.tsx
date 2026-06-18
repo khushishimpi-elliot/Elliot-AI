@@ -16,6 +16,7 @@ const SOURCES: SourceConfig[] = [
   { id: "jira", icon: "JR", name: "Jira", description: "Read issues and sprints", category: "tickets" },
   { id: "linear", icon: "LN", name: "Linear", description: "Read issues and cycles", category: "tickets" },
   { id: "clickup", icon: "CU", name: "ClickUp", description: "Read tasks and spaces", category: "tickets" },
+  { id: "confluence", icon: "CF", name: "Confluence", description: "Read pages and spaces", category: "docs" },
   { id: "notion", icon: "ND", name: "Notion", description: "Read databases and pages", category: "docs" },
   { id: "sharepoint", icon: "SP", name: "SharePoint", description: "Read files and pages", category: "docs" },
   { id: "gdrive", icon: "GD", name: "Google Drive", description: "Read files and folders", category: "docs" },
