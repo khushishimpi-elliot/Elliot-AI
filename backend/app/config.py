@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     notion_client_id: str = ""
     notion_client_secret: str = ""
 
+    # ── SharePoint ───────────────────────────────────
+    sharepoint_client_id: str = ""
+    sharepoint_client_secret: str = ""
+
     # ── AI APIs ──────────────────────────────────────
     openai_api_key: str = ""
     anthropic_api_key: str = ""
