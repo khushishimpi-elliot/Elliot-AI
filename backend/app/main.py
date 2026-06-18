@@ -6,6 +6,7 @@ from app.config import get_settings
 from app.routers import (
     bitbucket,
     clickup,
+    confluence,
     connectors,
     database,
     gdrive,
@@ -61,6 +62,7 @@ app.include_router(linear.router, prefix="/linear", tags=["linear"])
 app.include_router(notion.router, prefix="/notion", tags=["notion"])
 app.include_router(sharepoint.router, prefix="/sharepoint", tags=["sharepoint"])
 app.include_router(gdrive.router, prefix="/gdrive", tags=["gdrive"])
+app.include_router(confluence.router, prefix="/confluence", tags=["confluence"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
 app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])

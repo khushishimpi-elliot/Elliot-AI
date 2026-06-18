@@ -95,6 +95,15 @@ CONNECTOR_REGISTRY = {
         scopes=["https://www.googleapis.com/auth/drive.readonly"],
         redirect_uri=f"{BASE_URL}/connectors/callback/gdrive",
     ),
+    "confluence": OAuthConfig(
+        provider_name="confluence",
+        client_id=os.getenv("CONFLUENCE_CLIENT_ID", ""),
+        client_secret=os.getenv("CONFLUENCE_CLIENT_SECRET", ""),
+        authorization_url="https://auth.atlassian.com/authorize",
+        token_url="https://auth.atlassian.com/oauth/token",
+        scopes=["read:confluence-content.all", "read:confluence-space.summary"],
+        redirect_uri=f"{BASE_URL}/connectors/callback/confluence",
+    ),
 }
 
 

@@ -84,6 +84,10 @@ class Settings(BaseSettings):
     gdrive_client_id: str = ""
     gdrive_client_secret: str = ""
 
+    # ── Confluence ───────────────────────────────────────
+    confluence_client_id: str = ""
+    confluence_client_secret: str = ""
+
     # ── AI APIs ──────────────────────────────────────
     openai_api_key: str = ""
     anthropic_api_key: str = ""
