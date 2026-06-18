@@ -14,6 +14,7 @@ from app.routers import (
     jira,
     launch,
     linear,
+    notion,
     organisation,
     query,
     sdlc,
@@ -55,6 +56,7 @@ app.include_router(clickup.router, prefix="/clickup", tags=["clickup"])
 app.include_router(jira.router, prefix="/jira", tags=["jira"])
 app.include_router(slack.router, prefix="/slack", tags=["slack"])
 app.include_router(linear.router, prefix="/linear", tags=["linear"])
+app.include_router(notion.router, prefix="/notion", tags=["notion"])
 app.include_router(indexing.router, prefix="/index", tags=["indexing"])
 app.include_router(usage.router, prefix="/usage", tags=["usage"])
 app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
