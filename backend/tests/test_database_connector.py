@@ -162,3 +162,14 @@ def test_connect_endpoint_connection_fails():
         assert "connect" in r.json()["detail"].lower()
     finally:
         app.dependency_overrides.clear()
+
+
+def test_schema_endpoint_not_found():
+    mock_db = _make_mock_db()  # returns None for scalar_one_or_none
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = _client.get(f"/database/{_TENANT_ID}/schema?provider=postgresql")
+        assert r.status_code == 404
+        assert "not found" in r.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()

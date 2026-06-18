@@ -45,12 +45,16 @@ class DatabaseConnector:
                 conn.close()
                 return True
             elif self.provider == "pinecone":
+                import asyncio
+
                 import pinecone
                 parsed = urlparse(self.connection_string)
                 pc = pinecone.Pinecone(api_key=parsed.username or "")
-                pc.list_indexes()
+                await asyncio.to_thread(pc.list_indexes)
                 return True
             elif self.provider == "weaviate":
+                import asyncio
+
                 import weaviate
                 parsed = urlparse(self.connection_string)
                 client = weaviate.connect_to_custom(
@@ -58,10 +62,12 @@ class DatabaseConnector:
                     http_port=parsed.port or 8080,
                     http_secure=False,
                 )
-                ready = client.is_ready()
+                ready = await asyncio.to_thread(client.is_ready)
                 client.close()
                 return bool(ready)
             elif self.provider == "qdrant":
+                import asyncio
+
                 from qdrant_client import QdrantClient
                 parsed = urlparse(self.connection_string)
                 client = QdrantClient(
@@ -69,7 +75,7 @@ class DatabaseConnector:
                     port=parsed.port or 6333,
                     timeout=10,
                 )
-                client.get_collections()
+                await asyncio.to_thread(client.get_collections)
                 return True
         except Exception:
             return False
@@ -182,10 +188,12 @@ class DatabaseConnector:
                 conn.close()
 
         elif self.provider == "pinecone":
+            import asyncio
+
             import pinecone
             parsed = urlparse(self.connection_string)
             pc = pinecone.Pinecone(api_key=parsed.username or "")
-            indexes = pc.list_indexes()
+            indexes = await asyncio.to_thread(pc.list_indexes)
             return [
                 {
                     "index_name": idx.name,
@@ -197,6 +205,8 @@ class DatabaseConnector:
             ]
 
         elif self.provider == "weaviate":
+            import asyncio
+
             import weaviate
             parsed = urlparse(self.connection_string)
             client = weaviate.connect_to_custom(
@@ -205,7 +215,7 @@ class DatabaseConnector:
                 http_secure=False,
             )
             try:
-                collections = client.collections.list_all()
+                collections = await asyncio.to_thread(client.collections.list_all)
                 return [
                     {"index_name": name, "dimensions": None, "vector_count": None, "metric": None}
                     for name in collections
@@ -214,6 +224,8 @@ class DatabaseConnector:
                 client.close()
 
         elif self.provider == "qdrant":
+            import asyncio
+
             from qdrant_client import QdrantClient
             parsed = urlparse(self.connection_string)
             client = QdrantClient(
@@ -221,10 +233,11 @@ class DatabaseConnector:
                 port=parsed.port or 6333,
                 timeout=10,
             )
-            collections = client.get_collections().collections
+            collections_resp = await asyncio.to_thread(client.get_collections)
+            collections = collections_resp.collections
             result = []
             for col in collections:
-                info = client.get_collection(col.name)
+                info = await asyncio.to_thread(client.get_collection, col.name)
                 vectors = info.config.params.vectors
                 result.append({
                     "index_name": col.name,
@@ -237,6 +250,7 @@ class DatabaseConnector:
         return []
 
     async def get_query_logs(self, limit: int = 50) -> list[dict]:
+        limit = max(1, min(int(limit), 500))  # clamp to safe range
         if self.provider == "postgresql":
             import asyncpg
             conn = await asyncpg.connect(self.connection_string, timeout=10.0)
@@ -250,7 +264,7 @@ class DatabaseConnector:
                     {
                         "query": r["query"],
                         "calls": r["calls"],
-                        "total_time": r["total_time"],
+                        "total_time_ms": float(r["total_time"]) if r["total_time"] else None,
                         "last_call": r["last_call"],
                     }
                     for r in rows
@@ -283,7 +297,7 @@ class DatabaseConnector:
                     {
                         "query": r["query"] or "",
                         "calls": r["calls"],
-                        "total_time": float(r["total_time"]) if r["total_time"] else None,
+                        "total_time_ms": float(r["total_time"]) if r["total_time"] else None,
                         "last_call": str(r["last_call"]) if r["last_call"] else None,
                     }
                     for r in rows
