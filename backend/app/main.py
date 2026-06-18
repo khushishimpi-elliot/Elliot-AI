@@ -7,6 +7,7 @@ from app.routers import (
     bitbucket,
     clickup,
     connectors,
+    database,
     github,
     gitlab,
     indexing,
@@ -59,6 +60,7 @@ app.include_router(usage.router, prefix="/usage", tags=["usage"])
 app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
 app.include_router(query.router, prefix="/query", tags=["query"])
 app.include_router(launch.router, prefix="/launch", tags=["launch"])
+app.include_router(database.router, prefix="/database", tags=["database"])
 
 
 @app.get("/health")
