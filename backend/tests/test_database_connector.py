@@ -1,7 +1,11 @@
-from unittest.mock import AsyncMock, patch
+import uuid as _uuid
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 
+from app.db.session import get_db
+from app.main import app
 from app.services.connectors.database import DatabaseConnector
 
 
@@ -90,3 +94,71 @@ async def test_get_query_logs_postgresql():
         logs = await c.get_query_logs()
         assert len(logs) == 1
         assert logs[0]["query"] == "SELECT * FROM users"
+
+
+_client = TestClient(app)
+_TENANT_ID = _uuid.uuid4()
+
+
+def _make_mock_db():
+    db = AsyncMock()
+    db.add = MagicMock()
+    db.commit = AsyncMock()
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    db.execute = AsyncMock(return_value=mock_result)
+    return db
+
+
+def test_connect_endpoint_success():
+    mock_db = _make_mock_db()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        with patch(
+            "app.services.connectors.database.DatabaseConnector.test_connection",
+            new_callable=AsyncMock,
+            return_value=True,
+        ), patch("app.routers.database.encrypt_token", return_value="encrypted"):
+            r = _client.post(
+                f"/database/{_TENANT_ID}/connect",
+                json={"connection_string": "postgresql://user:pass@localhost:5432/db"},
+            )
+        assert r.status_code == 200
+        body = r.json()
+        assert body["status"] == "connected"
+        assert body["provider"] == "postgresql"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_connect_endpoint_invalid_string():
+    mock_db = _make_mock_db()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        r = _client.post(
+            f"/database/{_TENANT_ID}/connect",
+            json={"connection_string": "mongodb://localhost:27017/db"},
+        )
+        assert r.status_code == 400
+        assert "Unsupported" in r.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_connect_endpoint_connection_fails():
+    mock_db = _make_mock_db()
+    app.dependency_overrides[get_db] = lambda: mock_db
+    try:
+        with patch(
+            "app.services.connectors.database.DatabaseConnector.test_connection",
+            new_callable=AsyncMock,
+            return_value=False,
+        ):
+            r = _client.post(
+                f"/database/{_TENANT_ID}/connect",
+                json={"connection_string": "postgresql://user:wrong@localhost:5432/db"},
+            )
+        assert r.status_code == 400
+        assert "connect" in r.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
