@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     clickup_client_id: str = ""
     clickup_client_secret: str = ""
 
+    # ── Notion ───────────────────────────────────────
+    notion_client_id: str = ""
+    notion_client_secret: str = ""
+
     # ── AI APIs ──────────────────────────────────────
     openai_api_key: str = ""
     anthropic_api_key: str = ""
