@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { ELLIOT } from "./data";
 
-export default function Terminal() {
+interface TerminalProps {
+  onReset?: () => void;
+}
+
+export default function Terminal({ onReset }: TerminalProps) {
   const [input, setInput] = useState("");
   const [running, setRunning] = useState(false);
 
@@ -39,6 +43,19 @@ export default function Terminal() {
           <span>elliot-engineer-v2</span>
           <span>·</span>
           <span>staging</span>
+          {onReset && (
+            <>
+              <span>·</span>
+              <button
+                onClick={onReset}
+                style={{ color: "var(--text-muted)", cursor: "pointer", background: "transparent", border: "none", fontSize: "11px", textDecoration: "underline", fontFamily: "var(--font-sans)" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "var(--accent-blue)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)")}
+              >
+                Reset (dev)
+              </button>
+            </>
+          )}
         </div>
       </div>
 
