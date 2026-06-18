@@ -4,212 +4,144 @@ interface Step1Props {
   onContinue: () => void;
 }
 
-interface OAuthModal {
-  provider: "okta" | "entra" | "google" | null;
-  authorized: boolean;
-}
-
 export default function Step1SignIn({ onContinue }: Step1Props) {
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [authMethod, setAuthMethod] = useState<"oauth" | "email" | null>(null);
-  const [oauthModal, setOAuthModal] = useState<OAuthModal>({ provider: null, authorized: false });
 
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!value) {
-      return "Email is required";
-    }
-    if (!emailRegex.test(value)) {
-      return "Please enter a valid email address";
-    }
-    return "";
-  };
-
-  const handleOAuthClick = (provider: "okta" | "entra" | "google") => {
-    setAuthMethod("oauth");
-    setOAuthModal({ provider, authorized: false });
-  };
-
-  const handleAuthorizeOAuth = () => {
-    setOAuthModal((prev) => ({ ...prev, authorized: true }));
-    setTimeout(() => {
-      onContinue();
-    }, 500);
-  };
-
-  const handleMagicLinkClick = () => {
-    const error = validateEmail(email);
-    if (error) {
-      setEmailError(error);
-      return;
-    }
-    setAuthMethod("email");
-    setTimeout(() => {
-      onContinue();
-    }, 500);
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    if (emailError) {
-      setEmailError("");
-    }
-  };
-
-  const getProviderInfo = (provider: "okta" | "entra" | "google") => {
-    const info = {
-      okta: {
-        name: "Okta",
-        scopes: ["read:user_profile", "read:groups", "read:org_config"],
-      },
-      entra: {
-        name: "Microsoft Entra",
-        scopes: ["User.Read", "Directory.Read.All", "GroupMember.Read.All"],
-      },
-      google: {
-        name: "Google Workspace",
-        scopes: ["openid", "email", "profile", "admin.directory.group.readonly"],
-      },
-    };
-    return info[provider];
+  const handleContinue = () => {
+    setTimeout(() => onContinue(), 300);
   };
 
   return (
-    <div className="step-content">
-      <div className="step-header">
-        <div className="step-label">IDENTITY · STEP 1 OF 6</div>
-        <h1>Sign in to Elliot-AI</h1>
-        <p className="step-description">
-          Authenticate with your organization's identity provider. Elliot inherits your SSO
-          groups and least-privilege roles.
+    <div>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-blue)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+          IDENTITY · STEP 1 OF 6
+        </div>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+          Sign in to Elliot-AI
+        </h1>
+        <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
+          Authenticate with your organization's identity provider. Elliot inherits your SSO groups and least-privilege roles.
         </p>
       </div>
 
-      <div className="step-body">
-        <div className="auth-options">
+      {/* SSO Buttons */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px", maxWidth: "480px" }}>
+        {[
+          { icon: "O", name: "Continue with Okta", proto: "SAML / SCIM" },
+          { icon: "E", name: "Continue with Microsoft Entra", proto: "Azure AD" },
+          { icon: "G", name: "Continue with Google Workspace", proto: "OIDC" },
+        ].map((btn) => (
           <button
-            className="auth-card"
-            onClick={() => handleOAuthClick("okta")}
-            disabled={authMethod !== null && authMethod !== "oauth"}
+            key={btn.icon}
+            onClick={handleContinue}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "11px 14px",
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              borderRadius: "5px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-sans)",
+              minHeight: "48px",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-blue)";
+              (e.currentTarget as HTMLButtonElement).style.background = "#1e2235";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--surface-2)";
+            }}
           >
-            <span className="auth-icon">O</span>
-            <div className="auth-text">
-              <div className="auth-name">Continue with Okta</div>
-              <div className="auth-subtitle">SAML / SCIM</div>
+            <span style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", background: "#2a2d3a", borderRadius: "6px", fontSize: "12px", fontWeight: "700", color: "white", fontFamily: "var(--font-mono)" }}>
+              {btn.icon}
+            </span>
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontSize: "14px", fontWeight: "500", color: "var(--text-primary)" }}>{btn.name}</div>
+              <div style={{ fontSize: "12px", fontWeight: "400", color: "var(--text-muted)", marginTop: "2px" }}>{btn.proto}</div>
             </div>
-            <span className="auth-arrow">→</span>
+            <span style={{ color: "var(--text-muted)" }}>→</span>
           </button>
-
-          <button
-            className="auth-card"
-            onClick={() => handleOAuthClick("entra")}
-            disabled={authMethod !== null && authMethod !== "oauth"}
-          >
-            <span className="auth-icon">E</span>
-            <div className="auth-text">
-              <div className="auth-name">Continue with Microsoft Entra</div>
-              <div className="auth-subtitle">Azure AD</div>
-            </div>
-            <span className="auth-arrow">→</span>
-          </button>
-
-          <button
-            className="auth-card"
-            onClick={() => handleOAuthClick("google")}
-            disabled={authMethod !== null && authMethod !== "oauth"}
-          >
-            <span className="auth-icon">G</span>
-            <div className="auth-text">
-              <div className="auth-name">Continue with Google Workspace</div>
-              <div className="auth-subtitle">OIDC</div>
-            </div>
-            <span className="auth-arrow">→</span>
-          </button>
-        </div>
-
-        <div className="auth-divider">
-          <span>or with email</span>
-        </div>
-
-        <div className="email-input-group">
-          <input
-            type="email"
-            value={email}
-            onChange={handleEmailChange}
-            placeholder="you@core-payments.com"
-            className={`email-input ${emailError ? "error" : ""}`}
-            disabled={authMethod !== null && authMethod !== "email"}
-          />
-          {emailError && <div className="input-error">{emailError}</div>}
-        </div>
-
-        <button
-          onClick={handleMagicLinkClick}
-          className="btn btn-outline btn-full"
-          disabled={authMethod === "oauth"}
-        >
-          Send magic link
-        </button>
+        ))}
       </div>
 
-      {oauthModal.provider && (
-        <div className="oauth-modal-overlay" onClick={() => setOAuthModal({ provider: null, authorized: false })}>
-          <div className="oauth-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="oauth-modal-close"
-              onClick={() => setOAuthModal({ provider: null, authorized: false })}
-            >
-              ×
-            </button>
+      {/* Divider */}
+      <div style={{ position: "relative", margin: "20px 0", maxWidth: "480px" }}>
+        <div style={{ height: "1px", background: "var(--border)" }} />
+        <span style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", background: "var(--bg)", padding: "0 8px", fontSize: "12px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
+          or with email
+        </span>
+      </div>
 
-            {!oauthModal.authorized ? (
-              <>
-                <div className="oauth-label">OAUTH 2.0 · secure handshake</div>
-                <div className="oauth-header">
-                  <span className="oauth-icon">E</span>
-                  <span className="oauth-divider">↔</span>
-                  <span className="oauth-icon">⚙</span>
-                </div>
+      {/* Email Input */}
+      <div style={{ maxWidth: "480px", marginBottom: "12px" }}>
+        <label style={{ display: "block", fontSize: "11px", fontWeight: "500", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-secondary)", marginBottom: "6px", fontFamily: "var(--font-sans)" }}>
+          Work Email
+        </label>
+        <input
+          type="email"
+          placeholder="you@core-payments.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{
+            width: "100%",
+            height: "40px",
+            padding: "0 12px",
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            borderRadius: "5px",
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-sans)",
+            fontSize: "14px",
+            fontWeight: "400",
+            outline: "none",
+            transition: "border-color 0.15s ease",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = "var(--accent-blue)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = "var(--border)";
+          }}
+        />
+      </div>
 
-                <h2>Authorize Elliot-AI for {getProviderInfo(oauthModal.provider).name}</h2>
-                <p>Elliot-AI is requesting the following scopes:</p>
-
-                <div className="oauth-scopes">
-                  {getProviderInfo(oauthModal.provider).scopes.map((scope) => (
-                    <div key={scope} className="oauth-scope">
-                      {scope}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="oauth-actions">
-                  <button className="btn btn-primary" onClick={handleAuthorizeOAuth}>
-                    Authorize
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setOAuthModal({ provider: null, authorized: false })}
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <p className="oauth-footer">
-                  <span className="oauth-footer-dot" />
-                  Read-only by default · revocable anytime · no source code leaves your tenancy
-                </p>
-              </>
-            ) : (
-              <div className="oauth-success">
-                <div className="oauth-checkmark">✓</div>
-                <h2>{getProviderInfo(oauthModal.provider).name} Connected</h2>
-                <p>Authorization successful. Proceeding to next step...</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Send Magic Link Button */}
+      <button
+        onClick={handleContinue}
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+          height: "40px",
+          background: "transparent",
+          color: "var(--text-secondary)",
+          border: "1px solid var(--border)",
+          borderRadius: "5px",
+          fontSize: "14px",
+          fontWeight: "600",
+          cursor: "pointer",
+          fontFamily: "var(--font-sans)",
+          transition: "all 0.15s ease",
+          marginBottom: "20px",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-blue)";
+          (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+          (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+        }}
+      >
+        Send magic link
+      </button>
     </div>
   );
 }
