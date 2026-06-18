@@ -1,9 +1,18 @@
 import { useState } from "react";
+import LandingPage from "./LandingPage";
 import Onboarding from "./Onboarding";
 import Terminal from "./Terminal";
 
-export default function App() {
-  const [isOnboarded, setIsOnboarded] = useState(false);
+type Screen = "landing" | "onboarding" | "terminal";
 
-  return isOnboarded ? <Terminal /> : <Onboarding onComplete={() => setIsOnboarded(true)} />;
+export default function App() {
+  const [screen, setScreen] = useState<Screen>("landing");
+
+  return (
+    <>
+      {screen === "landing" && <LandingPage onSignIn={() => setScreen("onboarding")} />}
+      {screen === "onboarding" && <Onboarding onComplete={() => setScreen("terminal")} />}
+      {screen === "terminal" && <Terminal />}
+    </>
+  );
 }
