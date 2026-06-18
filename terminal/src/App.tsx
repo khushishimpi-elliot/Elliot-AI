@@ -4,11 +4,9 @@ import Onboarding from "./Onboarding";
 import Terminal from "./Terminal";
 
 type Screen = "landing" | "onboarding" | "terminal";
-type AuthMode = "signin" | "signup";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [authMode, setAuthMode] = useState<AuthMode>("signin");
 
   useEffect(() => {
     if (localStorage.getItem("elliot_onboarded") === "true") {
@@ -31,14 +29,7 @@ export default function App() {
 
   return (
     <>
-      {screen === "landing" && (
-        <LandingPage
-          authMode={authMode}
-          setAuthMode={setAuthMode}
-          onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
-        />
-      )}
+      {screen === "landing" && <LandingPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
       {screen === "onboarding" && <Onboarding onComplete={handleOnboardingComplete} />}
       {screen === "terminal" && (
         <Terminal onReset={() => { localStorage.removeItem("elliot_onboarded"); setScreen("landing"); }} />
