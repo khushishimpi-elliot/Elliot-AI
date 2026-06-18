@@ -68,6 +68,15 @@ CONNECTOR_REGISTRY = {
         scopes=["read"],
         redirect_uri=f"{BASE_URL}/connectors/callback/clickup",
     ),
+    "notion": OAuthConfig(
+        provider_name="notion",
+        client_id=os.getenv("NOTION_CLIENT_ID", ""),
+        client_secret=os.getenv("NOTION_CLIENT_SECRET", ""),
+        authorization_url="https://api.notion.com/v1/oauth/authorize",
+        token_url="https://api.notion.com/v1/oauth/token",
+        scopes=["read_content", "read_user"],
+        redirect_uri=f"{BASE_URL}/connectors/callback/notion",
+    ),
 }
 
 
