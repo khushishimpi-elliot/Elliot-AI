@@ -13,7 +13,6 @@ const SOURCES: SourceConfig[] = [
   { id: "github", icon: "GH", name: "GitHub", description: "Read repos, open pull requests", category: "repositories" },
   { id: "gitlab", icon: "GL", name: "GitLab", description: "Read repos, open merge requests", category: "repositories" },
   { id: "bitbucket", icon: "BB", name: "Bitbucket", description: "Read repos, open pull requests", category: "repositories" },
-  { id: "azure", icon: "AZ", name: "Azure Repos", description: "Read repos, open pull requests", category: "repositories" },
   { id: "jira", icon: "JR", name: "Jira", description: "Read issues and sprints", category: "tickets" },
   { id: "linear", icon: "LN", name: "Linear", description: "Read issues and cycles", category: "tickets" },
   { id: "clickup", icon: "CU", name: "ClickUp", description: "Read tasks and spaces", category: "tickets" },
