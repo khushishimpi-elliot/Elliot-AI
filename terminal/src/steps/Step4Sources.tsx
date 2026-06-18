@@ -1,219 +1,262 @@
 import { useState } from "react";
+import OAuthModal from "../components/OAuthModal";
+
+interface SourceConfig {
+  id: string;
+  icon: string;
+  name: string;
+  description: string;
+  category: "repositories" | "tickets" | "docs" | "databases" | "communication";
+}
+
+const SOURCES: SourceConfig[] = [
+  { id: "github", icon: "GH", name: "GitHub", description: "Read repos, open pull requests", category: "repositories" },
+  { id: "gitlab", icon: "GL", name: "GitLab", description: "Read repos, open merge requests", category: "repositories" },
+  { id: "bitbucket", icon: "BB", name: "Bitbucket", description: "Read repos, open pull requests", category: "repositories" },
+  { id: "azure", icon: "AZ", name: "Azure Repos", description: "Read repos, open pull requests", category: "repositories" },
+  { id: "jira", icon: "JR", name: "Jira", description: "Read issues and sprints", category: "tickets" },
+  { id: "linear", icon: "LN", name: "Linear", description: "Read issues and cycles", category: "tickets" },
+  { id: "azboards", icon: "AB", name: "Azure Boards", description: "Read issues and sprints", category: "tickets" },
+  { id: "confluence", icon: "CF", name: "Confluence", description: "Read pages and spaces", category: "docs" },
+  { id: "notion", icon: "ND", name: "Notion", description: "Read databases and pages", category: "docs" },
+  { id: "sharepoint", icon: "SP", name: "SharePoint", description: "Read files and pages", category: "docs" },
+  { id: "gdrive", icon: "GD", name: "Google Drive", description: "Read files and folders", category: "docs" },
+  { id: "postgres", icon: "PG", name: "PostgreSQL", description: "Read schema and data", category: "databases" },
+  { id: "mysql", icon: "MY", name: "MySQL", description: "Read schema and data", category: "databases" },
+  { id: "vectordb", icon: "VX", name: "Vector DB", description: "Read vectors and metadata", category: "databases" },
+  { id: "slack", icon: "SL", name: "Slack", description: "Read channels and messages", category: "communication" },
+  { id: "teams", icon: "MT", name: "Microsoft Teams", description: "Read chats and messages", category: "communication" },
+];
+
+const SCOPE_MAP: Record<string, string[]> = {
+  repositories: ["read_repository", "write_repository", "read_api"],
+  tickets: ["read:issues", "read:sprints", "read:projects"],
+  docs: ["read:pages", "read:spaces", "read:databases"],
+  databases: ["SELECT", "SHOW TABLES", "DESCRIBE"],
+  communication: ["channels:read", "messages:read", "files:read"],
+};
+
+const SECTIONS = [
+  { id: "repositories", label: "Repositories", required: true, description: "Source code Elliot reads, reviews, and writes against." },
+  { id: "tickets", label: "Issue & ticket tracking", required: true, description: "Sprints, tickets and acceptance criteria for context." },
+  { id: "docs", label: "Knowledge & documentation", required: false, description: "Wikis, specs and decisions ingested into the knowledge base." },
+  { id: "databases", label: "Databases & schema", required: false, description: "Schema-aware context for queries and migrations." },
+  { id: "communication", label: "Team communication", required: false, description: "Optional — surface decisions made in chat." },
+];
 
 interface Step4Props {
   onContinue: () => void;
   onBack?: () => void;
 }
 
-interface Provider {
-  name: string;
-  description: string;
-  status: "not-connected" | "connected";
-  category: string;
-}
+export default function Step4Sources({ onContinue }: Step4Props) {
+  const [connectedSources, setConnectedSources] = useState<Set<string>>(new Set());
+  const [modalSource, setModalSource] = useState<SourceConfig | null>(null);
 
-const providers: Record<string, Provider[]> = {
-  repositories: [
-    {
-      name: "GitHub",
-      description: "Read repos, open pull requests",
-      status: "not-connected",
-      category: "repositories",
-    },
-    {
-      name: "GitLab",
-      description: "Read repos, open merge requests",
-      status: "not-connected",
-      category: "repositories",
-    },
-  ],
-  ticketing: [
-    {
-      name: "Jira",
-      description: "Read issues and sprints",
-      status: "not-connected",
-      category: "ticketing",
-    },
-    {
-      name: "Linear",
-      description: "Read issues and cycles",
-      status: "not-connected",
-      category: "ticketing",
-    },
-  ],
-  docs: [
-    {
-      name: "Confluence",
-      description: "Read pages and spaces",
-      status: "not-connected",
-      category: "docs",
-    },
-    {
-      name: "Notion",
-      description: "Read databases and pages",
-      status: "not-connected",
-      category: "docs",
-    },
-  ],
-};
-
-export default function Step4Sources({ onContinue, onBack }: Step4Props) {
-  const [connectedSources, setConnectedSources] = useState<string[]>([]);
-  const [authorizing, setAuthorizing] = useState<string | null>(null);
-
-  const handleConnect = (providerName: string) => {
-    setAuthorizing(providerName);
+  const handleConnect = (source: SourceConfig) => {
+    setModalSource(source);
   };
 
-  const handleAuthorize = (providerName: string) => {
-    setConnectedSources([...connectedSources, providerName]);
-    setAuthorizing(null);
+  const handleAuthorize = () => {
+    if (modalSource) {
+      setConnectedSources((prev) => new Set(prev).add(modalSource.id));
+      setModalSource(null);
+    }
   };
 
-  const canContinue = connectedSources.length > 0;
+  const handleCancel = () => {
+    setModalSource(null);
+  };
+
+  const requiredSources = SOURCES.filter((s) => SECTIONS.find((sec) => sec.id === s.category)?.required);
+  const connectedRequired = requiredSources.filter((s) => connectedSources.has(s.id)).length;
+  const canContinue = connectedRequired === requiredSources.length;
 
   return (
-    <div className="step-content">
-      <div className="step-header">
-        <button className="step-back" onClick={onBack}>←</button>
-        <div className="step-label">CONNECT SOURCES · STEP 4 OF 6</div>
-        <h1>Connect & authorize your sources</h1>
-        <p className="step-description">
-          Link the systems Elliot draws context from. OAuth is read-only by default and scoped per
-          provider — review each grant before approving.
+    <div>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-blue)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+          INTEGRATIONS · STEP 4 OF 6
+        </div>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+          Connect & authorize your sources
+        </h1>
+        <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
+          Link the systems Elliot draws context from. OAuth is read-only by default and scoped per provider — review each grant before approving.
         </p>
       </div>
 
-      <div className="step-body">
-        <div className="sources-section">
-          <div className="section-header">
-            <h3>Repositories</h3>
-            <span className="badge badge-required">required</span>
-          </div>
-          <p className="section-description">Source code Elliot reads, reviews, and writes against.</p>
-          <div className="providers-grid">
-            {providers.repositories.map((provider) => (
-              <div key={provider.name} className="provider-card">
-                <div className="provider-icon">{provider.name.charAt(0)}</div>
-                <div className="provider-info">
-                  <div className="provider-name">{provider.name}</div>
-                  <div className="provider-desc">{provider.description}</div>
-                </div>
-                {connectedSources.includes(provider.name) ? (
-                  <div className="provider-status connected">✓ Linked</div>
-                ) : (
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => handleConnect(provider.name)}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* Sections */}
+      {SECTIONS.map((section) => {
+        const sectionSources = SOURCES.filter((s) => s.category === section.id);
+        return (
+          <div key={section.id} style={{ marginBottom: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+              <h3 style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
+                {section.label}
+              </h3>
+              <span
+                style={{
+                  background: section.required ? "rgba(245,158,11,0.15)" : "rgba(139,143,168,0.1)",
+                  border: `1px solid ${section.required ? "var(--amber)" : "var(--border)"}`,
+                  color: section.required ? "var(--amber)" : "var(--text-muted)",
+                  fontSize: "11px",
+                  fontWeight: "500",
+                  padding: "2px 8px",
+                  borderRadius: "3px",
+                  fontFamily: "var(--font-sans)",
+                  textTransform: "uppercase",
+                }}
+              >
+                {section.required ? "required" : "optional"}
+              </span>
+            </div>
+            <p style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+              {section.description}
+            </p>
 
-        <div className="sources-section">
-          <div className="section-header">
-            <h3>Issue & Ticket Tracking</h3>
-            <span className="badge badge-required">required</span>
-          </div>
-          <p className="section-description">Sprints, tickets and acceptance criteria for context.</p>
-          <div className="providers-grid">
-            {providers.ticketing.map((provider) => (
-              <div key={provider.name} className="provider-card">
-                <div className="provider-icon">{provider.name.charAt(0)}</div>
-                <div className="provider-info">
-                  <div className="provider-name">{provider.name}</div>
-                  <div className="provider-desc">{provider.description}</div>
-                </div>
-                {connectedSources.includes(provider.name) ? (
-                  <div className="provider-status connected">✓ Linked</div>
-                ) : (
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => handleConnect(provider.name)}
+            {/* Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px", marginBottom: "20px" }}>
+              {sectionSources.map((source) => {
+                const isConnected = connectedSources.has(source.id);
+                return (
+                  <div
+                    key={source.id}
+                    style={{
+                      background: "var(--surface)",
+                      border: isConnected ? "1px solid rgba(79,255,176,0.3)" : "1px solid var(--border)",
+                      borderRadius: "5px",
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      minHeight: "56px",
+                      transition: "all 0.15s ease",
+                    }}
                   >
-                    Connect
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                    {/* Badge */}
+                    <div
+                      style={{
+                        width: "34px",
+                        height: "34px",
+                        background: isConnected ? "rgba(79,255,176,0.1)" : "#1a1d27",
+                        border: `1px solid ${isConnected ? "rgba(79,255,176,0.3)" : "var(--border)"}`,
+                        borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        color: "white",
+                        fontFamily: "var(--font-mono)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {source.icon}
+                    </div>
 
-        <div className="sources-section">
-          <div className="section-header">
-            <h3>Documentation</h3>
-            <span className="badge badge-optional">optional</span>
-          </div>
-          <p className="section-description">Wikis and specs ingested into the knowledge base.</p>
-          <div className="providers-grid">
-            {providers.docs.map((provider) => (
-              <div key={provider.name} className="provider-card">
-                <div className="provider-icon">{provider.name.charAt(0)}</div>
-                <div className="provider-info">
-                  <div className="provider-name">{provider.name}</div>
-                  <div className="provider-desc">{provider.description}</div>
-                </div>
-                {connectedSources.includes(provider.name) ? (
-                  <div className="provider-status connected">✓ Linked</div>
-                ) : (
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => handleConnect(provider.name)}
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                    {/* Label & Status */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "13px", fontWeight: "500", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
+                        {source.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "400",
+                          color: isConnected ? "var(--accent-green)" : "var(--text-muted)",
+                          marginTop: "2px",
+                          fontFamily: "var(--font-sans)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        {isConnected && <span style={{ fontSize: "6px", color: "var(--accent-green)" }}>●</span>}
+                        {isConnected ? "connected" : "Not connected"}
+                      </div>
+                    </div>
 
+                    {/* Button */}
+                    <button
+                      onClick={() => handleConnect(source)}
+                      disabled={isConnected}
+                      style={{
+                        background: isConnected ? "transparent" : "#1a1d27",
+                        color: isConnected ? "var(--accent-green)" : "var(--text-secondary)",
+                        border: `1px solid ${isConnected ? "transparent" : "var(--border)"}`,
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        padding: "5px 12px",
+                        cursor: isConnected ? "default" : "pointer",
+                        fontFamily: "var(--font-sans)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isConnected) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-blue)";
+                          (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isConnected) {
+                          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+                          (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
+                        }
+                      }}
+                    >
+                      {isConnected ? "✓ Linked" : "Connect"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Bottom Bar */}
+      <div style={{ position: "sticky", bottom: 0, background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "12px 0", display: "flex", alignItems: "center", gap: "16px", marginTop: "20px" }}>
         <button
           onClick={onContinue}
-          className="btn btn-primary"
           disabled={!canContinue}
+          style={{
+            background: canContinue ? "var(--accent-blue)" : "#1a1d27",
+            color: canContinue ? "white" : "var(--text-muted)",
+            border: "none",
+            borderRadius: "5px",
+            fontSize: "14px",
+            fontWeight: "600",
+            padding: "10px 20px",
+            cursor: canContinue ? "pointer" : "not-allowed",
+            fontFamily: "var(--font-sans)",
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            if (canContinue) (e.currentTarget as HTMLButtonElement).style.opacity = "0.9";
+          }}
+          onMouseLeave={(e) => {
+            if (canContinue) (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+          }}
         >
-          Continue ({connectedSources.length} sources linked) →
+          Connect required sources to continue
         </button>
+        <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+          {connectedSources.size} sources linked
+        </span>
       </div>
 
-      {authorizing && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <span className="modal-label">OAUTH 2.0 · secure handshake</span>
-            </div>
-            <h2>Authorize Elliot-AI for {authorizing}</h2>
-            <p>Elliot-AI is requesting the following scopes on repositories:</p>
-            <ul className="scopes-list">
-              <li>› read_repository</li>
-              <li>› write_repository</li>
-              <li>› read_api</li>
-            </ul>
-            <div className="modal-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => handleAuthorize(authorizing)}
-              >
-                Authorize
-              </button>
-              <button
-                className="btn btn-outline"
-                onClick={() => setAuthorizing(null)}
-              >
-                Cancel
-              </button>
-            </div>
-            <p className="modal-footer">
-              Read-only by default · revocable anytime · no source code leaves your tenancy
-            </p>
-          </div>
-        </div>
-      )}
+      {/* OAuth Modal */}
+      <OAuthModal
+        isOpen={modalSource !== null}
+        serviceName={modalSource?.name || ""}
+        serviceIcon={modalSource?.icon || ""}
+        category={modalSource?.category || "repositories"}
+        scopes={modalSource ? SCOPE_MAP[modalSource.category] : []}
+        onAuthorize={handleAuthorize}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
