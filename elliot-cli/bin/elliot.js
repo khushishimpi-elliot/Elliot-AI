@@ -1,3 +1,6 @@
 #!/usr/bin/env node
 
-require("../dist/index.js");
+import('../dist/index.js').catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

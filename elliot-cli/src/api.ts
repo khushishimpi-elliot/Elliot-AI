@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { ElliotConfig } from "./config";
+import { ElliotConfig } from "./config.js";
 
 export async function checkBackendHealth(
   backendUrl: string
@@ -12,9 +12,14 @@ export async function checkBackendHealth(
   }
 }
 
+export interface ConnectorInfo {
+  provider: string;
+  status: "connected" | "not_connected";
+}
+
 export async function getConnectorStatus(
   config: ElliotConfig
-): Promise<Record<string, boolean>> {
+): Promise<ConnectorInfo[]> {
   try {
     const response = await fetch(
       `${config.backend_url}/connectors/${config.tenant_id}`,
@@ -26,22 +31,53 @@ export async function getConnectorStatus(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      return [];
     }
 
     const data = (await response.json()) as {
       connectors?: Record<string, { connected: boolean }>;
     };
-    const connectors: Record<string, boolean> = {};
+    const connectors: ConnectorInfo[] = [];
 
     if (data.connectors) {
       for (const [name, info] of Object.entries(data.connectors)) {
-        connectors[name] = info.connected;
+        connectors.push({
+          provider: name,
+          status: info.connected ? "connected" : "not_connected",
+        });
       }
     }
 
     return connectors;
   } catch {
-    return {};
+    return [];
+  }
+}
+
+export interface IndexStats {
+  total_chunks: number;
+}
+
+export async function getIndexStats(
+  config: ElliotConfig
+): Promise<IndexStats> {
+  try {
+    const response = await fetch(
+      `${config.backend_url}/index/${config.tenant_id}/stats`,
+      {
+        headers: {
+          Authorization: `Bearer ${config.jwt_token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return { total_chunks: 0 };
+    }
+
+    const data = (await response.json()) as IndexStats;
+    return data;
+  } catch {
+    return { total_chunks: 0 };
   }
 }

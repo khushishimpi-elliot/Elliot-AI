@@ -1,11 +1,13 @@
 import fetch from "node-fetch";
-import EventSource = require("eventsource");
-import { ElliotConfig } from "./config";
-import { printSources } from "./display";
+import EventSource from "eventsource";
+import { ElliotConfig } from "./config.js";
 
 export async function streamQuery(
   query: string,
-  config: ElliotConfig
+  config: ElliotConfig,
+  onToken: (token: string) => void,
+  onDone: (sources: Record<string, number>) => void,
+  onError: (error: string) => void
 ): Promise<void> {
   const url = `${config.backend_url}/query/stream`;
   const headers = {
@@ -39,23 +41,21 @@ export async function streamQuery(
     } as any);
 
     let sourcesUsed: Record<string, number> = {};
-    let isFirstToken = true;
 
     eventSource.addEventListener("message", (event: any) => {
       try {
         const data = JSON.parse(event.data);
 
         if (data.token) {
-          process.stdout.write(data.token);
-          isFirstToken = false;
+          onToken(data.token);
         }
 
         if (data.done) {
-          process.stdout.write("\n");
           if (data.sources_used) {
             sourcesUsed = data.sources_used;
           }
           eventSource.close();
+          onDone(sourcesUsed);
         }
       } catch (error) {
         eventSource.close();
@@ -63,27 +63,14 @@ export async function streamQuery(
     });
 
     eventSource.addEventListener("error", (event: any) => {
-      const error = event.error || event;
-      if (error.status !== undefined) {
-        console.error(`Error: Backend responded with ${error.status}`);
-      } else {
-        console.error("Error: Connection lost");
-      }
       eventSource.close();
-    });
-
-    await new Promise<void>((resolve) => {
-      eventSource.addEventListener("done", () => {
-        printSources(sourcesUsed);
-        resolve();
-      });
+      onError("Connection lost or backend error");
     });
   } catch (error) {
     if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
+      onError(error.message);
     } else {
-      console.error("Error: Failed to connect to backend");
+      onError("Failed to connect to backend");
     }
-    throw error;
   }
 }

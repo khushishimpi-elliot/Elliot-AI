@@ -1,5 +1,5 @@
 import * as http from "http";
-import { ElliotConfig } from "./config";
+import { ElliotConfig } from "./config.js";
 
 export function startCallbackServer(): Promise<ElliotConfig> {
   return new Promise((resolve, reject) => {

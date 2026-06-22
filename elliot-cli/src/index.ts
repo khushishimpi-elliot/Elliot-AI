@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { initCommand } from "./commands/init";
-import { askCommand } from "./commands/ask";
-import { statusCommand } from "./commands/status";
-import { logoutCommand } from "./commands/logout";
+import { initCommand } from "./commands/init.js";
+import { askCommand } from "./commands/ask.js";
+import { statusCommand } from "./commands/status.js";
+import { logoutCommand } from "./commands/logout.js";
 
 const program = new Command();
 
@@ -19,8 +19,8 @@ program
   .action(initCommand);
 
 program
-  .command("ask <question>")
-  .description("Ask Elliot a question about your codebase")
+  .command("ask", { isDefault: true })
+  .description("Start interactive Elliot-AI terminal")
   .action(askCommand);
 
 program

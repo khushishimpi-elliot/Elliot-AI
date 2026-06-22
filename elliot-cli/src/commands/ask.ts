@@ -1,8 +1,11 @@
-import { isConfigured, readConfig } from "../config";
-import { printQuery, printThinking, printError, printInfo } from "../display";
-import { streamQuery } from "../stream";
+import React from "react";
+import { render } from "ink";
+import { isConfigured, readConfig } from "../config.js";
+import { printError, printInfo } from "../display.js";
+import { checkBackendHealth, getConnectorStatus, getIndexStats } from "../api.js";
+import App from "../ui/App.js";
 
-export async function askCommand(question: string): Promise<void> {
+export async function askCommand(): Promise<void> {
   try {
     if (!isConfigured()) {
       printError("Not configured. Run 'elliot init' first");
@@ -15,21 +18,25 @@ export async function askCommand(question: string): Promise<void> {
       process.exit(1);
     }
 
-    printQuery(question);
-    const spinner = printThinking();
+    printInfo("Connecting to Elliot-AI...");
 
-    try {
-      await streamQuery(question, config);
-      spinner.stop();
-    } catch {
-      spinner.stop();
-      throw new Error("Failed to stream response");
-    }
+    const backendHealthy = await checkBackendHealth(config.backend_url);
+    const connectors = await getConnectorStatus(config);
+    const stats = await getIndexStats(config);
+
+    render(
+      React.createElement(App, {
+        config,
+        connectors,
+        chunkCount: stats.total_chunks,
+        backendHealthy,
+      })
+    );
   } catch (error) {
     if (error instanceof Error) {
       printError(error.message);
     } else {
-      printError("Ask failed");
+      printError("Failed to start TUI");
     }
     process.exit(1);
   }

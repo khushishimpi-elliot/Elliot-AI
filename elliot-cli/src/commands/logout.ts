@@ -1,6 +1,6 @@
 import * as readline from "readline";
-import { isConfigured, readConfig, clearConfig } from "../config";
-import { printError, printSuccess, printInfo } from "../display";
+import { isConfigured, readConfig, clearConfig } from "../config.js";
+import { printError, printSuccess, printInfo } from "../display.js";
 
 function askQuestion(query: string): Promise<string> {
   const rl = readline.createInterface({
