@@ -55,10 +55,10 @@ try {
     execSync('npm install --save-dev pkg', { stdio: 'inherit' });
   }
 
-  // Build for each platform
+  // Build for each platform with ESM support
   for (const platform of platforms) {
     console.log(`\n🏗️  Building for ${platform.name}...`);
-    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output}`;
+    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output} --compress Brotli`;
     execSync(cmd, { stdio: 'inherit' });
     console.log(`✅ Built: ${platform.output}`);
   }
