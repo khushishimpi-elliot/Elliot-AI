@@ -29,6 +29,12 @@ export async function streamQuery(
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authentication failed. Run 'elliot-ai init' to reconfigure.");
+      }
+      if (response.status === 404) {
+        throw new Error("Backend endpoint not found. Check your backend configuration.");
+      }
       throw new Error(
         `Backend error: ${response.status} ${response.statusText}`
       );

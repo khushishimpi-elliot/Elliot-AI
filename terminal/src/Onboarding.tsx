@@ -59,7 +59,7 @@ export default function Onboarding({ onComplete = () => {} }: OnboardingProps) {
       case 5:
         return <Step5IndexKnowledge onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 6:
-        return <Step6Launch onComplete={onComplete} config={config} />;
+        return <Step6Launch config={config} />;
       default:
         return null;
     }

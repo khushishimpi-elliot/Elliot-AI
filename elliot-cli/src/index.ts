@@ -9,7 +9,7 @@ import { logoutCommand } from "./commands/logout.js";
 const program = new Command();
 
 program
-  .name("elliot")
+  .name("elliot-ai")
   .description("AI coding assistant for engineering teams")
   .version("1.0.0");
 

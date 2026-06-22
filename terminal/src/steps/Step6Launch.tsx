@@ -10,11 +10,10 @@ interface OnboardingConfig {
 }
 
 interface Step6Props {
-  onComplete?: () => void;
   config?: OnboardingConfig;
 }
 
-export default function Step6Launch({ onComplete = () => {}, config = {} }: Step6Props) {
+export default function Step6Launch({ config = {} }: Step6Props) {
   const [cliMode, setCliMode] = useState(false);
   const [cliCallback, setCliCallback] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
@@ -53,10 +52,8 @@ export default function Step6Launch({ onComplete = () => {}, config = {} }: Step
         setIsComplete(true);
       } catch (error) {
         console.error("Failed to notify CLI:", error);
-        setTimeout(() => onComplete(), 300);
+        setIsComplete(true);
       }
-    } else {
-      setTimeout(() => onComplete(), 300);
     }
   };
 
@@ -120,31 +117,45 @@ export default function Step6Launch({ onComplete = () => {}, config = {} }: Step
         ))}
       </div>
 
-      {/* Launch Button */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-        <button
-          onClick={handleLaunch}
-          style={{
-            background: "var(--accent-green)",
-            color: "black",
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "15px",
-            fontWeight: "700",
-            padding: "11px 24px",
-            cursor: "pointer",
-            fontFamily: "var(--font-mono)",
-            transition: "all 0.15s ease",
-          }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-        >
-          {cliMode ? "$ Configure CLI →" : "$ Launch Elliot terminal →"}
-        </button>
-        <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
-          {cliMode ? "Configures your terminal" : "Opens your workspace"}
-        </span>
-      </div>
+      {/* Launch Button or Message */}
+      {cliMode ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            onClick={handleLaunch}
+            style={{
+              background: "var(--accent-green)",
+              color: "black",
+              border: "none",
+              borderRadius: "5px",
+              fontSize: "15px",
+              fontWeight: "700",
+              padding: "11px 24px",
+              cursor: "pointer",
+              fontFamily: "var(--font-mono)",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+          >
+            $ Configure CLI →
+          </button>
+          <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
+            Configures your terminal
+          </span>
+        </div>
+      ) : (
+        <div style={{ background: "rgba(79,255,176,0.1)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
+          <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", margin: "0 0 12px 0", fontFamily: "var(--font-sans)" }}>
+            To use Elliot-AI, install and run the CLI:
+          </p>
+          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", display: "block", marginBottom: "8px" }}>
+            npm install -g elliot-ai
+          </code>
+          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)" }}>
+            elliot-ai
+          </code>
+        </div>
+      )}
     </div>
   );
 }

@@ -38,7 +38,7 @@ export async function logoutCommand(): Promise<void> {
     }
 
     clearConfig();
-    printSuccess("Logged out. Run 'elliot init' to reconnect.");
+    printSuccess("Logged out. Run 'elliot-ai init' to reconnect.");
     printInfo("");
   } catch (error) {
     if (error instanceof Error) {

@@ -19,33 +19,21 @@ export default function InputBar({ onSubmit, disabled }: InputBarProps) {
 
   if (disabled) {
     return (
-      <Box
-        borderStyle="round"
-        borderColor="gray"
-        paddingX={1}
-        paddingY={0}
-        marginTop={1}
-      >
+      <Box borderStyle="round" borderColor="gray" paddingX={1} marginTop={1}>
         <Text color="green">{">"} </Text>
-        <Text color="gray">▋ waiting...</Text>
+        <Text color="gray">waiting...</Text>
       </Box>
     );
   }
 
   return (
-    <Box
-      borderStyle="round"
-      borderColor="gray"
-      paddingX={1}
-      paddingY={0}
-      marginTop={1}
-    >
+    <Box borderStyle="round" borderColor="gray" paddingX={1} marginTop={1}>
       <Text color="green">{">"} </Text>
       <TextInput
         value={input}
         onChange={setInput}
         onSubmit={handleSubmit}
-        placeholder="ask anything about your codebase..."
+        placeholder="ask about your codebase..."
       />
     </Box>
   );
