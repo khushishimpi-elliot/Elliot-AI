@@ -58,6 +58,10 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     setModalSource(source);
   };
 
+  const handleConnectAll = () => {
+    setConnectedSources(new Set(SOURCES.map((s) => s.id)));
+  };
+
   const handleAuthorize = () => {
     if (modalSource) {
       setConnectedSources((prev) => new Set(prev).add(modalSource.id));
@@ -85,6 +89,43 @@ export default function Step4Sources({ onContinue }: Step4Props) {
         <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
           Link the systems Elliot draws context from. OAuth is read-only by default and scoped per provider — review each grant before approving.
         </p>
+      </div>
+
+      {/* Connect All */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+          padding: "12px 16px",
+          background: "rgba(79,255,176,0.04)",
+          border: "1px solid rgba(79,255,176,0.15)",
+          borderRadius: "6px",
+          marginBottom: "28px",
+        }}
+      >
+        <button
+          onClick={handleConnectAll}
+          disabled={SOURCES.every((s) => connectedSources.has(s.id))}
+          style={{
+            background: SOURCES.every((s) => connectedSources.has(s.id)) ? "transparent" : "var(--accent-green)",
+            color: SOURCES.every((s) => connectedSources.has(s.id)) ? "var(--text-muted)" : "#0D1117",
+            border: `1px solid ${SOURCES.every((s) => connectedSources.has(s.id)) ? "var(--border)" : "transparent"}`,
+            borderRadius: "5px",
+            fontSize: "13px",
+            fontWeight: "700",
+            padding: "8px 18px",
+            cursor: SOURCES.every((s) => connectedSources.has(s.id)) ? "default" : "pointer",
+            fontFamily: "var(--font-sans)",
+            whiteSpace: "nowrap",
+            transition: "all 0.15s ease",
+          }}
+        >
+          {SOURCES.every((s) => connectedSources.has(s.id)) ? "✓ All connected" : "Connect All"}
+        </button>
+        <span style={{ fontSize: "13px", color: "var(--text-secondary)", fontFamily: "var(--font-sans)", lineHeight: 1.5 }}>
+          Authorize all integrations at once — each will open its OAuth grant screen.
+        </span>
       </div>
 
       {/* Sections */}
