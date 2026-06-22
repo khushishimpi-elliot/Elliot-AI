@@ -8,7 +8,7 @@ import App from "../ui/App.js";
 export async function askCommand(): Promise<void> {
   try {
     if (!isConfigured()) {
-      printError("Not configured. Run 'elliot init' first");
+      printError("Not configured. Run 'elliot-ai init' first");
       process.exit(1);
     }
 

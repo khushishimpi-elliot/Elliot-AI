@@ -14,7 +14,7 @@ function formatDate(isoString: string): string {
 export async function statusCommand(): Promise<void> {
   try {
     if (!isConfigured()) {
-      printError("Not configured. Run 'elliot init' first");
+      printError("Not configured. Run 'elliot-ai init' first");
       process.exit(1);
     }
 
