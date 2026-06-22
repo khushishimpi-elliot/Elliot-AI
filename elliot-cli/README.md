@@ -1,31 +1,132 @@
 # elliot-ai CLI
 
-AI coding assistant for engineering teams — Elliot Systems
+AI coding assistant for engineering teams — Interactive terminal UI
 
-## Install
+## Installation
+
+### Option A: From Source (Development/Testing)
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd Elliot-AI/elliot-cli
+
+# Install and build
+npm install
+npm run build
+
+# Link globally
+npm link
+
+# Use from any directory
+elliot-ai
+```
+
+### Option B: From npm (Once Published)
 
 ```bash
 npm install -g elliot-ai
+elliot-ai
 ```
 
-## Setup (run once)
+## Getting Started
+
+### 1. First Time Setup
+
+Run the interactive onboarding:
 
 ```bash
-elliot init
+elliot-ai init
 ```
 
-## Usage
+This will:
+- Open your browser for 6-step setup
+- Connect your repositories (GitHub, GitLab, etc.)
+- Connect your knowledge sources (Jira, Confluence, etc.)
+- Automatically configure your CLI
+- Return to terminal ready to use
+
+### 2. Open the Interactive TUI
 
 ```bash
-elliot ask "how does auth work?"
-elliot ask "explain PR #452"
-elliot ask "status of ticket PAY-234?"
-elliot status
-elliot logout
+elliot-ai
 ```
 
-## How it works
+You'll see:
+```
+┌──────────────────────────────────────┐
+│ ELLIOT-AI • Your Organization        │
+│ TypeScript/Node • Backend ✅ online   │
+├──────────────────────────────────────┤
+│ Ask anything about your codebase.    │
+├──────────────────────────────────────┤
+│ > ask about your codebase...         │
+└──────────────────────────────────────┘
+```
 
-`elliot init` opens your browser for a one-time setup.
-After completing the 6-step onboarding, your CLI is
-automatically configured and ready to use.
+Type your question and press Enter. Responses stream in real-time.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `elliot-ai` | Open interactive TUI |
+| `elliot-ai init` | Complete setup wizard |
+| `elliot-ai ask "query"` | Ask a specific question |
+| `elliot-ai status` | Check connection & connectors |
+| `elliot-ai logout` | Disconnect from organization |
+| `elliot-ai --help` | Show help |
+
+## Usage Examples
+
+```bash
+# Interactive mode (recommended)
+elliot-ai
+
+# Ask specific questions
+elliot-ai ask "how does the auth system work?"
+elliot-ai ask "what are the failing tests?"
+elliot-ai ask "explain the database schema"
+
+# Check status
+elliot-ai status
+
+# Disconnect
+elliot-ai logout
+```
+
+## Features
+
+- ✨ **Real-time streaming** — Responses appear token-by-token
+- 🎯 **Full context** — Understands your codebase, standards, and team
+- 🔍 **Source attribution** — See which files/docs informed the response
+- ⚡ **Multi-agent reasoning** — Parallel analysis from different angles
+- 💾 **Persistent config** — One-time setup, use from anywhere
+- 🌈 **Beautiful TUI** — Clean, intuitive terminal interface
+
+## Configuration
+
+Config stored at: `~/.elliot/config.json`
+
+To reconfigure:
+```bash
+elliot-ai logout
+elliot-ai init
+```
+
+## Requirements
+
+- Node.js 18+
+- npm or yarn
+- Active internet connection
+- Browser (for initial setup only)
+
+## Support
+
+For issues or feedback:
+- GitHub: <repository-issues>
+- Documentation: <docs-url>
+
+## License
+
+© Elliot Systems. All rights reserved.
