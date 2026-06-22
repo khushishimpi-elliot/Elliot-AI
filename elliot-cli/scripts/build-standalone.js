@@ -58,7 +58,7 @@ try {
   // Build for each platform with ESM support
   for (const platform of platforms) {
     console.log(`\n🏗️  Building for ${platform.name}...`);
-    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output} --compress Brotli`;
+    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output} --public-packages "*"`;
     execSync(cmd, { stdio: 'inherit' });
     console.log(`✅ Built: ${platform.output}`);
   }

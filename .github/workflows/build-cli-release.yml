@@ -45,7 +45,7 @@ jobs:
 
       - name: Build standalone binary
         working-directory: ./elliot-cli
-        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }} --compress Brotli
+        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }} --public-packages "*"
 
       - name: Make binary executable (Unix)
         if: matrix.os != 'windows-latest'
