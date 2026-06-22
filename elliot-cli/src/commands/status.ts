@@ -1,6 +1,6 @@
-import { isConfigured, readConfig } from "../config";
-import { printError, printInfo } from "../display";
-import { checkBackendHealth, getConnectorStatus } from "../api";
+import { isConfigured, readConfig } from "../config.js";
+import { printError, printInfo } from "../display.js";
+import { checkBackendHealth, getConnectorStatus } from "../api.js";
 
 function formatDate(isoString: string): string {
   const date = new Date(isoString);

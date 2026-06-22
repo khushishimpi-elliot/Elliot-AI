@@ -1,13 +1,13 @@
 import * as readline from "readline";
 import open from "open";
-import { isConfigured, readConfig, writeConfig, ElliotConfig } from "../config";
+import { isConfigured, readConfig, writeConfig, ElliotConfig } from "../config.js";
 import {
   printWelcome,
   printSuccess,
   printError,
   printInfo,
-} from "../display";
-import { startCallbackServer } from "../callback";
+} from "../display.js";
+import { startCallbackServer } from "../callback.js";
 
 function askQuestion(query: string): Promise<string> {
   const rl = readline.createInterface({

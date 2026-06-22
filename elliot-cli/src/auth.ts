@@ -1,4 +1,4 @@
-import { ElliotConfig, readConfig, writeConfig } from "./config";
+import { ElliotConfig, readConfig, writeConfig } from "./config.js";
 
 export function getToken(): string | null {
   const config = readConfig();
