@@ -115,7 +115,7 @@ services:
     runtime: node
     rootDir: terminal
     buildCommand: npm install && npm run build
-    startCommand: node server.js
+    startCommand: npm start
     envVars:
       - key: VITE_API_URL
         value: https://elliot-ai-backend.onrender.com
