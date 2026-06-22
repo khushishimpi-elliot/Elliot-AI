@@ -114,7 +114,7 @@ services:
     name: elliot-ai-terminal
     runtime: node
     rootDir: terminal
-    buildCommand: npm install && npx tsc -b && npx vite build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: node index.js
     envVars:
       - key: VITE_API_URL
