@@ -112,13 +112,15 @@ services:
 
   - type: web
     name: elliot-ai-terminal
-    runtime: static
+    runtime: node
     rootDir: terminal
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    startCommand: node server-simple.js
     envVars:
       - key: VITE_API_URL
         value: https://elliot-ai-backend.onrender.com
+      - key: NODE_ENV
+        value: production
 
   - type: web
     name: elliot-ai-dashboard
