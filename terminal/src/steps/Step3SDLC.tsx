@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
 interface Step3Props {
   onContinue: () => void;
   onConfigUpdate?: (config: { stack?: string }) => void;
@@ -13,10 +15,29 @@ export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
   const [cicd, setCicd] = useState<string[]>(["GitHub Actions"]);
   const [review, setReview] = useState("2 approvals");
 
-  const handleContinue = () => {
-    if (onConfigUpdate) {
-      onConfigUpdate({ stack: stack.join(" / ") });
+  const handleContinue = async () => {
+    try {
+      const token = localStorage.getItem("elliot_token");
+      const tenantId = localStorage.getItem("elliot_tenant_id");
+      await fetch(`${API_URL}/onboarding/sdlc`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          tenant_id: tenantId,
+          primary_stack: stack.join(" / "),
+          branching_model: branching,
+          test_framework: testing,
+          ci_platform: cicd.join(", "),
+          review_policy: review,
+        }),
+      });
+    } catch {
+      // backend unavailable — continue anyway
     }
+    if (onConfigUpdate) onConfigUpdate({ stack: stack.join(" / ") });
     onContinue();
   };
 
