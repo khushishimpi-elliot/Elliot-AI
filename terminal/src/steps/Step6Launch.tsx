@@ -79,54 +79,70 @@ export default function Step6Launch({ config = {} }: Step6Props) {
   const handleDownloadAndInstall = async () => {
     setIsInstalling(true);
     const os = detectOS();
-    const installerUrl = getInstallerUrl(os);
 
     try {
-      if (os === "windows") {
-        // Windows: Download and run PowerShell script
-        const response = await fetch(installerUrl);
-        const scriptContent = await response.text();
+      // For now, show manual installation instructions with GitHub link
+      // Once v1.0.0 is released, this will auto-download from releases
+      const githubReleasesUrl = "https://github.com/khushishimpi-elliot/Elliot-AI/releases";
 
-        // Create blob and download
-        const blob = new Blob([scriptContent], { type: "text/plain" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "install-elliot-ai.ps1";
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+      const instructions: Record<string, { steps: string[]; github: string }> = {
+        windows: {
+          steps: [
+            "1. Visit: " + githubReleasesUrl,
+            "2. Download: install-windows.ps1",
+            "3. Right-click PowerShell, select 'Run as Administrator'",
+            "4. Run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force",
+            "5. Run: .\\install-windows.ps1",
+            "",
+            "The installer will download elliot-ai.exe and configure your system.",
+          ],
+          github: githubReleasesUrl,
+        },
+        macos: {
+          steps: [
+            "1. Visit: " + githubReleasesUrl,
+            "2. Download: install-unix.sh",
+            "3. Open Terminal and navigate to downloads",
+            "4. Run: chmod +x install-unix.sh",
+            "5. Run: ./install-unix.sh",
+            "",
+            "The installer will download the binary and configure your system.",
+          ],
+          github: githubReleasesUrl,
+        },
+        linux: {
+          steps: [
+            "1. Visit: " + githubReleasesUrl,
+            "2. Download: install-unix.sh",
+            "3. Open Terminal and navigate to downloads",
+            "4. Run: chmod +x install-unix.sh",
+            "5. Run: ./install-unix.sh",
+            "",
+            "The installer will download the binary and configure your system.",
+          ],
+          github: githubReleasesUrl,
+        },
+      };
 
-        alert(
-          "Installer downloaded! Run this in PowerShell as Administrator:\n" +
-          "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force\n" +
-          ".\\install-elliot-ai.ps1"
-        );
+      const instruction = instructions[os] || instructions.windows;
+      const message = instruction.steps.join("\n");
+
+      // Show instructions with GitHub link option
+      const response = confirm(
+        message +
+        "\n\n" +
+        "Click OK to open GitHub Releases in a new window.\n" +
+        "Click Cancel to see these instructions again."
+      );
+
+      if (response) {
+        window.open(instruction.github, "_blank");
       } else {
-        // Mac/Linux: Download and run shell script
-        const response = await fetch(installerUrl);
-        const scriptContent = await response.text();
-
-        const blob = new Blob([scriptContent], { type: "text/plain" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "install-elliot-ai.sh";
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        alert(
-          "Installer downloaded! Run this in your terminal:\n" +
-          "chmod +x install-elliot-ai.sh\n" +
-          "./install-elliot-ai.sh"
-        );
+        setIsInstalling(false);
+        return;
       }
     } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download installer. Please visit the GitHub releases page.");
+      console.error("Error:", error);
     } finally {
       setIsInstalling(false);
     }
