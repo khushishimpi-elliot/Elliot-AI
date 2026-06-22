@@ -10,11 +10,10 @@ interface OnboardingConfig {
 }
 
 interface Step6Props {
-  onComplete?: () => void;
   config?: OnboardingConfig;
 }
 
-export default function Step6Launch({ onComplete = () => {}, config = {} }: Step6Props) {
+export default function Step6Launch({ config = {} }: Step6Props) {
   const [cliMode, setCliMode] = useState(false);
   const [cliCallback, setCliCallback] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
