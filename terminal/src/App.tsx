@@ -22,15 +22,10 @@ export default function App() {
     setScreen("onboarding");
   };
 
-  const handleOnboardingComplete = () => {
-    localStorage.setItem("elliot_onboarded", "true");
-    setScreen("terminal");
-  };
-
   return (
     <>
       {screen === "landing" && <LandingPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
-      {screen === "onboarding" && <Onboarding onComplete={handleOnboardingComplete} />}
+      {screen === "onboarding" && <Onboarding />}
       {screen === "terminal" && (
         <Terminal onReset={() => { localStorage.removeItem("elliot_onboarded"); setScreen("landing"); }} />
       )}

@@ -15,10 +15,6 @@ interface OnboardingConfig {
   stack?: string;
 }
 
-interface OnboardingProps {
-  onComplete?: () => void;
-}
-
 const STEPS = [
   { id: 1, title: "Sign in", subtitle: "SSO / identity" },
   { id: 2, title: "Workspace", subtitle: "Org setup" },
@@ -28,7 +24,7 @@ const STEPS = [
   { id: 6, title: "Launch", subtitle: "Setup complete" },
 ];
 
-export default function Onboarding({ onComplete = () => {} }: OnboardingProps) {
+export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [config, setConfig] = useState<OnboardingConfig>({});
