@@ -47,10 +47,14 @@ try {
   console.log('📦 Compiling TypeScript...');
   execSync('npm run build', { stdio: 'inherit' });
 
-  // Build for each platform
+  // Bundle with ncc to create a single CommonJS file
+  console.log('📦 Bundling with ncc...');
+  execSync('npx ncc build dist/index.js -o dist/bundled -m', { stdio: 'inherit' });
+
+  // Build for each platform using bundled code
   for (const platform of platforms) {
     console.log(`\n🏗️  Building for ${platform.name}...`);
-    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output}`;
+    const cmd = `npx pkg dist/bundled/index.js --targets node18-${platform.target} --output ${platform.output}`;
     execSync(cmd, { stdio: 'inherit' });
     console.log(`✅ Built: ${platform.output}`);
   }

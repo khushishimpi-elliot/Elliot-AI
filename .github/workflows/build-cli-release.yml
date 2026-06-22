@@ -44,13 +44,13 @@ jobs:
         working-directory: ./elliot-cli
         run: npm run build
 
-      - name: Install pkg
+      - name: Bundle with ncc
         working-directory: ./elliot-cli
-        run: npm install --save-dev pkg@latest
+        run: npx ncc build dist/index.js -o dist/bundled -m
 
       - name: Build standalone binary
         working-directory: ./elliot-cli
-        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }}
+        run: npx pkg dist/bundled/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }}
 
       - name: Make binary executable (Unix)
         if: matrix.os != 'windows-latest'
