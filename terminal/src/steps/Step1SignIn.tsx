@@ -14,7 +14,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSSO = (provider: "google" | "entra" | "auth0") => {
-    window.location.href = `${API_URL}/auth/${provider}/login`;
+    onContinue();
   };
 
   const handleMagicLink = async () => {
