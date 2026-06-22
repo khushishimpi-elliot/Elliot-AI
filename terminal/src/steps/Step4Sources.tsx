@@ -9,6 +9,7 @@ interface SourceConfig {
   name: string;
   description: string;
   category: "repositories" | "tickets" | "docs" | "databases" | "communication";
+  provider?: string;
 }
 
 const SOURCES: SourceConfig[] = [
