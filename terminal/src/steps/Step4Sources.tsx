@@ -45,13 +45,22 @@ const SECTIONS = [
   { id: "communication", label: "Team communication", required: false, description: "Optional — surface decisions made in chat." },
 ];
 
+interface OnboardingConfig {
+  jwtToken?: string;
+  tenantId?: string;
+  userId?: string;
+  teamId?: string;
+  orgName?: string;
+  stack?: string;
+}
+
 interface Step4Props {
   onContinue: () => void;
-  onConfigUpdate?: (config: any) => void;
+  onConfigUpdate?: (config: Partial<OnboardingConfig>) => void;
   onBack?: () => void;
 }
 
-export default function Step4Sources({ onContinue, onConfigUpdate }: Step4Props) {
+export default function Step4Sources({ onContinue }: Step4Props) {
   const [connectedSources, setConnectedSources] = useState<Set<string>>(new Set());
   const [modalSource, setModalSource] = useState<SourceConfig | null>(null);
 

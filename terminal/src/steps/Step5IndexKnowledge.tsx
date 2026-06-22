@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 
+interface OnboardingConfig {
+  jwtToken?: string;
+  tenantId?: string;
+  userId?: string;
+  teamId?: string;
+  orgName?: string;
+  stack?: string;
+}
+
 interface Step5Props {
   onContinue: () => void;
-  onConfigUpdate?: (config: any) => void;
+  onConfigUpdate?: (config: Partial<OnboardingConfig>) => void;
   onBack?: () => void;
 }
 
-export default function Step5IndexKnowledge({ onContinue, onConfigUpdate }: Step5Props) {
+export default function Step5IndexKnowledge({ onContinue }: Step5Props) {
   const [progress, setProgress] = useState([0, 0, 0, 0, 0]);
 
   useEffect(() => {
