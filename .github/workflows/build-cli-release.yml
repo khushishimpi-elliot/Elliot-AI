@@ -1,0 +1,105 @@
+name: Build & Release CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: win-x64
+            filename: elliot-ai.exe
+
+          - os: macos-latest
+            target: macos-x64
+            filename: elliot-ai-macos
+
+          - os: ubuntu-latest
+            target: linux-x64
+            filename: elliot-ai-linux
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies (CLI)
+        working-directory: ./elliot-cli
+        run: npm install
+
+      - name: Build TypeScript
+        working-directory: ./elliot-cli
+        run: npm run build
+
+      - name: Install pkg
+        run: npm install -g pkg
+
+      - name: Build standalone binary
+        working-directory: ./elliot-cli
+        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }}
+
+      - name: Make binary executable (Unix)
+        if: matrix.os != 'windows-latest'
+        run: chmod +x ./elliot-cli/dist-standalone/${{ matrix.filename }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.filename }}
+          path: ./elliot-cli/dist-standalone/${{ matrix.filename }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            elliot-ai.exe/elliot-ai.exe
+            elliot-ai-macos/elliot-ai-macos
+            elliot-ai-linux/elliot-ai-linux
+          body: |
+            # Elliot-AI CLI Release
+
+            Download the executable for your OS:
+            - **Windows**: elliot-ai.exe
+            - **macOS**: elliot-ai-macos
+            - **Linux**: elliot-ai-linux
+
+            ## Installation
+
+            ### Windows (PowerShell)
+            ```powershell
+            Invoke-WebRequest -Uri "https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/${{ github.ref_name }}/install-windows.ps1" -OutFile "install.ps1"
+            Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+            .\install.ps1
+            ```
+
+            ### macOS / Linux
+            ```bash
+            curl -fsSL https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/${{ github.ref_name }}/install-unix.sh | bash
+            ```
+
+            Then run:
+            ```bash
+            elliot-ai init
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

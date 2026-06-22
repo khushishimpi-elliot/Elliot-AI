@@ -19,7 +19,7 @@ export default function InputBar({ onSubmit, disabled }: InputBarProps) {
 
   if (disabled) {
     return (
-      <Box borderStyle="round" borderColor="gray" paddingX={1} marginTop={1}>
+      <Box marginTop={1}>
         <Text color="green">{">"} </Text>
         <Text color="gray">waiting...</Text>
       </Box>
@@ -27,7 +27,7 @@ export default function InputBar({ onSubmit, disabled }: InputBarProps) {
   }
 
   return (
-    <Box borderStyle="round" borderColor="gray" paddingX={1} marginTop={1}>
+    <Box marginTop={1}>
       <Text color="green">{">"} </Text>
       <TextInput
         value={input}

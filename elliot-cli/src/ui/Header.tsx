@@ -20,20 +20,16 @@ export default function Header({
   const backendStatus = backendHealthy ? "✅" : "❌";
 
   return (
-    <Box borderStyle="round" borderColor="gray" paddingX={1} marginBottom={1}>
-      <Box flexDirection="column" width="100%">
-        <Box>
-          <Text bold color="green">
-            ELLIOT-AI
-          </Text>
-          <Text color="gray"> • {config.org_name}</Text>
-        </Box>
-        <Box>
-          <Text color="gray">
-            {config.stack} • Backend {backendStatus} offline • {chunkCountK}k chunks
-          </Text>
-        </Box>
-      </Box>
-    </Box>
+    <>
+      <Text>
+        <Text bold color="green">
+          ELLIOT-AI
+        </Text>
+        <Text color="gray"> • {config.org_name}</Text>
+      </Text>
+      <Text color="gray">
+        {config.stack} • Backend {backendStatus} offline • {chunkCountK}k chunks
+      </Text>
+    </>
   );
 }
