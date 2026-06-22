@@ -1,4 +1,4 @@
-name: Build & Release CLI
+name: Build & Publish CLI
 
 on:
   push:
@@ -8,21 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            target: win-x64
-            filename: elliot-ai.exe
-
-          - os: macos-latest
-            target: macos-x64
-            filename: elliot-ai-macos
-
-          - os: ubuntu-latest
-            target: linux-x64
-            filename: elliot-ai-linux
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -31,10 +17,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
-      - name: Install system dependencies (Ubuntu/Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies (CLI)
         working-directory: ./elliot-cli
@@ -44,67 +27,62 @@ jobs:
         working-directory: ./elliot-cli
         run: npm run build
 
-      - name: Bundle with ncc
+      - name: Publish to npm
         working-directory: ./elliot-cli
-        run: npx ncc build dist/index.js -o dist/bundled -m
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build standalone binary
-        working-directory: ./elliot-cli
-        run: npx pkg dist/bundled/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }}
-
-      - name: Make binary executable (Unix)
-        if: matrix.os != 'windows-latest'
-        run: chmod +x ./elliot-cli/dist-standalone/${{ matrix.filename }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.filename }}
-          path: ./elliot-cli/dist-standalone/${{ matrix.filename }}
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
-
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            elliot-ai.exe/elliot-ai.exe
-            elliot-ai-macos/elliot-ai-macos
-            elliot-ai-linux/elliot-ai-linux
           body: |
-            # Elliot-AI CLI Release
+            # Elliot-AI CLI v${{ github.ref_name }}
 
-            Download the executable for your OS:
-            - **Windows**: elliot-ai.exe
-            - **macOS**: elliot-ai-macos
-            - **Linux**: elliot-ai-linux
+            🚀 Interactive AI coding assistant for engineering teams.
 
             ## Installation
 
-            ### Windows (PowerShell)
-            ```powershell
-            Invoke-WebRequest -Uri "https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/${{ github.ref_name }}/install-windows.ps1" -OutFile "install.ps1"
-            Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
-            .\install.ps1
+            ```bash
+            npm install -g elliot-ai
             ```
 
-            ### macOS / Linux
-            ```bash
-            curl -fsSL https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/${{ github.ref_name }}/install-unix.sh | bash
-            ```
+            ## Quick Start
 
-            Then run:
             ```bash
+            # First-time setup (browser-based onboarding)
             elliot-ai init
+
+            # Open interactive TUI
+            elliot-ai
+
+            # Check status
+            elliot-ai status
+
+            # Disconnect
+            elliot-ai logout
             ```
+
+            ## Features
+
+            ✨ **Interactive Terminal UI** — Real-time token streaming with animated thinking indicator
+            🔐 **Full Context Awareness** — Understands your entire codebase
+            🚀 **One-Click Setup** — Browser-based 6-step onboarding
+            💾 **Persistent Config** — Works from any terminal
+            📊 **Multi-Source** — GitHub, GitLab, Jira, Confluence, and more
+
+            ## Requirements
+
+            - **Node.js**: 18.0.0 or higher
+            - **npm**: 9.0.0 or higher
+
+            ## Documentation
+
+            - [README](https://github.com/khushishimpi-elliot/Elliot-AI/blob/main/elliot-cli/README.md)
+            - [Deployment Guide](https://github.com/khushishimpi-elliot/Elliot-AI/blob/main/elliot-cli/DEPLOYMENT_GUIDE.md)
+
+            Made with ❤️ by Elliot Systems
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

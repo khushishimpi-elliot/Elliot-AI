@@ -13,14 +13,6 @@ interface Step6Props {
   config?: OnboardingConfig;
 }
 
-function detectOS(): "windows" | "macos" | "linux" {
-  const ua = navigator.userAgent.toLowerCase();
-  if (ua.includes("win")) return "windows";
-  if (ua.includes("mac")) return "macos";
-  if (ua.includes("linux")) return "linux";
-  return "windows";
-}
-
 export default function Step6Launch({ config = {} }: Step6Props) {
   const [cliMode, setCliMode] = useState(false);
   const [cliCallback, setCliCallback] = useState<string | null>(null);
@@ -68,48 +60,19 @@ export default function Step6Launch({ config = {} }: Step6Props) {
 
   const handleDownloadAndInstall = async () => {
     setIsInstalling(true);
-    const os = detectOS();
 
     try {
-      const installerMap: Record<string, string> = {
-        windows: "install-windows.ps1",
-        macos: "install-unix.sh",
-        linux: "install-unix.sh",
-      };
+      // Copy npm install command to clipboard
+      const command = "npm install -g elliot-ai";
+      await navigator.clipboard.writeText(command);
 
-      const installerFile = installerMap[os];
-      const downloadUrl = `https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/${installerFile}`;
-
-      // Try to download from GitHub releases
-      const response = await fetch(downloadUrl);
-
-      if (!response.ok) {
-        // Fallback: open GitHub releases page if download fails
-        window.open("https://github.com/khushishimpi-elliot/Elliot-AI/releases", "_blank");
-        setIsInstalling(false);
-        return;
-      }
-
-      // Get the script content
-      const scriptContent = await response.text();
-
-      // Create blob and trigger download
-      const blob = new Blob([scriptContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = installerFile;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Show success message
+      // Show success
       setIsComplete(true);
     } catch (error) {
-      console.error("Download error:", error);
-      // Fallback to GitHub releases page
-      window.open("https://github.com/khushishimpi-elliot/Elliot-AI/releases", "_blank");
+      console.error("Error:", error);
+      // Fallback: just show the command
+      setIsComplete(true);
+    } finally {
       setIsInstalling(false);
     }
   };
@@ -143,23 +106,26 @@ export default function Step6Launch({ config = {} }: Step6Props) {
       <div>
         <div style={{ marginBottom: "28px" }}>
           <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-green)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
-            INSTALLER DOWNLOADED · SETUP READY
+            COMMAND COPIED · SETUP READY
           </div>
           <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
             ✅ Ready to install
           </h1>
           <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
-            The installer has been downloaded to your Downloads folder. Run it now to set up Elliot-AI on your system.
+            The install command has been copied to your clipboard. Open your terminal and paste it to install Elliot-AI globally.
           </p>
         </div>
 
         <div style={{ background: "var(--surface)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
           <div style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", marginBottom: "8px" }}>
-            Next step:
+            Paste this in your terminal:
           </div>
           <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}>
-            Open Downloads → Run installer
+            npm install -g elliot-ai
           </code>
+          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "12px", fontFamily: "var(--font-sans)" }}>
+            Then run: <code style={{ fontFamily: "var(--font-mono)" }}>elliot-ai init</code>
+          </div>
         </div>
       </div>
     );
@@ -248,10 +214,10 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             onMouseEnter={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
             onMouseLeave={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
           >
-            {isInstalling ? "⏳ Downloading..." : "$ Setup & Launch Terminal →"}
+            {isInstalling ? "✓ Copied" : "$ Copy Install Command →"}
           </button>
           <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
-            Installs CLI and opens terminal
+            Copies npm install command
           </span>
         </div>
       )}

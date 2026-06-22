@@ -2,14 +2,32 @@
   "name": "elliot-ai",
   "version": "1.0.0",
   "type": "module",
-  "description": "AI coding assistant for engineering teams",
-  "bin": {
-    "elliot-ai": "./bin/elliot.js"
+  "description": "Interactive AI coding assistant for engineering teams",
+  "author": "Elliot Systems",
+  "license": "MIT",
+  "homepage": "https://github.com/khushishimpi-elliot/Elliot-AI",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/khushishimpi-elliot/Elliot-AI.git",
+    "directory": "elliot-cli"
   },
+  "bugs": {
+    "url": "https://github.com/khushishimpi-elliot/Elliot-AI/issues"
+  },
+  "bin": {
+    "elliot-ai": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "dev": "ts-node src/index.ts",
-    "start": "node bin/elliot.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -25,9 +43,20 @@
     "@types/eventsource": "^1.1.15",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
-    "@vercel/ncc": "^0.38.1",
-    "pkg": "^5.14.4",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "coding",
+    "assistant",
+    "engineering",
+    "teams",
+    "context",
+    "codebase"
+  ]
 }
