@@ -56,7 +56,6 @@ interface OnboardingConfig {
 
 interface Step4Props {
   onContinue: () => void;
-  onConfigUpdate?: (config: Partial<OnboardingConfig>) => void;
   onBack?: () => void;
 }
 

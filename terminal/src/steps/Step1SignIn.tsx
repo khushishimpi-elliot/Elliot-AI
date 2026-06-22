@@ -11,7 +11,6 @@ interface OnboardingConfig {
 
 interface Step1Props {
   onContinue: () => void;
-  onConfigUpdate?: (config: Partial<OnboardingConfig>) => void;
 }
 
 export default function Step1SignIn({ onContinue }: Step1Props) {

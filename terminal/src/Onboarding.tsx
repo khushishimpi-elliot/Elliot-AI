@@ -45,15 +45,15 @@ export default function Onboarding() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1SignIn onContinue={handleContinue} onConfigUpdate={updateConfig} />;
+        return <Step1SignIn onContinue={handleContinue} />;
       case 2:
         return <Step2Workspace onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 3:
         return <Step3SDLC onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 4:
-        return <Step4Sources onContinue={handleContinue} onConfigUpdate={updateConfig} />;
+        return <Step4Sources onContinue={handleContinue} />;
       case 5:
-        return <Step5IndexKnowledge onContinue={handleContinue} onConfigUpdate={updateConfig} />;
+        return <Step5IndexKnowledge onContinue={handleContinue} />;
       case 6:
         return <Step6Launch config={config} />;
       default:

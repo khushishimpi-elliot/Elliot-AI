@@ -11,7 +11,6 @@ interface OnboardingConfig {
 
 interface Step5Props {
   onContinue: () => void;
-  onConfigUpdate?: (config: Partial<OnboardingConfig>) => void;
   onBack?: () => void;
 }
 
