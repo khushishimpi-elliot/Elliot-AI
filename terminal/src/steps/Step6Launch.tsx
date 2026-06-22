@@ -194,31 +194,44 @@ export default function Step6Launch({ config = {} }: Step6Props) {
           </span>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button
-            onClick={handleDownloadAndInstall}
-            disabled={isInstalling}
-            style={{
-              background: isInstalling ? "var(--text-muted)" : "var(--accent-green)",
-              color: "black",
-              border: "none",
-              borderRadius: "5px",
-              fontSize: "15px",
-              fontWeight: "700",
-              padding: "11px 24px",
-              cursor: isInstalling ? "not-allowed" : "pointer",
-              fontFamily: "var(--font-mono)",
-              transition: "all 0.15s ease",
-              opacity: isInstalling ? 0.6 : 1,
-            }}
-            onMouseEnter={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-            onMouseLeave={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-          >
-            {isInstalling ? "✓ Copied" : "$ Copy Install Command →"}
-          </button>
-          <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
-            Copies npm install command
-          </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ background: "var(--surface)", border: "2px solid rgba(79,255,176,0.5)", borderRadius: "8px", padding: "20px", maxWidth: "540px" }}>
+            <div style={{ fontSize: "12px", fontFamily: "var(--font-sans)", color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Installation Command
+            </div>
+            <code style={{ fontSize: "16px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", fontWeight: "600", display: "block", wordBreak: "break-all" }}>
+              npm install -g elliot-ai
+            </code>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "12px", fontFamily: "var(--font-sans)" }}>
+              Copy and paste into your terminal. Then run: <code style={{ fontFamily: "var(--font-mono)", color: "var(--accent-blue)" }}>elliot-ai init</code>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <button
+              onClick={handleDownloadAndInstall}
+              disabled={isInstalling}
+              style={{
+                background: isInstalling ? "var(--text-muted)" : "var(--accent-green)",
+                color: "black",
+                border: "none",
+                borderRadius: "5px",
+                fontSize: "15px",
+                fontWeight: "700",
+                padding: "11px 24px",
+                cursor: isInstalling ? "not-allowed" : "pointer",
+                fontFamily: "var(--font-mono)",
+                transition: "all 0.15s ease",
+                opacity: isInstalling ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
+              onMouseLeave={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+            >
+              {isInstalling ? "✓ Copied" : "$ Copy Command to Clipboard →"}
+            </button>
+            <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
+              Easy paste into terminal
+            </span>
+          </div>
         </div>
       )}
     </div>
