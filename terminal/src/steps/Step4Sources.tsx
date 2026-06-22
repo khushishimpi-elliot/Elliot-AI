@@ -45,15 +45,6 @@ const SECTIONS = [
   { id: "communication", label: "Team communication", required: false, description: "Optional — surface decisions made in chat." },
 ];
 
-interface OnboardingConfig {
-  jwtToken?: string;
-  tenantId?: string;
-  userId?: string;
-  teamId?: string;
-  orgName?: string;
-  stack?: string;
-}
-
 interface Step4Props {
   onContinue: () => void;
   onBack?: () => void;

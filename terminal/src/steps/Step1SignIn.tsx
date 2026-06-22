@@ -1,14 +1,5 @@
 import { useState } from "react";
 
-interface OnboardingConfig {
-  jwtToken?: string;
-  tenantId?: string;
-  userId?: string;
-  teamId?: string;
-  orgName?: string;
-  stack?: string;
-}
-
 interface Step1Props {
   onContinue: () => void;
 }

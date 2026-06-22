@@ -13,16 +13,6 @@ interface Step6Props {
   config?: OnboardingConfig;
 }
 
-function getInstallerUrl(os: string) {
-  const baseUrl = "https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0";
-  const scripts: Record<string, string> = {
-    windows: `${baseUrl}/install-windows.ps1`,
-    macos: `${baseUrl}/install-unix.sh`,
-    linux: `${baseUrl}/install-unix.sh`,
-  };
-  return scripts[os] || scripts.windows;
-}
-
 function detectOS(): "windows" | "macos" | "linux" {
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes("win")) return "windows";
