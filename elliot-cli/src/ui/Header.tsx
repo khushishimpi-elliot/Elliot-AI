@@ -17,46 +17,22 @@ export default function Header({
   backendHealthy,
 }: HeaderProps) {
   const chunkCountK = Math.round(chunkCount / 1000);
-
-  const connectorStatus = connectors
-    .map((c) => {
-      const icon = c.status === "connected" ? "✅" : "❌";
-      return `${c.provider} ${icon}`;
-    })
-    .join("  ");
-
-  const backendStatus = backendHealthy ? "✅ online" : "❌ offline";
+  const backendStatus = backendHealthy ? "✅" : "❌";
 
   return (
-    <Box
-      flexDirection="column"
-      borderStyle="round"
-      borderColor="gray"
-      paddingX={1}
-      paddingY={0}
-      marginBottom={1}
-    >
-      <Box>
-        <Text bold color="green">
-          ELLIOT-AI
-        </Text>
-        <Text color="gray"> • {config.org_name}</Text>
-      </Box>
-
-      <Box>
-        <Text color="gray">
-          {config.stack} · {config.stack} · Backend {backendStatus}
-        </Text>
-      </Box>
-
-      {connectors.length > 0 && (
+    <Box borderStyle="round" borderColor="gray" paddingX={1} marginBottom={1}>
+      <Box flexDirection="column" width="100%">
         <Box>
-          <Text color="gray">{connectorStatus}</Text>
+          <Text bold color="green">
+            ELLIOT-AI
+          </Text>
+          <Text color="gray"> • {config.org_name}</Text>
         </Box>
-      )}
-
-      <Box>
-        <Text color="gray">{chunkCountK}k chunks indexed</Text>
+        <Box>
+          <Text color="gray">
+            {config.stack} • Backend {backendStatus} offline • {chunkCountK}k chunks
+          </Text>
+        </Box>
       </Box>
     </Box>
   );
