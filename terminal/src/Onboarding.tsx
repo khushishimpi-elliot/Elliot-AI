@@ -6,6 +6,15 @@ import Step4Sources from "./steps/Step4Sources";
 import Step5IndexKnowledge from "./steps/Step5IndexKnowledge";
 import Step6Launch from "./steps/Step6Launch";
 
+interface OnboardingConfig {
+  jwtToken?: string;
+  tenantId?: string;
+  userId?: string;
+  teamId?: string;
+  orgName?: string;
+  stack?: string;
+}
+
 interface OnboardingProps {
   onComplete?: () => void;
 }
@@ -22,6 +31,7 @@ const STEPS = [
 export default function Onboarding({ onComplete = () => {} }: OnboardingProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [config, setConfig] = useState<OnboardingConfig>({});
 
   const handleContinue = () => {
     const newCompleted = new Set(completedSteps);
@@ -32,20 +42,24 @@ export default function Onboarding({ onComplete = () => {} }: OnboardingProps) {
     }
   };
 
+  const updateConfig = (updates: Partial<OnboardingConfig>) => {
+    setConfig((prev) => ({ ...prev, ...updates }));
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <Step1SignIn onContinue={handleContinue} />;
+        return <Step1SignIn onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 2:
-        return <Step2Workspace onContinue={handleContinue} />;
+        return <Step2Workspace onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 3:
-        return <Step3SDLC onContinue={handleContinue} />;
+        return <Step3SDLC onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 4:
-        return <Step4Sources onContinue={handleContinue} />;
+        return <Step4Sources onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 5:
-        return <Step5IndexKnowledge onContinue={handleContinue} />;
+        return <Step5IndexKnowledge onContinue={handleContinue} onConfigUpdate={updateConfig} />;
       case 6:
-        return <Step6Launch onComplete={onComplete} />;
+        return <Step6Launch onComplete={onComplete} config={config} />;
       default:
         return null;
     }

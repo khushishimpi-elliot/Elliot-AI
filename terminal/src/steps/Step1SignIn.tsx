@@ -2,9 +2,10 @@ import { useState } from "react";
 
 interface Step1Props {
   onContinue: () => void;
+  onConfigUpdate?: (config: any) => void;
 }
 
-export default function Step1SignIn({ onContinue }: Step1Props) {
+export default function Step1SignIn({ onContinue, onConfigUpdate }: Step1Props) {
   const [email, setEmail] = useState("");
 
   const handleContinue = () => {

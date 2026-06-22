@@ -2,16 +2,20 @@ import { useState } from "react";
 
 interface Step2Props {
   onContinue: () => void;
+  onConfigUpdate?: (config: { orgName?: string }) => void;
   onBack?: () => void;
 }
 
-export default function Step2Workspace({ onContinue }: Step2Props) {
+export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Props) {
   const [orgName, setOrgName] = useState("Core Payments, Inc.");
   const [domain, setDomain] = useState("core-payments.com");
   const [teamSize, setTeamSize] = useState("21-100");
   const [residency, setResidency] = useState("us");
 
   const handleContinue = () => {
+    if (onConfigUpdate) {
+      onConfigUpdate({ orgName });
+    }
     setTimeout(() => onContinue(), 300);
   };
 

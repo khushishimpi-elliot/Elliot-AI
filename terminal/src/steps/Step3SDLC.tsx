@@ -2,17 +2,23 @@ import { useState } from "react";
 
 interface Step3Props {
   onContinue: () => void;
+  onConfigUpdate?: (config: { stack?: string }) => void;
   onBack?: () => void;
 }
 
-export default function Step3SDLC({ onContinue }: Step3Props) {
+export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
   const [stack, setStack] = useState<string[]>(["TypeScript/Node"]);
   const [branching, setBranching] = useState("trunk-based");
   const [testing, setTesting] = useState("vitest");
   const [cicd, setCicd] = useState<string[]>(["GitHub Actions"]);
   const [review, setReview] = useState("2 approvals");
 
-  const handleContinue = () => onContinue();
+  const handleContinue = () => {
+    if (onConfigUpdate) {
+      onConfigUpdate({ stack: stack.join(" / ") });
+    }
+    onContinue();
+  };
 
   return (
     <div>
