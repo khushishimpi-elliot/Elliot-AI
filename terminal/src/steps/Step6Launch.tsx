@@ -71,69 +71,45 @@ export default function Step6Launch({ config = {} }: Step6Props) {
     const os = detectOS();
 
     try {
-      // For now, show manual installation instructions with GitHub link
-      // Once v1.0.0 is released, this will auto-download from releases
-      const githubReleasesUrl = "https://github.com/khushishimpi-elliot/Elliot-AI/releases";
-
-      const instructions: Record<string, { steps: string[]; github: string }> = {
-        windows: {
-          steps: [
-            "1. Visit: " + githubReleasesUrl,
-            "2. Download: install-windows.ps1",
-            "3. Right-click PowerShell, select 'Run as Administrator'",
-            "4. Run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force",
-            "5. Run: .\\install-windows.ps1",
-            "",
-            "The installer will download elliot-ai.exe and configure your system.",
-          ],
-          github: githubReleasesUrl,
-        },
-        macos: {
-          steps: [
-            "1. Visit: " + githubReleasesUrl,
-            "2. Download: install-unix.sh",
-            "3. Open Terminal and navigate to downloads",
-            "4. Run: chmod +x install-unix.sh",
-            "5. Run: ./install-unix.sh",
-            "",
-            "The installer will download the binary and configure your system.",
-          ],
-          github: githubReleasesUrl,
-        },
-        linux: {
-          steps: [
-            "1. Visit: " + githubReleasesUrl,
-            "2. Download: install-unix.sh",
-            "3. Open Terminal and navigate to downloads",
-            "4. Run: chmod +x install-unix.sh",
-            "5. Run: ./install-unix.sh",
-            "",
-            "The installer will download the binary and configure your system.",
-          ],
-          github: githubReleasesUrl,
-        },
+      const installerMap: Record<string, string> = {
+        windows: "install-windows.ps1",
+        macos: "install-unix.sh",
+        linux: "install-unix.sh",
       };
 
-      const instruction = instructions[os] || instructions.windows;
-      const message = instruction.steps.join("\n");
+      const installerFile = installerMap[os];
+      const downloadUrl = `https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/${installerFile}`;
 
-      // Show instructions with GitHub link option
-      const response = confirm(
-        message +
-        "\n\n" +
-        "Click OK to open GitHub Releases in a new window.\n" +
-        "Click Cancel to see these instructions again."
-      );
+      // Try to download from GitHub releases
+      const response = await fetch(downloadUrl);
 
-      if (response) {
-        window.open(instruction.github, "_blank");
-      } else {
+      if (!response.ok) {
+        // Fallback: open GitHub releases page if download fails
+        window.open("https://github.com/khushishimpi-elliot/Elliot-AI/releases", "_blank");
         setIsInstalling(false);
         return;
       }
+
+      // Get the script content
+      const scriptContent = await response.text();
+
+      // Create blob and trigger download
+      const blob = new Blob([scriptContent], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = installerFile;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      setIsComplete(true);
     } catch (error) {
-      console.error("Error:", error);
-    } finally {
+      console.error("Download error:", error);
+      // Fallback to GitHub releases page
+      window.open("https://github.com/khushishimpi-elliot/Elliot-AI/releases", "_blank");
       setIsInstalling(false);
     }
   };
@@ -156,6 +132,33 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         <div style={{ background: "var(--surface)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
           <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)" }}>
             $ elliot ask "how does auth work?"
+          </code>
+        </div>
+      </div>
+    );
+  }
+
+  if (isComplete && !cliMode) {
+    return (
+      <div>
+        <div style={{ marginBottom: "28px" }}>
+          <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-green)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+            INSTALLER DOWNLOADED · SETUP READY
+          </div>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+            ✅ Ready to install
+          </h1>
+          <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
+            The installer has been downloaded to your Downloads folder. Run it now to set up Elliot-AI on your system.
+          </p>
+        </div>
+
+        <div style={{ background: "var(--surface)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
+          <div style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", marginBottom: "8px" }}>
+            Next step:
+          </div>
+          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}>
+            Open Downloads → Run installer
           </code>
         </div>
       </div>
