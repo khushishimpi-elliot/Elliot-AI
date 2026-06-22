@@ -38,6 +38,18 @@ export default function Onboarding() {
     }
   };
 
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const goToStep = (stepId: number) => {
+    if (stepId < currentStep || completedSteps.has(stepId)) {
+      setCurrentStep(stepId);
+    }
+  };
+
   const updateConfig = (updates: Partial<OnboardingConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
   };
@@ -98,7 +110,27 @@ export default function Onboarding() {
                   )}
 
                   {/* Step Item */}
-                  <div style={{ padding: "10px 20px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                  <div
+                    onClick={() => goToStep(step.id)}
+                    style={{
+                      padding: "10px 20px",
+                      display: "flex",
+                      gap: "12px",
+                      alignItems: "flex-start",
+                      cursor: (step.id < currentStep || completedSteps.has(step.id)) ? "pointer" : "default",
+                      opacity: step.id > currentStep && !completedSteps.has(step.id) ? 0.45 : 1,
+                      borderRadius: "4px",
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (step.id < currentStep || completedSteps.has(step.id)) {
+                        (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.background = "transparent";
+                    }}
+                  >
                     {/* Circle */}
                     <div
                       style={{
@@ -144,6 +176,29 @@ export default function Onboarding() {
 
         {/* CONTENT AREA */}
         <div style={{ flex: 1, background: "var(--bg)", overflowY: "auto", padding: "40px 48px" }}>
+          {currentStep > 1 && (
+            <button
+              onClick={handleBack}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "transparent",
+                border: "none",
+                color: "var(--text-muted)",
+                fontSize: "13px",
+                fontFamily: "var(--font-sans)",
+                cursor: "pointer",
+                padding: "0",
+                marginBottom: "24px",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
+            >
+              ← Back
+            </button>
+          )}
           {renderStep()}
         </div>
       </div>
