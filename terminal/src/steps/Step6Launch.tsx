@@ -13,10 +13,29 @@ interface Step6Props {
   config?: OnboardingConfig;
 }
 
+function getInstallerUrl(os: string) {
+  const baseUrl = "https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0";
+  const scripts: Record<string, string> = {
+    windows: `${baseUrl}/install-windows.ps1`,
+    macos: `${baseUrl}/install-unix.sh`,
+    linux: `${baseUrl}/install-unix.sh`,
+  };
+  return scripts[os] || scripts.windows;
+}
+
+function detectOS(): "windows" | "macos" | "linux" {
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes("win")) return "windows";
+  if (ua.includes("mac")) return "macos";
+  if (ua.includes("linux")) return "linux";
+  return "windows";
+}
+
 export default function Step6Launch({ config = {} }: Step6Props) {
   const [cliMode, setCliMode] = useState(false);
   const [cliCallback, setCliCallback] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -54,6 +73,62 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         console.error("Failed to notify CLI:", error);
         setIsComplete(true);
       }
+    }
+  };
+
+  const handleDownloadAndInstall = async () => {
+    setIsInstalling(true);
+    const os = detectOS();
+    const installerUrl = getInstallerUrl(os);
+
+    try {
+      if (os === "windows") {
+        // Windows: Download and run PowerShell script
+        const response = await fetch(installerUrl);
+        const scriptContent = await response.text();
+
+        // Create blob and download
+        const blob = new Blob([scriptContent], { type: "text/plain" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "install-elliot-ai.ps1";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert(
+          "Installer downloaded! Run this in PowerShell as Administrator:\n" +
+          "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force\n" +
+          ".\\install-elliot-ai.ps1"
+        );
+      } else {
+        // Mac/Linux: Download and run shell script
+        const response = await fetch(installerUrl);
+        const scriptContent = await response.text();
+
+        const blob = new Blob([scriptContent], { type: "text/plain" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "install-elliot-ai.sh";
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert(
+          "Installer downloaded! Run this in your terminal:\n" +
+          "chmod +x install-elliot-ai.sh\n" +
+          "./install-elliot-ai.sh"
+        );
+      }
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download installer. Please visit the GitHub releases page.");
+    } finally {
+      setIsInstalling(false);
     }
   };
 
@@ -117,7 +192,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         ))}
       </div>
 
-      {/* Launch Button or Message */}
+      {/* Launch Button or Install Button */}
       {cliMode ? (
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button
@@ -144,16 +219,31 @@ export default function Step6Launch({ config = {} }: Step6Props) {
           </span>
         </div>
       ) : (
-        <div style={{ background: "rgba(79,255,176,0.1)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
-          <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", margin: "0 0 12px 0", fontFamily: "var(--font-sans)" }}>
-            To use Elliot-AI, install and run the CLI:
-          </p>
-          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)", display: "block", marginBottom: "8px" }}>
-            npm install -g elliot-ai
-          </code>
-          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)" }}>
-            elliot-ai
-          </code>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            onClick={handleDownloadAndInstall}
+            disabled={isInstalling}
+            style={{
+              background: isInstalling ? "var(--text-muted)" : "var(--accent-green)",
+              color: "black",
+              border: "none",
+              borderRadius: "5px",
+              fontSize: "15px",
+              fontWeight: "700",
+              padding: "11px 24px",
+              cursor: isInstalling ? "not-allowed" : "pointer",
+              fontFamily: "var(--font-mono)",
+              transition: "all 0.15s ease",
+              opacity: isInstalling ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
+            onMouseLeave={(e) => !isInstalling && ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+          >
+            {isInstalling ? "⏳ Downloading..." : "$ Setup & Launch Terminal →"}
+          </button>
+          <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
+            Installs CLI and opens terminal
+          </span>
         </div>
       )}
     </div>
