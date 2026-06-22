@@ -49,7 +49,7 @@ export function useTeams(tenantId: string) {
         const apiUrl = import.meta.env?.VITE_API_URL || "http://localhost:8000";
         const token = localStorage.getItem("elliot_token");
 
-        const response = await fetch(`${apiUrl}/members/${tenantId}`, {
+        const response = await fetch(`${apiUrl}/teams?tenant_id=${tenantId}`, {
           headers: {
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
