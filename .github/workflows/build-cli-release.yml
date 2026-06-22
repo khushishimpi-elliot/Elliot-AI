@@ -41,11 +41,12 @@ jobs:
         run: npm run build
 
       - name: Install pkg
-        run: npm install -g pkg
+        working-directory: ./elliot-cli
+        run: npm install --save-dev pkg@latest
 
       - name: Build standalone binary
         working-directory: ./elliot-cli
-        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }} --public-packages "*"
+        run: npx pkg dist/index.js --targets node18-${{ matrix.target }} --output ./dist-standalone/${{ matrix.filename }}
 
       - name: Make binary executable (Unix)
         if: matrix.os != 'windows-latest'

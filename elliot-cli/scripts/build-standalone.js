@@ -47,18 +47,10 @@ try {
   console.log('📦 Compiling TypeScript...');
   execSync('npm run build', { stdio: 'inherit' });
 
-  // Install pkg if not available
-  try {
-    execSync('npm list pkg', { stdio: 'ignore' });
-  } catch {
-    console.log('📥 Installing pkg...');
-    execSync('npm install --save-dev pkg', { stdio: 'inherit' });
-  }
-
-  // Build for each platform with ESM support
+  // Build for each platform
   for (const platform of platforms) {
     console.log(`\n🏗️  Building for ${platform.name}...`);
-    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output} --public-packages "*"`;
+    const cmd = `npx pkg dist/index.js --targets node18-${platform.target} --output ${platform.output}`;
     execSync(cmd, { stdio: 'inherit' });
     console.log(`✅ Built: ${platform.output}`);
   }
