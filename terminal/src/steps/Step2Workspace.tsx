@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
 interface Step2Props {
   onContinue: () => void;
   onConfigUpdate?: (config: { orgName?: string }) => void;
@@ -11,12 +13,34 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
   const [domain, setDomain] = useState("core-payments.com");
   const [teamSize, setTeamSize] = useState("21-100");
   const [residency, setResidency] = useState("us");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleContinue = () => {
-    if (onConfigUpdate) {
-      onConfigUpdate({ orgName });
+  const handleContinue = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("elliot_token");
+      const res = await fetch(`${API_URL}/workspace`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: orgName, domain, team_size: teamSize, data_residency: residency }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.tenant_id) localStorage.setItem("elliot_tenant_id", data.tenant_id);
+        if (data.token)     localStorage.setItem("elliot_token", data.token);
+      }
+    } catch {
+      // backend unavailable — continue anyway in dev mode
+    } finally {
+      setSaving(false);
     }
-    setTimeout(() => onContinue(), 300);
+    if (onConfigUpdate) onConfigUpdate({ orgName });
+    onContinue();
   };
 
   return (
@@ -146,25 +170,14 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
         </div>
       </div>
 
+      {error && <div style={{ fontSize: "13px", color: "#ff7b72", marginBottom: "10px" }}>{error}</div>}
       {/* Continue Button */}
       <button
         onClick={handleContinue}
-        style={{
-          background: "var(--accent-blue)",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          fontSize: "14px",
-          fontWeight: "600",
-          padding: "10px 20px",
-          cursor: "pointer",
-          fontFamily: "var(--font-sans)",
-          transition: "all 0.15s ease",
-        }}
-        onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-        onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+        disabled={saving}
+        style={{ background: "var(--accent-blue)", color: "white", border: "none", borderRadius: "5px", fontSize: "14px", fontWeight: "600", padding: "10px 20px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", opacity: saving ? 0.7 : 1 }}
       >
-        Continue →
+        {saving ? "Saving…" : "Continue →"}
       </button>
     </div>
   );

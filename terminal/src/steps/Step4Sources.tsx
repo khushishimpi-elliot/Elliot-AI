@@ -1,6 +1,8 @@
 import { useState } from "react";
 import OAuthModal from "../components/OAuthModal";
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
 interface SourceConfig {
   id: string;
   icon: string;
@@ -62,11 +64,39 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     setConnectedSources(new Set(SOURCES.map((s) => s.id)));
   };
 
-  const handleAuthorize = () => {
-    if (modalSource) {
-      setConnectedSources((prev) => new Set(prev).add(modalSource.id));
-      setModalSource(null);
+  const handleAuthorize = async () => {
+    if (!modalSource) return;
+    const source = modalSource;
+    setModalSource(null);
+
+    try {
+      const token = localStorage.getItem("elliot_token");
+      const tenantId = localStorage.getItem("elliot_tenant_id") ?? "default";
+      const res = await fetch(
+        `${API_URL}/connectors/${tenantId}/${source.provider}/authorize`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.redirect_url) {
+          // Open OAuth popup; mark connected when it closes
+          const popup = window.open(data.redirect_url, "_blank", "width=600,height=700");
+          const poll = setInterval(() => {
+            if (popup?.closed) {
+              clearInterval(poll);
+              setConnectedSources((prev) => new Set(prev).add(source.id));
+            }
+          }, 500);
+          return;
+        }
+      }
+    } catch {
+      // fall through to optimistic connect
     }
+
+    // Fallback: mark connected optimistically (dev mode / backend not yet live)
+    setConnectedSources((prev) => new Set(prev).add(source.id));
   };
 
   const handleCancel = () => {
