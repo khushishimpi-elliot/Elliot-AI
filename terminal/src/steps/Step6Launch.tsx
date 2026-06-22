@@ -1,11 +1,88 @@
-interface Step6Props {
-  onComplete?: () => void;
+import { useState, useEffect } from "react";
+
+interface OnboardingConfig {
+  jwtToken?: string;
+  tenantId?: string;
+  userId?: string;
+  teamId?: string;
+  orgName?: string;
+  stack?: string;
 }
 
-export default function Step6Launch({ onComplete = () => {} }: Step6Props) {
-  const handleLaunch = () => {
-    setTimeout(() => onComplete(), 300);
+interface Step6Props {
+  onComplete?: () => void;
+  config?: OnboardingConfig;
+}
+
+export default function Step6Launch({ onComplete = () => {}, config = {} }: Step6Props) {
+  const [cliMode, setCliMode] = useState(false);
+  const [cliCallback, setCliCallback] = useState<string | null>(null);
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("source");
+    const callback = params.get("callback");
+
+    if (source === "cli" && callback) {
+      setCliMode(true);
+      setCliCallback(callback);
+    }
+  }, []);
+
+  const handleLaunch = async () => {
+    if (cliMode && cliCallback) {
+      try {
+        const payload = {
+          jwt_token: config.jwtToken || "",
+          tenant_id: config.tenantId || "",
+          user_id: config.userId || "",
+          team_id: config.teamId || "",
+          org_name: config.orgName || "",
+          stack: config.stack || "",
+          backend_url: "https://elliot-ai-backend.onrender.com",
+          onboarding_url: "https://elliot-ai-terminal.onrender.com",
+        };
+
+        await fetch(cliCallback, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        setIsComplete(true);
+      } catch (error) {
+        console.error("Failed to notify CLI:", error);
+        setTimeout(() => onComplete(), 300);
+      }
+    } else {
+      setTimeout(() => onComplete(), 300);
+    }
   };
+
+  if (isComplete && cliMode) {
+    return (
+      <div>
+        <div style={{ marginBottom: "28px" }}>
+          <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-green)", fontFamily: "var(--font-sans)", marginBottom: "12px" }}>
+            CLI CONFIGURED · SETUP COMPLETE
+          </div>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>
+            ✅ CLI configured
+          </h1>
+          <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
+            Your Elliot-AI CLI is now configured and ready to use. You can close this tab and start using the CLI from your terminal.
+          </p>
+        </div>
+
+        <div style={{ background: "var(--surface)", border: "1px solid rgba(79,255,176,0.3)", borderRadius: "6px", padding: "16px", maxWidth: "540px", marginTop: "24px" }}>
+          <code style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--accent-green)" }}>
+            $ elliot ask "how does auth work?"
+          </code>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -62,9 +139,11 @@ export default function Step6Launch({ onComplete = () => {} }: Step6Props) {
           onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
           onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
         >
-          $ Launch Elliot terminal →
+          {cliMode ? "$ Configure CLI →" : "$ Launch Elliot terminal →"}
         </button>
-        <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>Opens your workspace</span>
+        <span style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>
+          {cliMode ? "Configures your terminal" : "Opens your workspace"}
+        </span>
       </div>
     </div>
   );

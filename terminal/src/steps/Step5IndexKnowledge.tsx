@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 
 interface Step5Props {
   onContinue: () => void;
+  onConfigUpdate?: (config: any) => void;
   onBack?: () => void;
 }
 
-export default function Step5IndexKnowledge({ onContinue }: Step5Props) {
+export default function Step5IndexKnowledge({ onContinue, onConfigUpdate }: Step5Props) {
   const [progress, setProgress] = useState([0, 0, 0, 0, 0]);
 
   useEffect(() => {

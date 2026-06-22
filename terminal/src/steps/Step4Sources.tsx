@@ -47,10 +47,11 @@ const SECTIONS = [
 
 interface Step4Props {
   onContinue: () => void;
+  onConfigUpdate?: (config: any) => void;
   onBack?: () => void;
 }
 
-export default function Step4Sources({ onContinue }: Step4Props) {
+export default function Step4Sources({ onContinue, onConfigUpdate }: Step4Props) {
   const [connectedSources, setConnectedSources] = useState<Set<string>>(new Set());
   const [modalSource, setModalSource] = useState<SourceConfig | null>(null);
 
