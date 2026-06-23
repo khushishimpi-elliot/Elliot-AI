@@ -9,6 +9,7 @@ backend/      FastAPI + LangGraph + pgvector (Python 3.11+)
 terminal/     Developer terminal UI (React + Vite, dark theme)
 dashboard/    Admin dashboard UI (React + Vite, light theme)
 onboarding/   New-tenant signup flow (React 19 + Vite 8, JSX)
+cli/          Local CLI client — `npm i -g @elliot-ai/cli` (Node 20 + Ink TUI)
 ```
 
 ## Quick start
@@ -47,6 +48,20 @@ npm install
 npm run dev
 ```
 Opens at http://localhost:5175
+
+### CLI
+```bash
+cd cli
+npm install
+npm run build
+node bin/elliot.js status    # smoke test
+npm link                     # makes `elliot` global
+
+elliot login
+elliot ask "How does auth work?"
+elliot                       # interactive Ink REPL
+```
+See [cli/README.md](cli/README.md) for the full command list.
 
 ## Project tracking
 

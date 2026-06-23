@@ -1,0 +1,36 @@
+{
+  "name": "@elliot-ai/cli",
+  "version": "0.1.0",
+  "description": "Elliot-AI CLI — ask questions, run queries, interactive REPL",
+  "type": "module",
+  "bin": {
+    "elliot": "./bin/elliot.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --max-warnings 0",
+    "start": "node bin/elliot.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "ink": "^5.1.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "open": "^10.1.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "typescript": "^5.6.3"
+  }
+}
