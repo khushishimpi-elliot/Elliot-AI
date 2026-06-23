@@ -1,10 +1,18 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import App from "./App";
-import "./App.css";
+import ConnectorCallbackPage from "./ConnectorCallbackPage";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+// If the browser landed on /connectors/callback, render the lightweight
+// callback handler instead of the full app.
+const root = document.getElementById("root")!;
+
+if (window.location.pathname === "/connectors/callback") {
+  createRoot(root).render(<ConnectorCallbackPage />);
+} else {
+  createRoot(root).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
