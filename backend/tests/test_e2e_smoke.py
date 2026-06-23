@@ -4,7 +4,7 @@ Exercises the deployed backend over real HTTP. Skipped by default; opt in by
 setting an env var pointing at the target:
 
     # Live deploy
-    E2E_BASE_URL=https://elliot-ai-backend.onrender.com pytest tests/test_e2e_smoke.py -v
+    E2E_BASE_URL=https://elliot-ai.onrender.com pytest tests/test_e2e_smoke.py -v
 
     # Local
     E2E_BASE_URL=http://localhost:8000 pytest tests/test_e2e_smoke.py -v

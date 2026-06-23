@@ -28,7 +28,7 @@ services:
       - key: AUTH0_CLIENT_SECRET
         sync: false
       - key: AUTH0_CALLBACK_URL
-        value: https://elliot-ai-backend.onrender.com/auth/auth0/callback
+        value: https://elliot-ai.onrender.com/auth/auth0/callback
       - key: AUTH0_AUDIENCE
         sync: false
 
@@ -92,13 +92,13 @@ services:
 
       # App URLs
       - key: BACKEND_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: TERMINAL_URL
         value: https://elliot-ai-1.onrender.com
       - key: DASHBOARD_URL
         value: https://elliot-ai-dashboard.onrender.com
       - key: OAUTH_REDIRECT_BASE_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: CORS_ORIGINS
         value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
 
@@ -118,7 +118,7 @@ services:
     startCommand: node index.js
     envVars:
       - key: VITE_API_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: NODE_ENV
         value: production
 
@@ -130,4 +130,4 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
