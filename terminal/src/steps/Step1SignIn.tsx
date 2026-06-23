@@ -13,7 +13,10 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [uiState, setUiState] = useState<UIState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSSO = (provider: "google" | "entra" | "auth0") => {
+    // TODO: route to provider-specific OAuth start; currently all flows just
+    // advance to the next onboarding step.
     onContinue();
   };
 
