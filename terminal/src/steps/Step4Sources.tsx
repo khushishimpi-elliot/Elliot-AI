@@ -61,7 +61,6 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     Object.fromEntries(SOURCES.map((s) => [s.id, "idle"]))
   );
   const [modalSource, setModalSource] = useState<SourceConfig | null>(null);
-  const [loadError, setLoadError]    = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const tenantId = localStorage.getItem("elliot_tenant_id") ?? "";
