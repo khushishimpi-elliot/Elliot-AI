@@ -41,7 +41,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
           org_name: config.orgName || "",
           stack: config.stack || "",
           backend_url: "https://elliot-ai-backend.onrender.com",
-          onboarding_url: "https://elliot-ai-terminal.onrender.com",
+          onboarding_url: "https://elliot-ai-1.onrender.com",
         };
 
         await fetch(cliCallback, {

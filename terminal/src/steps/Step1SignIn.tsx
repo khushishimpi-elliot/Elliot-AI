@@ -13,10 +13,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [uiState, setUiState] = useState<UIState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSSO = (provider: "google" | "entra" | "auth0") => {
-    // TODO: route to provider-specific OAuth start; currently all flows just
-    // advance to the next onboarding step.
+  const handleSSO = () => {
     onContinue();
   };
 
@@ -71,7 +68,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
         {SSO_BUTTONS.map((btn) => (
           <button
             key={btn.icon}
-            onClick={() => handleSSO(btn.provider)}
+            onClick={handleSSO}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "11px 14px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "5px", cursor: "pointer", transition: "all 0.15s ease", fontSize: "14px", fontWeight: "500", color: "var(--text-primary)", fontFamily: "var(--font-sans)", minHeight: "48px" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-blue)"; (e.currentTarget as HTMLButtonElement).style.background = "#1e2235"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--surface-2)"; }}
