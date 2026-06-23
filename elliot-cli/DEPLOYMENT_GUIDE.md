@@ -10,7 +10,7 @@ The Elliot-AI CLI uses **standalone executables** - no Node.js installation requ
 
 ```
 Developer Flow:
-1. Visits web UI: https://elliot-ai-terminal.onrender.com
+1. Visits web UI: https://elliot-ai-1.onrender.com
 2. Completes 6-step onboarding
 3. Clicks "Setup & Launch Terminal"
 4. Web UI downloads appropriate installer (Windows/Mac/Linux)
@@ -138,7 +138,7 @@ The web UI detects the developer's OS and:
 
 ### Step 1: Visit Web UI
 ```
-https://elliot-ai-terminal.onrender.com
+https://elliot-ai-1.onrender.com
 ```
 
 ### Step 2: Complete Onboarding

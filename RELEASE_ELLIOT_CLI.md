@@ -149,7 +149,7 @@ curl -L -O https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1
 
 ## Step 7: Test Web UI Installation Flow
 
-1. Open: https://elliot-ai-terminal.onrender.com
+1. Open: https://elliot-ai-1.onrender.com
 2. Complete onboarding (Steps 1-6)
 3. Click "Setup & Launch Terminal" button
 4. Should show instructions to download installer
@@ -290,7 +290,7 @@ https://github.com/khushishimpi-elliot/Elliot-AI/releases/tag/v1.0.0
 ```
 
 ### Test web UI:
-- Visit https://elliot-ai-terminal.onrender.com
+- Visit https://elliot-ai-1.onrender.com
 - Complete setup
 - Click "Setup & Launch Terminal"
 - Should link to GitHub releases

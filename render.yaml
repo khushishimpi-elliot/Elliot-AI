@@ -94,13 +94,13 @@ services:
       - key: BACKEND_URL
         value: https://elliot-ai-backend.onrender.com
       - key: TERMINAL_URL
-        value: https://elliot-ai-terminal.onrender.com
+        value: https://elliot-ai-1.onrender.com
       - key: DASHBOARD_URL
         value: https://elliot-ai-dashboard.onrender.com
       - key: OAUTH_REDIRECT_BASE_URL
         value: https://elliot-ai-backend.onrender.com
       - key: CORS_ORIGINS
-        value: https://elliot-ai-terminal.onrender.com,https://elliot-ai-dashboard.onrender.com
+        value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
 
       # Security
       - key: FERNET_KEY

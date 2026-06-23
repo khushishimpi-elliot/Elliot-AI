@@ -10,7 +10,7 @@ export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
 
   const handleDevSignIn = () => {
     if (localStorage.getItem("elliot_onboarded") === "true") {
-      window.location.href = "https://elliot-ai-terminal.onrender.com";
+      window.location.href = "https://elliot-ai-1.onrender.com";
     } else {
       onSignIn();
     }

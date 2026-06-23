@@ -41,7 +41,7 @@ export async function initCommand(): Promise<void> {
     printInfo("Starting callback server on http://localhost:3333...");
 
     const callbackUrl = encodeURIComponent("http://localhost:3333/callback");
-    const onboardingUrl = `https://elliot-ai-terminal.onrender.com?callback=${callbackUrl}&source=cli`;
+    const onboardingUrl = `https://elliot-ai-1.onrender.com?callback=${callbackUrl}&source=cli`;
 
     printInfo("Opening browser for setup...");
     printInfo("Complete the 6-step onboarding in your browser.");
