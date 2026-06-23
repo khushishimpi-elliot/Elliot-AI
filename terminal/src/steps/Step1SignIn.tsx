@@ -13,7 +13,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [uiState, setUiState] = useState<UIState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSSO = (provider: "google" | "entra" | "auth0") => {
+  const handleSSO = () => {
     onContinue();
   };
 
