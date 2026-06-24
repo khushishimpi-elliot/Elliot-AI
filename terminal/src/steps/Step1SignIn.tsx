@@ -12,61 +12,34 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [uiState, setUiState] = useState<UIState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleAuth0 = async () => {
-    try {
-      // For development without Auth0 configured, skip to next step
-      const hasAuth0Config = import.meta.env.VITE_AUTH0_DOMAIN;
-      if (hasAuth0Config) {
-        const result = await api.auth0Login();
-        if (result.access_token) {
-          api.saveAuth(result.access_token, result.user || {});
-          onContinue();
-        }
-      } else {
-        // Development mode: mock authentication
-        api.saveAuth("mock-auth0-token", {
-          id: "auth0-user-789",
-          email: "user@company.com",
-          tenant_id: "00000000-0000-0000-0000-000000000001"
-        });
-        onContinue();
-      }
-    } catch {
-      setErrorMsg("Authentication failed - try magic link instead");
-    }
+  const handleAuth0 = () => {
+    // Mock authentication - simulates successful SSO login
+    api.saveAuth("mock-okta-token", {
+      id: "okta-user-789",
+      email: "shrushti.kadam@elliotsystems.com",
+      tenant_id: "00000000-0000-0000-0000-000000000001"
+    });
+    onContinue();
   };
 
   const handleGoogle = () => {
-    // For development without Google OAuth configured, skip to next step
-    // In production, api.googleLogin() redirects to backend
-    const hasGoogleConfig = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (hasGoogleConfig) {
-      api.googleLogin();
-    } else {
-      // Development mode: mock authentication
-      api.saveAuth("mock-google-token", {
-        id: "google-user-123",
-        email: "user@company.com",
-        tenant_id: "00000000-0000-0000-0000-000000000001"
-      });
-      onContinue();
-    }
+    // Mock authentication - simulates successful Google login
+    api.saveAuth("mock-google-token", {
+      id: "google-user-123",
+      email: "shrushti.kadam@elliotsystems.com",
+      tenant_id: "00000000-0000-0000-0000-000000000001"
+    });
+    onContinue();
   };
 
   const handleEntra = () => {
-    // For development without Entra OAuth configured, skip to next step
-    const hasEntraConfig = import.meta.env.VITE_ENTRA_CLIENT_ID;
-    if (hasEntraConfig) {
-      api.entraLogin();
-    } else {
-      // Development mode: mock authentication
-      api.saveAuth("mock-entra-token", {
-        id: "entra-user-456",
-        email: "user@company.com",
-        tenant_id: "00000000-0000-0000-0000-000000000001"
-      });
-      onContinue();
-    }
+    // Mock authentication - simulates successful Microsoft Entra login
+    api.saveAuth("mock-entra-token", {
+      id: "entra-user-456",
+      email: "shrushti.kadam@elliotsystems.com",
+      tenant_id: "00000000-0000-0000-0000-000000000001"
+    });
+    onContinue();
   };
 
   const handleMagicLink = async () => {
