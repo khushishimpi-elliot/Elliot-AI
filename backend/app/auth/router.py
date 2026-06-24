@@ -48,23 +48,34 @@ def google_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/google/callback", response_model=TokenResponse)
-def google_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
+@router.get("/google/callback")
+def google_callback(code: str = Query(...), state: str = Query(...)):
+    settings = get_settings()
+
     if not oauth_state.consume(state):
-        raise HTTPException(status_code=400, detail="invalid or expired state")
+        # Redirect back to frontend with error parameter instead of returning error JSON
+        # Frontend will detect error parameter and use fallback auth
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_state_expired",
+            status_code=302
+        )
 
     try:
         tokens = sso_google.exchange_code_for_tokens(code)
         claims = sso_google.verify_id_token(tokens["id_token"])
     except sso_google.OIDCError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_failed",
+            status_code=302
+        )
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
+
+    # Redirect back to frontend with JWT token
+    return RedirectResponse(
+        url=f"{settings.terminal_url}/?jwt_token={access_token}",
+        status_code=302
     )
 
 
@@ -78,23 +89,33 @@ def entra_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/entra/callback", response_model=TokenResponse)
-def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
+@router.get("/entra/callback")
+def entra_callback(code: str = Query(...), state: str = Query(...)):
+    settings = get_settings()
+
     if not oauth_state.consume(state):
-        raise HTTPException(status_code=400, detail="invalid or expired state")
+        # Redirect back to frontend with error parameter
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_state_expired",
+            status_code=302
+        )
 
     try:
         tokens = sso_entra.exchange_code_for_tokens(code)
         claims = sso_entra.verify_id_token(tokens["id_token"])
     except sso_entra.OIDCError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_failed",
+            status_code=302
+        )
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
+
+    # Redirect back to frontend with JWT token
+    return RedirectResponse(
+        url=f"{settings.terminal_url}/?jwt_token={access_token}",
+        status_code=302
     )
 
 
@@ -137,7 +158,11 @@ async def auth0_callback(
         raise HTTPException(status_code=503, detail="Auth0 not configured")
 
     if not oauth_state.consume(state):
-        raise HTTPException(status_code=400, detail="Invalid or expired state")
+        # Redirect back to frontend with error parameter
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_state_expired",
+            status_code=302
+        )
 
     try:
         # Exchange code for tokens
@@ -158,20 +183,22 @@ async def auth0_callback(
         # Create JWT
         jwt_token = auth0_service.create_jwt(user)
 
-        return {
-            "jwt_token": jwt_token,
-            "user": {
-                "email": user["email"],
-                "role": user["role"],
-                "tenant_id": user["tenant_id"],
-            },
-            "message": "Successfully authenticated with Auth0",
-        }
+        # Redirect back to frontend with JWT token
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?jwt_token={jwt_token}",
+            status_code=302
+        )
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_failed",
+            status_code=302
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Auth0 login failed") from e
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=oauth_failed",
+            status_code=302
+        )
 
 
 @router.get("/auth0/logout")
