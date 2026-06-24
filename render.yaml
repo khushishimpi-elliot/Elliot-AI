@@ -10,10 +10,8 @@ services:
       - key: DATABASE_URL
         sync: false
 
-      # AI APIs
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
+      # AI APIs (OpenRouter)
+      - key: OPENROUTER_API_KEY
         sync: false
 
       # JWT & Auth
@@ -90,6 +88,30 @@ services:
       - key: CLICKUP_CLIENT_SECRET
         sync: false
 
+      # Notion
+      - key: NOTION_CLIENT_ID
+        sync: false
+      - key: NOTION_CLIENT_SECRET
+        sync: false
+
+      # Google Drive
+      - key: GDRIVE_CLIENT_ID
+        sync: false
+      - key: GDRIVE_CLIENT_SECRET
+        sync: false
+
+      # Confluence
+      - key: CONFLUENCE_CLIENT_ID
+        sync: false
+      - key: CONFLUENCE_CLIENT_SECRET
+        sync: false
+
+      # SharePoint
+      - key: SHAREPOINT_CLIENT_ID
+        sync: false
+      - key: SHAREPOINT_CLIENT_SECRET
+        sync: false
+
       # App URLs
       - key: BACKEND_URL
         value: https://elliot-ai.onrender.com
@@ -101,6 +123,14 @@ services:
         value: https://elliot-ai.onrender.com
       - key: CORS_ORIGINS
         value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
+      - key: MAGIC_LINK_BASE_URL
+        value: https://elliot-ai-1.onrender.com/auth/callback
+
+      # Email (Resend)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: onboarding@elliot-ai.com
 
       # Security
       - key: FERNET_KEY
@@ -124,10 +154,12 @@ services:
 
   - type: web
     name: elliot-ai-dashboard
-    runtime: static
+    runtime: node
     rootDir: dashboard
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: node index.js
     envVars:
       - key: VITE_API_URL
         value: https://elliot-ai.onrender.com
+      - key: NODE_ENV
+        value: production

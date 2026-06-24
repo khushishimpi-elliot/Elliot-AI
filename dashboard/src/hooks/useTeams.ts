@@ -45,7 +45,6 @@ export function useTeams(tenantId: string) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // @ts-expect-error - import.meta.env is available at runtime
         const apiUrl = import.meta.env?.VITE_API_URL || "http://localhost:8000";
         const token = localStorage.getItem("elliot_token");
 
