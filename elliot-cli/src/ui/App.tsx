@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, useInput, useApp, useStdout } from "ink";
+import { Box, Text, useInput, useApp, useStdout } from "ink";
 import { ElliotConfig } from "../config.js";
 import { ConnectorInfo } from "../api.js";
 import { streamQuery } from "../stream.js";
@@ -146,10 +146,10 @@ export default function App({
     }
   };
 
-  const conversationWidth = terminalWidth - sidebarWidth - 3;
+  const conversationWidth = terminalWidth - sidebarWidth - 4;
 
   return (
-    <Box flexDirection="column" height="100%">
+    <Box flexDirection="column">
       {/* HEADER */}
       <Header
         config={config}
@@ -159,30 +159,39 @@ export default function App({
         terminalWidth={terminalWidth}
       />
 
-      {/* MAIN CONTENT: SIDEBAR + CONVERSATION */}
-      <Box flexDirection="row" flexGrow={1}>
-        {/* SIDEBAR */}
-        <Sidebar
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={setActiveSessionId}
-          width={sidebarWidth}
-        />
+      {/* MAIN BOX SECTION */}
+      <Box
+        borderStyle="single"
+        borderColor="gray"
+        paddingX={1}
+        paddingY={0}
+        width={terminalWidth}
+      >
+        {/* MAIN CONTENT: SIDEBAR + CONVERSATION */}
+        <Box flexDirection="row" flexGrow={1}>
+          {/* SIDEBAR */}
+          <Sidebar
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSelectSession={setActiveSessionId}
+            width={sidebarWidth}
+          />
 
-        {/* VERTICAL DIVIDER */}
-        <Box
-          borderStyle="single"
-          borderLeft={true}
-          borderRight={false}
-          borderTop={false}
-          borderBottom={false}
-        />
+          {/* VERTICAL DIVIDER */}
+          <Box
+            borderStyle="single"
+            borderLeft={true}
+            borderRight={false}
+            borderTop={false}
+            borderBottom={false}
+            borderColor="gray"
+          />
 
-        {/* CONVERSATION */}
-        <Conversation
-          messages={currentMessages}
-          width={conversationWidth}
-        />
+          {/* CONVERSATION */}
+          <Box paddingLeft={1} width={conversationWidth}>
+            <Conversation messages={currentMessages} width={conversationWidth} />
+          </Box>
+        </Box>
       </Box>
 
       {/* FOOTER */}

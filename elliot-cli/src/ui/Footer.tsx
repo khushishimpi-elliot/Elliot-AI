@@ -2,7 +2,6 @@ import React from "react";
 import { Box, Text } from "ink";
 import { ConnectorInfo } from "../api.js";
 import os from "os";
-import path from "path";
 
 interface FooterProps {
   connectors: ConnectorInfo[];
@@ -15,7 +14,6 @@ export default function Footer({
   backendHealthy,
   terminalWidth = 120,
 }: FooterProps) {
-  const borderLine = "─".repeat(terminalWidth - 2);
   const homeDir = os.homedir();
   const currentDir = process.cwd();
   const displayDir =
@@ -32,23 +30,23 @@ export default function Footer({
     backendHealthy && connectedCount > 0
       ? `✓  ${connectedCount} tools`
       : "✗  offline";
-  const statusColor = backendHealthy ? "gray" : "red";
+  const statusColor = backendHealthy ? "gray" : "#FF6B6B";
 
   return (
     <Box
-      flexDirection="column"
-      marginTop={1}
+      borderStyle="single"
+      borderColor="gray"
+      borderTop={true}
+      borderBottom={true}
+      borderLeft={true}
+      borderRight={true}
       paddingX={1}
-      width={terminalWidth - 2}
+      paddingY={0}
+      width={terminalWidth}
+      justifyContent="space-between"
     >
-      {/* Top Border */}
-      <Text color="gray">{borderLine}</Text>
-
-      {/* Status Bar */}
-      <Box justifyContent="space-between" width={terminalWidth - 2}>
-        <Text color="gray">{displayDir}</Text>
-        <Text color={statusColor}>MCP {toolsStatus}</Text>
-      </Box>
+      <Text color="gray">{displayDir}</Text>
+      <Text color={statusColor}>MCP {toolsStatus}</Text>
     </Box>
   );
 }

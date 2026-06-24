@@ -37,14 +37,35 @@ export default function InputBar({
 
   if (disabled) {
     return (
-      <Box marginTop={1} paddingX={1}>
-        <Text color="gray">  {WAITING_FRAMES[spinnerFrame]} waiting for response...</Text>
+      <Box
+        borderStyle="single"
+        borderColor="gray"
+        borderTop={true}
+        borderBottom={true}
+        borderLeft={true}
+        borderRight={true}
+        paddingX={1}
+        paddingY={0}
+        width={terminalWidth}
+      >
+        <Text color="gray">{"> "}</Text>
+        <Text color="gray">{WAITING_FRAMES[spinnerFrame]} waiting for response...</Text>
       </Box>
     );
   }
 
   return (
-    <Box marginTop={1} paddingX={1} width={terminalWidth - 2}>
+    <Box
+      borderStyle="single"
+      borderColor="gray"
+      borderTop={true}
+      borderBottom={true}
+      borderLeft={true}
+      borderRight={true}
+      paddingX={1}
+      paddingY={0}
+      width={terminalWidth}
+    >
       <Text color="#4FFFB0">{"> "}</Text>
       <TextInput
         value={input}
