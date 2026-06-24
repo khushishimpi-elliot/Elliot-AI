@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.auth import magic_link
-from app.auth.jwt import decode_access_token
 from app.main import app
 
 client = TestClient(app)
