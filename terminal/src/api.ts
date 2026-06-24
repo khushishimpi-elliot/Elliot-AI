@@ -63,11 +63,14 @@ export const api = {
     team_size: string
     data_residency: string
   }) => {
-    const r = await fetch(`${API_URL}/organisations`, {
+    const r = await fetch(`${API_URL}/onboarding/workspace`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
-        tenant_id: getTenantId(), ...data
+        name: data.org_name,
+        domain: data.domain,
+        team_size: data.team_size,
+        residency: data.data_residency
       })
     })
     return r.json()

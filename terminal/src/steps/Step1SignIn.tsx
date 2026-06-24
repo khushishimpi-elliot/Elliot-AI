@@ -13,33 +13,19 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleAuth0 = () => {
-    // Mock authentication - simulates successful SSO login
-    api.saveAuth("mock-okta-token", {
-      id: "okta-user-789",
-      email: "shrushti.kadam@elliotsystems.com",
-      tenant_id: "00000000-0000-0000-0000-000000000001"
-    });
-    onContinue();
+    // Redirect to Google login (works like Google Workspace)
+    api.googleLogin();
   };
 
   const handleGoogle = () => {
-    // Mock authentication - simulates successful Google login
-    api.saveAuth("mock-google-token", {
-      id: "google-user-123",
-      email: "shrushti.kadam@elliotsystems.com",
-      tenant_id: "00000000-0000-0000-0000-000000000001"
-    });
-    onContinue();
+    // Redirect to Google login page
+    // User selects email → confirms → redirected back with auth code
+    api.googleLogin();
   };
 
   const handleEntra = () => {
-    // Mock authentication - simulates successful Microsoft Entra login
-    api.saveAuth("mock-entra-token", {
-      id: "entra-user-456",
-      email: "shrushti.kadam@elliotsystems.com",
-      tenant_id: "00000000-0000-0000-0000-000000000001"
-    });
-    onContinue();
+    // Redirect to Entra login page
+    api.entraLogin();
   };
 
   const handleMagicLink = async () => {
@@ -54,10 +40,21 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
     }
   };
 
-  // Called when user returns from magic link click in email
-  const token = new URLSearchParams(window.location.search).get("token");
+  // Handle callbacks from OAuth providers
+  const params = new URLSearchParams(window.location.search);
+
+  // Magic link callback
+  const token = params.get("token");
   if (token) {
     localStorage.setItem("elliot_jwt", token);
+    window.history.replaceState({}, "", window.location.pathname);
+    onContinue();
+  }
+
+  // OAuth success callback (from /auth/callback or /connectors/callback)
+  const oauthToken = params.get("access_token") || params.get("jwt_token");
+  if (oauthToken) {
+    localStorage.setItem("elliot_jwt", oauthToken);
     window.history.replaceState({}, "", window.location.pathname);
     onContinue();
   }
