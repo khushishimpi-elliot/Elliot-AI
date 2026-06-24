@@ -2,9 +2,9 @@ import json
 import logging
 from uuid import UUID
 
-from openai import OpenAI
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from openai import OpenAI
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
