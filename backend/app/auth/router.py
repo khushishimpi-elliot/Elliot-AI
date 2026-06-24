@@ -23,18 +23,25 @@ def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
 
 
-@router.get("/callback", response_model=TokenResponse)
-def redeem_magic_link(token: str = Query(...)) -> TokenResponse:
+@router.get("/callback")
+def redeem_magic_link(token: str = Query(...)) -> RedirectResponse:
+    settings = get_settings()
+
     try:
         email = magic_link.redeem(token)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        # Invalid or expired token — redirect back with error
+        return RedirectResponse(
+            url=f"{settings.terminal_url}/?error=invalid_magic_link",
+            status_code=302
+        )
 
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
+
+    # Redirect back to frontend with JWT token (like OAuth callbacks)
+    return RedirectResponse(
+        url=f"{settings.terminal_url}/?token={access_token}",
+        status_code=302
     )
 
 
