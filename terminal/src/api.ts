@@ -39,11 +39,11 @@ export const api = {
     window.location.href = `${API_URL}/auth/entra/login`
   },
 
-  saveAuth: (jwt: string, user: any) => {
+  saveAuth: (jwt: string, user: Record<string, unknown>) => {
     localStorage.setItem('elliot_jwt', jwt)
-    localStorage.setItem('elliot_user_id', user.id || '')
-    localStorage.setItem('elliot_tenant_id', user.tenant_id || '')
-    localStorage.setItem('elliot_email', user.email || '')
+    localStorage.setItem('elliot_user_id', (user.id as string) || '')
+    localStorage.setItem('elliot_tenant_id', (user.tenant_id as string) || '')
+    localStorage.setItem('elliot_email', (user.email as string) || '')
   },
 
   isLoggedIn: () => !!localStorage.getItem('elliot_jwt'),
@@ -126,7 +126,7 @@ export const api = {
       const r = await fetch(`${API_URL}/launch`, {
         headers: authHeaders()
       })
-      return r.json()
+      return r.json() as Promise<Record<string, unknown>>
     } catch {
       return null
     }
@@ -137,7 +137,7 @@ export const api = {
   queryStream: async (
     query: string,
     onToken: (t: string) => void,
-    onDone: (d: any) => void,
+    onDone: (d: Record<string, unknown>) => void,
     onError: (e: string) => void
   ) => {
     try {
@@ -175,7 +175,7 @@ export const api = {
           } catch {}
         }
       }
-    } catch (err) {
+    } catch {
       onError('Cannot reach backend. Check connection.')
     }
   }

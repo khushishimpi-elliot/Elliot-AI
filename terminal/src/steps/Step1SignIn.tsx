@@ -19,7 +19,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
         api.saveAuth(result.access_token, result.user || {});
         onContinue();
       }
-    } catch (e) {
+    } catch {
       setErrorMsg("Auth0 login failed");
     }
   };
@@ -38,8 +38,8 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
     try {
       await api.sendMagicLink(email);
       setUiState("sent");
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : "Failed to send link");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to send link");
       setUiState("error");
     }
   };
