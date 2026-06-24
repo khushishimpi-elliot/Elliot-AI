@@ -88,11 +88,16 @@ class Settings(BaseSettings):
     confluence_client_id: str = ""
     confluence_client_secret: str = ""
 
-    # ── AI APIs ──────────────────────────────────────
-    openai_api_key: str = ""
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-sonnet-4-6"
-    anthropic_max_tokens: int = 2048
+    # ── AI APIs (OpenRouter) ─────────────────────────
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    claude_model: str = "anthropic/claude-sonnet-4-6"
+    embedding_model: str = "openai/text-embedding-3-small"
+    max_tokens: int = 2048
+
+    # ── Email (Resend) ───────────────────────────────
+    resend_api_key: str = ""
+    email_from: str = "onboarding@resend.dev"
 
     # ── Security ─────────────────────────────────────
     fernet_key: str = ""

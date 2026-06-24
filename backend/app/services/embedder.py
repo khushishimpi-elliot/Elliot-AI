@@ -6,13 +6,16 @@ from app.config import get_settings
 
 
 class Embedder:
-    """OpenAI embeddings service"""
+    """OpenRouter embeddings service (OpenAI models)"""
 
     def __init__(self):
-        """Initialize OpenAI client"""
+        """Initialize OpenRouter client (OpenAI-compatible)"""
         settings = get_settings()
-        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
-        self.model = "text-embedding-3-small"
+        self.client = AsyncOpenAI(
+            base_url=settings.openrouter_base_url,
+            api_key=settings.openrouter_api_key,
+        )
+        self.model = settings.embedding_model
         self.embedding_dim = 1536
 
     async def embed_text(self, text: str) -> list[float]:

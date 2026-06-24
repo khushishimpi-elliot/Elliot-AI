@@ -6,16 +6,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.token_usage import TokenUsageLog
 
-# Model pricing: (input_cost_per_1M, output_cost_per_1M)
+# Model pricing via OpenRouter: (input_cost_per_1M, output_cost_per_1M)
 MODEL_PRICING = {
+    "anthropic/claude-sonnet-4-6": (3.0, 15.0),
+    "anthropic/claude-opus-4-8": (15.0, 75.0),
+    "anthropic/claude-haiku-4-5": (0.25, 1.25),
+    "openai/gpt-4o": (5.0, 15.0),
+    "openai/gpt-4o-mini": (0.15, 0.60),
+    "openai/text-embedding-3-small": (0.02, 0.0),
+    # Fallback for old format (for compatibility)
     "claude-sonnet-4-6": (3.0, 15.0),
-    "claude-opus-4-8": (15.0, 75.0),
-    "claude-haiku-4-5-20251001": (0.25, 1.25),
     "gpt-4o": (5.0, 15.0),
-    "gpt-4o-mini": (0.15, 0.60),
 }
 
-DEFAULT_PRICING = (3.0, 15.0)  # claude-sonnet-4-6
+DEFAULT_PRICING = (3.0, 15.0)  # anthropic/claude-sonnet-4-6
 
 
 def calculate_cost(

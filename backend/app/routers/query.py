@@ -2,12 +2,13 @@ import json
 import logging
 from uuid import UUID
 
-from anthropic import Anthropic
+from openai import OpenAI
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.db.session import get_db
 from app.models.token_usage import TokenUsageLog
 from app.schemas.query import (
@@ -208,28 +209,48 @@ async def query_stream(
                 yield 'data: {"error": "Failed to generate prompt"}\n\n'
                 return
 
-            # Stream tokens from Claude
-            client = Anthropic()
+            # Stream tokens from Claude via OpenRouter
+            settings = get_settings()
+            client = OpenAI(
+                base_url=settings.openrouter_base_url,
+                api_key=settings.openrouter_api_key,
+            )
             input_tokens = 0
             output_tokens = 0
             response_text = ""
 
-            with client.messages.stream(
-                model="claude-sonnet-4-6",
-                max_tokens=2000,
+            stream = client.chat.completions.create(
+                model=settings.claude_model,
+                max_tokens=settings.max_tokens,
                 messages=[{"role": "user", "content": state["prompt"]}],
-            ) as stream:
-                for text in stream.text_stream:
+                stream=True,
+                extra_headers={
+                    "HTTP-Referer": "https://elliot-ai.onrender.com",
+                    "X-Title": "Elliot-AI",
+                },
+            )
+
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    text = chunk.choices[0].delta.content
                     response_text += text
                     # Send token as SSE event
                     event_data = json.dumps({"token": text})
                     yield f"data: {event_data}\n\n"
 
-                # Get final token counts from response
-                if stream.get_final_message():
-                    final = stream.get_final_message()
-                    input_tokens = final.usage.input_tokens
-                    output_tokens = final.usage.output_tokens
+            # For OpenRouter, token counts come from the final response
+            # Re-create a non-streaming request to get token counts
+            response = client.chat.completions.create(
+                model=settings.claude_model,
+                max_tokens=settings.max_tokens,
+                messages=[{"role": "user", "content": state["prompt"]}],
+                extra_headers={
+                    "HTTP-Referer": "https://elliot-ai.onrender.com",
+                    "X-Title": "Elliot-AI",
+                },
+            )
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
 
             # Log token usage
             try:
@@ -238,7 +259,7 @@ async def query_stream(
                     request.user_id,
                     request.tenant_id,
                     request.team_id,
-                    "claude-sonnet-4-6",
+                    settings.claude_model,
                     input_tokens,
                     output_tokens,
                     state["query_type"],
@@ -265,7 +286,7 @@ async def query_stream(
                     "output": output_tokens,
                     "cost_usd": float(
                         calculate_cost(
-                            "claude-sonnet-4-6",
+                            settings.claude_model,
                             input_tokens,
                             output_tokens,
                         )

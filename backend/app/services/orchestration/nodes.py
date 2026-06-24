@@ -1,9 +1,10 @@
 import logging
 
-from anthropic import Anthropic
+from openai import OpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models.connector import Connector
 from app.models.sdlc import SDLCProfile
 from app.services.token_logger import log_token_usage
@@ -312,20 +313,28 @@ Instructions:
 
 
 def llm_node(state: AgentState) -> AgentState:
-    """Call Claude to generate response"""
+    """Call Claude via OpenRouter to generate response"""
     try:
-        client = Anthropic()
-
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": state["prompt"]}],
+        settings = get_settings()
+        client = OpenAI(
+            base_url=settings.openrouter_base_url,
+            api_key=settings.openrouter_api_key,
         )
 
-        answer = response.content[0].text
+        response = client.chat.completions.create(
+            model=settings.claude_model,
+            max_tokens=settings.max_tokens,
+            messages=[{"role": "user", "content": state["prompt"]}],
+            extra_headers={
+                "HTTP-Referer": "https://elliot-ai.onrender.com",
+                "X-Title": "Elliot-AI",
+            },
+        )
 
-        input_tokens = response.usage.input_tokens
-        output_tokens = response.usage.output_tokens
+        answer = response.choices[0].message.content
+
+        input_tokens = response.usage.prompt_tokens
+        output_tokens = response.usage.completion_tokens
 
         logger.info(
             f"LLM response: {input_tokens} input, "
