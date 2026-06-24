@@ -67,9 +67,10 @@ def test_login_omits_hd_when_no_workspace_domain(monkeypatch):
 
 
 def test_callback_rejects_unknown_state(configured_google):
-    r = client.get("/auth/google/callback?code=anything&state=never-issued")
-    assert r.status_code == 400
-    assert "invalid or expired state" in r.json()["detail"]
+    r = client.get("/auth/google/callback?code=anything&state=never-issued", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_state_expired" in location
 
 
 def test_callback_happy_path(configured_google):
@@ -87,17 +88,15 @@ def test_callback_happy_path(configured_google):
         patch.object(sso_google, "exchange_code_for_tokens", return_value=fake_tokens),
         patch.object(sso_google, "verify_id_token", return_value=fake_claims),
     ):
-        r = client.get(f"/auth/google/callback?code=auth-code&state={state}")
+        r = client.get(f"/auth/google/callback?code=auth-code&state={state}", follow_redirects=False)
 
-    assert r.status_code == 200
-    body = r.json()
-    assert body["email"] == "khushi@elliotsystems.com"
-    assert body["token_type"] == "bearer"
-    assert body["access_token"]
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "jwt_token=" in location
 
 
 def test_callback_rejects_wrong_workspace_domain(configured_google):
-    """If sso_google.verify_id_token raises OIDCError, we 400."""
+    """If sso_google.verify_id_token raises OIDCError, we redirect with error."""
     state = oauth_state.issue()
 
     with (
@@ -110,19 +109,22 @@ def test_callback_rejects_wrong_workspace_domain(configured_google):
             side_effect=sso_google.OIDCError("workspace domain mismatch"),
         ),
     ):
-        r = client.get(f"/auth/google/callback?code=x&state={state}")
+        r = client.get(f"/auth/google/callback?code=x&state={state}", follow_redirects=False)
 
-    assert r.status_code == 400
-    assert "workspace domain mismatch" in r.json()["detail"]
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_failed" in location
 
 
 def test_state_is_single_use(configured_google):
     state = oauth_state.issue()
     # Consume it once directly
     assert oauth_state.consume(state) is True
-    # Now the callback should reject it
-    r = client.get(f"/auth/google/callback?code=x&state={state}")
-    assert r.status_code == 400
+    # Now the callback should reject it with a redirect
+    r = client.get(f"/auth/google/callback?code=x&state={state}", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_state_expired" in location
 
 
 # ---- Unit: build_authorization_url ---------------------------------------

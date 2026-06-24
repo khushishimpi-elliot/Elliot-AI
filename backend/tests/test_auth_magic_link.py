@@ -32,31 +32,29 @@ def test_callback_returns_jwt_for_valid_token():
     email = "khushi@elliotsystems.com"
     token, _ = magic_link.issue_link(email)
 
-    r = client.get(f"/auth/callback?token={token}")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["token_type"] == "bearer"
-    assert body["email"] == email
-
-    payload = decode_access_token(body["access_token"])
-    assert payload["sub"] == email
-    assert payload["typ"] == "access"
+    r = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "token=" in location
+    assert "error" not in location
 
 
 def test_callback_rejects_unknown_token():
-    r = client.get("/auth/callback?token=does-not-exist")
-    assert r.status_code == 400
-    assert "unknown" in r.json()["detail"]
+    r = client.get("/auth/callback?token=does-not-exist", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=invalid_magic_link" in location
 
 
 def test_callback_rejects_reused_token():
     token, _ = magic_link.issue_link("khushi@elliotsystems.com")
-    first = client.get(f"/auth/callback?token={token}")
-    assert first.status_code == 200
+    first = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert first.status_code == 302
 
-    second = client.get(f"/auth/callback?token={token}")
-    assert second.status_code == 400
-    assert "already used" in second.json()["detail"]
+    second = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert second.status_code == 302
+    location = second.headers.get("location", "")
+    assert "error=invalid_magic_link" in location
 
 
 def test_callback_rejects_expired_token():
@@ -66,9 +64,10 @@ def test_callback_rejects_expired_token():
     token, _ = magic_link.issue_link(email)
     magic_link._store[token].expires_at = datetime.now(UTC) - timedelta(seconds=1)
 
-    r = client.get(f"/auth/callback?token={token}")
-    assert r.status_code == 400
-    assert "expired" in r.json()["detail"]
+    r = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=invalid_magic_link" in location
 
 
 def test_end_to_end_flow():
@@ -82,8 +81,7 @@ def test_end_to_end_flow():
     assert len(magic_link._store) == 1
     token = next(iter(magic_link._store.keys()))
 
-    r2 = client.get(f"/auth/callback?token={token}")
-    assert r2.status_code == 200
-
-    payload = decode_access_token(r2.json()["access_token"])
-    assert payload["sub"] == email
+    r2 = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert r2.status_code == 302
+    location = r2.headers.get("location", "")
+    assert "token=" in location

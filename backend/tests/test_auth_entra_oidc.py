@@ -102,9 +102,10 @@ def test_login_redirects_to_microsoft(configured_entra):
 
 
 def test_callback_rejects_unknown_state(configured_entra):
-    r = client.get("/auth/entra/callback?code=anything&state=never-issued")
-    assert r.status_code == 400
-    assert "invalid or expired state" in r.json()["detail"]
+    r = client.get("/auth/entra/callback?code=anything&state=never-issued", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_state_expired" in location
 
 
 def test_callback_happy_path(configured_entra):
@@ -122,13 +123,11 @@ def test_callback_happy_path(configured_entra):
         patch.object(sso_entra, "exchange_code_for_tokens", return_value=fake_tokens),
         patch.object(sso_entra, "verify_id_token", return_value=fake_claims),
     ):
-        r = client.get(f"/auth/entra/callback?code=auth-code&state={state}")
+        r = client.get(f"/auth/entra/callback?code=auth-code&state={state}", follow_redirects=False)
 
-    assert r.status_code == 200
-    body = r.json()
-    assert body["email"] == "astika@elliotsystems.com"
-    assert body["token_type"] == "bearer"
-    assert body["access_token"]
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "jwt_token=" in location
 
 
 def test_callback_rejects_on_oidc_error(configured_entra):
@@ -142,14 +141,17 @@ def test_callback_rejects_on_oidc_error(configured_entra):
             side_effect=sso_entra.OIDCError("tenant mismatch"),
         ),
     ):
-        r = client.get(f"/auth/entra/callback?code=x&state={state}")
+        r = client.get(f"/auth/entra/callback?code=x&state={state}", follow_redirects=False)
 
-    assert r.status_code == 400
-    assert "tenant mismatch" in r.json()["detail"]
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_failed" in location
 
 
 def test_state_is_single_use(configured_entra):
     state = oauth_state.issue()
     assert oauth_state.consume(state) is True
-    r = client.get(f"/auth/entra/callback?code=x&state={state}")
-    assert r.status_code == 400
+    r = client.get(f"/auth/entra/callback?code=x&state={state}", follow_redirects=False)
+    assert r.status_code == 302
+    location = r.headers.get("location", "")
+    assert "error=oauth_state_expired" in location
