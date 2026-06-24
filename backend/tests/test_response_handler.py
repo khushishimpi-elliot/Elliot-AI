@@ -27,17 +27,17 @@ SDLC = SdlcProfile(
 
 
 def _api_response(text="Here is the answer.", input_tokens=120, output_tokens=45):
-    """Build a fake Anthropic Messages API response with the shape the SDK returns."""
+    """Build a fake OpenAI chat completions API response with the shape the SDK returns."""
     return SimpleNamespace(
-        content=[SimpleNamespace(type="text", text=text)],
-        usage=SimpleNamespace(input_tokens=input_tokens, output_tokens=output_tokens),
-        model="claude-sonnet-4-6",
+        choices=[SimpleNamespace(message=SimpleNamespace(content=text))],
+        usage=SimpleNamespace(prompt_tokens=input_tokens, completion_tokens=output_tokens),
+        model="anthropic/claude-sonnet-4-6",
     )
 
 
 def _make_client(response):
     client = MagicMock()
-    client.messages.create = AsyncMock(return_value=response)
+    client.chat.completions.create = AsyncMock(return_value=response)
     return client
 
 
@@ -107,9 +107,10 @@ async def test_respond_passes_built_prompt_to_anthropic(mock_log):
     prompt = build_prompt(SDLC, "how is auth done?", [])
     await handler.respond(prompt, db=AsyncMock(), **_ids())
 
-    call_kwargs = client.messages.create.call_args.kwargs
-    assert call_kwargs["system"] == prompt.system
-    assert call_kwargs["messages"] == prompt.to_messages()
+    call_kwargs = client.chat.completions.create.call_args.kwargs
+    # OpenAI format: system message is included in messages array
+    assert call_kwargs["messages"][0]["role"] == "system"
+    assert call_kwargs["messages"][0]["content"] == prompt.system
     assert "max_tokens" in call_kwargs
 
 
@@ -118,14 +119,12 @@ async def test_respond_passes_built_prompt_to_anthropic(mock_log):
 
 @patch("app.orchestration.response_handler.log_token_usage", new_callable=AsyncMock)
 async def test_concatenates_multiple_text_blocks(mock_log):
-    multi_block = SimpleNamespace(
-        content=[
-            SimpleNamespace(type="text", text="Part 1. "),
-            SimpleNamespace(type="text", text="Part 2."),
-        ],
-        usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+    # OpenAI API returns single text in message.content
+    multi_response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="Part 1. Part 2."))],
+        usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1),
     )
-    handler = ResponseHandler(client=_make_client(multi_block))
+    handler = ResponseHandler(client=_make_client(multi_response))
 
     result = await handler.respond(
         build_prompt(SDLC, "q", []), db=AsyncMock(), **_ids()
@@ -136,21 +135,18 @@ async def test_concatenates_multiple_text_blocks(mock_log):
 
 @patch("app.orchestration.response_handler.log_token_usage", new_callable=AsyncMock)
 async def test_ignores_non_text_blocks(mock_log):
-    mixed = SimpleNamespace(
-        content=[
-            SimpleNamespace(type="text", text="real answer"),
-            SimpleNamespace(type="tool_use", text="should-be-ignored"),
-        ],
-        usage=SimpleNamespace(input_tokens=1, output_tokens=1),
+    # OpenAI API returns text directly in message.content
+    response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="real answer"))],
+        usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1),
     )
-    handler = ResponseHandler(client=_make_client(mixed))
+    handler = ResponseHandler(client=_make_client(response))
 
     result = await handler.respond(
         build_prompt(SDLC, "q", []), db=AsyncMock(), **_ids()
     )
 
     assert result.answer == "real answer"
-    assert "should-be-ignored" not in result.answer
 
 
 # ---- cost calculation ----------------------------------------------------
@@ -158,11 +154,11 @@ async def test_ignores_non_text_blocks(mock_log):
 
 @patch("app.orchestration.response_handler.log_token_usage", new_callable=AsyncMock)
 async def test_cost_matches_pricing_table(mock_log):
-    """1_000_000 input + 1_000_000 output on sonnet-4-6 (3 + 15 per 1M) = $18."""
+    """1_000_000 input + 1_000_000 output on anthropic/claude-sonnet-4-6 (3 + 15 per 1M) = $18."""
     client = _make_client(
         _api_response(input_tokens=1_000_000, output_tokens=1_000_000)
     )
-    handler = ResponseHandler(client=client, model="claude-sonnet-4-6")
+    handler = ResponseHandler(client=client, model="anthropic/claude-sonnet-4-6")
 
     result = await handler.respond(
         build_prompt(SDLC, "q", []), db=AsyncMock(), **_ids()

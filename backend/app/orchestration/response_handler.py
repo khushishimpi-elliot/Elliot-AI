@@ -13,7 +13,7 @@ Side effect: writes a row to `token_usage_logs` via `token_logger.log_token_usag
 """
 from dataclasses import dataclass
 
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -31,17 +31,20 @@ class ResponseHandlerResult:
 
 
 class ResponseHandler:
-    """Wraps the Anthropic Messages API call + token usage logging.
+    """Wraps the OpenRouter API call + token usage logging.
 
-    The Anthropic client is injected so tests can mock it cleanly.
-    Pass `client=AsyncAnthropic(api_key=...)` in prod, or a mock in tests.
+    The OpenAI client is injected so tests can mock it cleanly.
+    Pass `client=AsyncOpenAI(api_key=...)` in prod, or a mock in tests.
     """
 
-    def __init__(self, client: AsyncAnthropic | None = None, model: str | None = None):
+    def __init__(self, client: AsyncOpenAI | None = None, model: str | None = None):
         settings = get_settings()
-        self.client = client or AsyncAnthropic(api_key=settings.anthropic_api_key)
-        self.model = model or settings.anthropic_model
-        self.max_tokens = settings.anthropic_max_tokens
+        self.client = client or AsyncOpenAI(
+            base_url=settings.openrouter_base_url,
+            api_key=settings.openrouter_api_key,
+        )
+        self.model = model or settings.claude_model
+        self.max_tokens = settings.max_tokens
 
     async def respond(
         self,
@@ -53,16 +56,22 @@ class ResponseHandler:
         team_id: str,
         query_type: str = "general",
     ) -> ResponseHandlerResult:
-        api_response = await self.client.messages.create(
+        api_response = await self.client.chat.completions.create(
             model=self.model,
             max_tokens=self.max_tokens,
-            system=prompt.system,
-            messages=prompt.to_messages(),
+            messages=[
+                {"role": "system", "content": prompt.system},
+                *prompt.to_messages(),
+            ],
+            extra_headers={
+                "HTTP-Referer": "https://elliot-ai.onrender.com",
+                "X-Title": "Elliot-AI",
+            },
         )
 
-        answer = self._extract_text(api_response)
-        input_tokens = api_response.usage.input_tokens
-        output_tokens = api_response.usage.output_tokens
+        answer = api_response.choices[0].message.content
+        input_tokens = api_response.usage.prompt_tokens
+        output_tokens = api_response.usage.completion_tokens
 
         await log_token_usage(
             db=db,
@@ -85,12 +94,5 @@ class ResponseHandler:
 
     @staticmethod
     def _extract_text(api_response) -> str:
-        """Concatenate all text blocks from the response. Anthropic returns a
-        list of content blocks; we ignore non-text blocks (e.g. tool_use)
-        since this handler is for plain Q&A. Tool-call orchestration is out
-        of scope for #31 — add it when we wire LangGraph (#29/#30)."""
-        parts = []
-        for block in api_response.content:
-            if getattr(block, "type", None) == "text":
-                parts.append(block.text)
-        return "".join(parts)
+        """Extract text from OpenAI-compatible response."""
+        return api_response.choices[0].message.content
