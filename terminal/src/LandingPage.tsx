@@ -6,9 +6,7 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
-  const [showDevSignup, setShowDevSignup] = useState(false);
-
-  const handleDevSignIn = () => {
+  const handleSignIn = () => {
     if (localStorage.getItem("elliot_onboarded") === "true") {
       window.location.href = "https://elliot-ai-1.onrender.com";
     } else {
@@ -16,345 +14,110 @@ export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
     }
   };
 
-  const handleDevSignUp = () => {
+  const handleCreateWorkspace = () => {
     onSignUp();
   };
 
-  const handleTeamLeadSignIn = () => {
-    window.location.href = "https://elliot-ai-dashboard.onrender.com";
-  };
-
   return (
-    <div style={{ display: "flex", height: "100vh", background: "var(--bg)" }}>
-      {/* LEFT PANEL — 42% width */}
-      <div style={{ flex: "0 0 42%", background: "var(--bg)", padding: "40px 48px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-        {/* Logo */}
+    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+      {/* TOP NAV */}
+      <div style={{ padding: "24px 48px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "4px", fontFamily: "var(--font-sans)" }}>
           <span style={{ color: "var(--accent-blue)", fontWeight: "600", fontSize: "14px" }}>[·]</span>
           <span style={{ color: "var(--text-primary)", fontWeight: "600", fontSize: "14px" }}>ELLIOT-AI</span>
         </div>
+      </div>
 
-        {/* Center Content */}
-        <div>
+      {/* CENTERED HERO SECTION */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 48px" }}>
+        <div style={{ maxWidth: "680px", width: "100%", textAlign: "center" }}>
           {/* Headline */}
-          <h1 style={{ fontSize: "42px", fontWeight: "700", lineHeight: "1.15", marginBottom: "16px", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
+          <h1 style={{ fontSize: "52px", fontWeight: "700", lineHeight: "1.15", marginBottom: "20px", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
             The organization's
             <br />
             <span style={{ color: "var(--accent-blue)" }}>AI engineer.</span>
           </h1>
 
           {/* Subtext */}
-          <p style={{ fontSize: "15px", fontWeight: "400", lineHeight: "1.6", color: "var(--text-secondary)", marginBottom: "32px", maxWidth: "360px", fontFamily: "var(--font-sans)" }}>
+          <p style={{ fontSize: "16px", fontWeight: "400", lineHeight: "1.6", color: "var(--text-secondary)", marginBottom: "40px", fontFamily: "var(--font-sans)" }}>
             One terminal for your repositories, standards, tickets and knowledge — operated by specialized agents that ship to your conventions.
           </p>
 
           {/* Terminal Demo Box */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "6px", padding: "16px 20px", marginBottom: "32px", fontFamily: "var(--font-mono)", fontSize: "13px", lineHeight: "1.6" }}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px", padding: "20px 24px", marginBottom: "40px", fontFamily: "var(--font-mono)", fontSize: "13px", lineHeight: "1.6" }}>
             <div style={{ color: "var(--text-primary)", marginBottom: "4px" }}>$ elliot auth --sso okta</div>
             <div style={{ color: "var(--accent-green)", marginBottom: "2px" }}>✓ identity verified · core-payments.okta.com</div>
             <div style={{ color: "var(--accent-green)", marginBottom: "2px" }}>✓ workspace: Payments Platform</div>
             <div style={{ color: "var(--accent-blue)" }}>→ 9 sources synced · 504k chunks ready</div>
           </div>
 
-          {/* Benefits Row */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          {/* Benefits Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px", marginBottom: "48px" }}>
             {["SOC 2 Type II", "SSO / SCIM", "Self-hosted option", "No training on your code"].map((benefit) => (
-              <div key={benefit} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: "400", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+              <div key={benefit} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
                 <span style={{ color: "var(--accent-green)", fontSize: "6px" }}>●</span>
                 {benefit}
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Bottom Spacer */}
-        <div />
+          {/* CTA Buttons */}
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+            <button
+              onClick={handleSignIn}
+              style={{
+                paddingLeft: "32px",
+                paddingRight: "32px",
+                height: "48px",
+                background: "var(--accent-blue)",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+            >
+              Sign in
+            </button>
+            <button
+              onClick={handleCreateWorkspace}
+              style={{
+                paddingLeft: "32px",
+                paddingRight: "32px",
+                height: "48px",
+                background: "transparent",
+                color: "var(--accent-blue)",
+                border: "1px solid var(--accent-blue)",
+                borderRadius: "6px",
+                fontSize: "15px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(67, 97, 238, 0.1)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              }}
+            >
+              Create a workspace
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* RIGHT PANEL — 58% width */}
-      <div style={{ flex: "0 0 58%", background: "var(--surface)", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", overflowY: "auto" }}>
-        <div style={{ maxWidth: "420px", width: "100%" }}>
-          {/* DEVELOPER CARD */}
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>
-              Developer
-            </div>
-
-            <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "8px", padding: "24px", marginBottom: "20px" }}>
-              {showDevSignup ? (
-                // SIGN UP VIEW
-                <>
-                  <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-                    Sign up
-                  </h2>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      style={{
-                        height: "42px",
-                        padding: "0 12px",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "5px",
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "14px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                    />
-                    <input
-                      type="password"
-                      placeholder="Create a password"
-                      style={{
-                        height: "42px",
-                        padding: "0 12px",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "5px",
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "14px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                    />
-                    <input
-                      type="password"
-                      placeholder="Confirm your password"
-                      style={{
-                        height: "42px",
-                        padding: "0 12px",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "5px",
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "14px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleDevSignUp}
-                    style={{
-                      width: "100%",
-                      height: "42px",
-                      background: "var(--accent-blue)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      marginBottom: "12px",
-                      transition: "all 0.15s ease",
-                      fontFamily: "var(--font-sans)",
-                    }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-                  >
-                    Sign up
-                  </button>
-
-                  <div style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", textAlign: "center", fontFamily: "var(--font-sans)" }}>
-                    Already have an account?{" "}
-                    <button
-                      onClick={() => setShowDevSignup(false)}
-                      style={{ color: "var(--accent-blue)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: "400" }}
-                    >
-                      Sign in
-                    </button>
-                  </div>
-                </>
-              ) : (
-                // SIGN IN VIEW
-                <>
-                  <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-                    Sign in
-                  </h2>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "12px" }}>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      style={{
-                        height: "42px",
-                        padding: "0 12px",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "5px",
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "14px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                    />
-                    <input
-                      type="password"
-                      placeholder="Enter your password"
-                      style={{
-                        height: "42px",
-                        padding: "0 12px",
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "5px",
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "14px",
-                        outline: "none",
-                        transition: "border-color 0.15s ease",
-                      }}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                    />
-                  </div>
-
-                  <a href="#" style={{ fontSize: "12px", fontWeight: "400", color: "var(--accent-blue)", textDecoration: "none", fontFamily: "var(--font-sans)", display: "block", marginBottom: "12px", marginTop: "-6px" }}>
-                    Forgot password?
-                  </a>
-
-                  <button
-                    onClick={handleDevSignIn}
-                    style={{
-                      width: "100%",
-                      height: "42px",
-                      background: "var(--accent-blue)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "5px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      marginBottom: "12px",
-                      transition: "all 0.15s ease",
-                      fontFamily: "var(--font-sans)",
-                    }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-                  >
-                    Sign in
-                  </button>
-
-                  <div style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", textAlign: "center", fontFamily: "var(--font-sans)" }}>
-                    Not onboarded yet?{" "}
-                    <button
-                      onClick={() => setShowDevSignup(true)}
-                      style={{ color: "var(--accent-blue)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: "400" }}
-                    >
-                      Sign up
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* DIVIDER */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0", fontFamily: "var(--font-sans)" }}>
-            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
-            <span style={{ fontSize: "11px", fontWeight: "400", color: "var(--text-muted)", whiteSpace: "nowrap" }}>or continue as team lead</span>
-            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
-          </div>
-
-          {/* TEAM LEAD CARD */}
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: "500", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>
-              Team Lead
-            </div>
-
-            <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderLeft: "2px solid var(--accent-blue)", borderRadius: "8px", padding: "24px" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-                Sign in
-              </h2>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "12px" }}>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  style={{
-                    height: "42px",
-                    padding: "0 12px",
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "5px",
-                    color: "var(--text-primary)",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "14px",
-                    outline: "none",
-                    transition: "border-color 0.15s ease",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                />
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  style={{
-                    height: "42px",
-                    padding: "0 12px",
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "5px",
-                    color: "var(--text-primary)",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "14px",
-                    outline: "none",
-                    transition: "border-color 0.15s ease",
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = "var(--accent-blue)")}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
-                />
-              </div>
-
-              <a href="#" style={{ fontSize: "12px", fontWeight: "400", color: "var(--accent-blue)", textDecoration: "none", fontFamily: "var(--font-sans)", display: "block", marginBottom: "12px", marginTop: "-6px" }}>
-                Forgot password?
-              </a>
-
-              <button
-                onClick={handleTeamLeadSignIn}
-                style={{
-                  width: "100%",
-                  height: "42px",
-                  background: "var(--accent-blue)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  marginBottom: "12px",
-                  transition: "all 0.15s ease",
-                  fontFamily: "var(--font-sans)",
-                }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-              >
-                Sign in
-              </button>
-
-              <div style={{ fontSize: "13px", fontWeight: "400", color: "var(--text-secondary)", textAlign: "center", fontFamily: "var(--font-sans)" }}>
-                Don't have access?{" "}
-                <a href="mailto:admin@elliot-ai.cloud" style={{ color: "var(--accent-blue)", textDecoration: "none" }}>
-                  Request access
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* FOOTER */}
+      <div style={{ padding: "24px 48px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "center", gap: "16px" }}>
+        <span style={{ fontSize: "12px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>● Protected by enterprise SSO</span>
+        <span style={{ fontSize: "12px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>● device trust</span>
+        <span style={{ fontSize: "12px", fontWeight: "400", color: "var(--text-muted)", fontFamily: "var(--font-sans)" }}>● audit logging</span>
       </div>
     </div>
   );
