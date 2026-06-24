@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import email as email_sender
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
 from app.auth.jwt import issue_access_token
-from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
+from app.auth.schemas import MagicLinkRequest, MagicLinkResponse
 from app.config import get_settings
 from app.db.session import get_db
 from app.services.auth0 import Auth0Service
@@ -29,7 +29,7 @@ def redeem_magic_link(token: str = Query(...)) -> RedirectResponse:
 
     try:
         email = magic_link.redeem(token)
-    except ValueError as e:
+    except ValueError:
         # Invalid or expired token — redirect back with error
         return RedirectResponse(
             url=f"{settings.terminal_url}/?error=invalid_magic_link",
@@ -70,7 +70,7 @@ def google_callback(code: str = Query(...), state: str = Query(...)):
     try:
         tokens = sso_google.exchange_code_for_tokens(code)
         claims = sso_google.verify_id_token(tokens["id_token"])
-    except sso_google.OIDCError as e:
+    except sso_google.OIDCError:
         return RedirectResponse(
             url=f"{settings.terminal_url}/?error=oauth_failed",
             status_code=302
@@ -110,7 +110,7 @@ def entra_callback(code: str = Query(...), state: str = Query(...)):
     try:
         tokens = sso_entra.exchange_code_for_tokens(code)
         claims = sso_entra.verify_id_token(tokens["id_token"])
-    except sso_entra.OIDCError as e:
+    except sso_entra.OIDCError:
         return RedirectResponse(
             url=f"{settings.terminal_url}/?error=oauth_failed",
             status_code=302
@@ -196,12 +196,12 @@ async def auth0_callback(
             status_code=302
         )
 
-    except ValueError as e:
+    except ValueError:
         return RedirectResponse(
             url=f"{settings.terminal_url}/?error=oauth_failed",
             status_code=302
         )
-    except Exception as e:
+    except Exception:
         return RedirectResponse(
             url=f"{settings.terminal_url}/?error=oauth_failed",
             status_code=302
