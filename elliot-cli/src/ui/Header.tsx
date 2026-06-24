@@ -24,10 +24,20 @@ export default function Header({
     .map((c) => `${c.provider} ${c.status === "connected" ? "✓" : "✗"}`)
     .join("  ");
 
-  const borderLine = "─".repeat(terminalWidth - 2);
-
   return (
-    <Box flexDirection="column" marginBottom={0} paddingX={1}>
+    <Box
+      flexDirection="column"
+      borderStyle="single"
+      borderColor="gray"
+      borderBottom={false}
+      borderTop={true}
+      borderLeft={true}
+      borderRight={true}
+      paddingX={1}
+      paddingY={0}
+      width={terminalWidth}
+      marginBottom={0}
+    >
       {/* Line 1: ELLIOT-AI | domain */}
       <Box justifyContent="space-between" width={terminalWidth - 2}>
         <Text bold color="#4FFFB0">
@@ -45,9 +55,6 @@ export default function Header({
       <Text color="gray">
         {connectorStatus}  ·  {chunkCountK}k chunks
       </Text>
-
-      {/* Border */}
-      <Text color="gray">{borderLine}</Text>
     </Box>
   );
 }
