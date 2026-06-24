@@ -1,18 +1,9 @@
 
 interface LandingPageProps {
-  onSignIn: () => void;
   onSignUp: () => void;
 }
 
-export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
-  const handleSignIn = () => {
-    if (localStorage.getItem("elliot_onboarded") === "true") {
-      window.location.href = "https://elliot-ai-1.onrender.com";
-    } else {
-      onSignIn();
-    }
-  };
-
+export default function LandingPage({ onSignUp }: LandingPageProps) {
   const handleCreateWorkspace = () => {
     onSignUp();
   };
@@ -60,55 +51,28 @@ export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
             ))}
           </div>
 
-          {/* CTA Buttons */}
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            <button
-              onClick={handleSignIn}
-              style={{
-                paddingLeft: "32px",
-                paddingRight: "32px",
-                height: "48px",
-                background: "var(--accent-blue)",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "var(--font-sans)",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={handleCreateWorkspace}
-              style={{
-                paddingLeft: "32px",
-                paddingRight: "32px",
-                height: "48px",
-                background: "transparent",
-                color: "var(--accent-blue)",
-                border: "1px solid var(--accent-blue)",
-                borderRadius: "6px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "var(--font-sans)",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(67, 97, 238, 0.1)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              }}
-            >
-              Create a workspace
-            </button>
-          </div>
+          {/* CTA Button */}
+          <button
+            onClick={handleCreateWorkspace}
+            style={{
+              paddingLeft: "40px",
+              paddingRight: "40px",
+              height: "48px",
+              background: "var(--accent-blue)",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "15px",
+              fontWeight: "600",
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+          >
+            Create a workspace
+          </button>
         </div>
       </div>
 

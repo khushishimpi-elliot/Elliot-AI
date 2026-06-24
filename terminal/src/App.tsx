@@ -14,17 +14,13 @@ export default function App() {
     }
   }, []);
 
-  const handleSignIn = () => {
-    setScreen("terminal");
-  };
-
   const handleSignUp = () => {
     setScreen("onboarding");
   };
 
   return (
     <>
-      {screen === "landing" && <LandingPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
+      {screen === "landing" && <LandingPage onSignUp={handleSignUp} />}
       {screen === "onboarding" && <Onboarding />}
       {screen === "terminal" && (
         <Terminal onReset={() => { localStorage.removeItem("elliot_onboarded"); setScreen("landing"); }} />
