@@ -21,13 +21,13 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
     setError("");
     try {
       const token = localStorage.getItem("elliot_token");
-      const res = await fetch(`${API_URL}/workspace`, {
+      const res = await fetch(`${API_URL}/onboarding/workspace`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ name: orgName, domain, team_size: teamSize, data_residency: residency }),
+        body: JSON.stringify({ name: orgName, domain, team_size: teamSize, residency }),
       });
       if (res.ok) {
         const data = await res.json();

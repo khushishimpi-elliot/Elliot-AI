@@ -11,14 +11,17 @@ interface Step3Props {
 export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
   const [stack, setStack] = useState<string[]>(["TypeScript/Node"]);
   const [branching, setBranching] = useState("trunk-based");
-  const [testing, setTesting] = useState("vitest");
+  const [testing, setTesting] = useState("Vitest · 90%");
   const [cicd, setCicd] = useState<string[]>(["GitHub Actions"]);
   const [review, setReview] = useState("2 approvals");
+  const [archStyle, setArchStyle] = useState("microservices");
 
   const handleContinue = async () => {
     try {
       const token = localStorage.getItem("elliot_token");
       const tenantId = localStorage.getItem("elliot_tenant_id");
+      const coverageMatch = testing.match(/·\s*(\d+)%/);
+      const coverageGate = coverageMatch ? parseInt(coverageMatch[1]) : 80;
       await fetch(`${API_URL}/onboarding/sdlc`, {
         method: "POST",
         headers: {
@@ -27,11 +30,13 @@ export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
         },
         body: JSON.stringify({
           tenant_id: tenantId,
-          primary_stack: stack.join(" / "),
+          stack: stack.join(" / "),
           branching_model: branching,
-          test_framework: testing,
-          ci_platform: cicd.join(", "),
+          test_framework: testing.split(" · ")[0],
+          coverage_gate: coverageGate,
+          ci_cd_platform: cicd.join(", "),
           review_policy: review,
+          arch_style: archStyle,
         }),
       });
     } catch {
@@ -97,6 +102,15 @@ export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {["1 approval", "2 approvals", "CODEOWNERS required", "Approval + green CI"].map((opt) => (
               <button key={opt} onClick={() => setReview(opt)} style={{ padding: "6px 14px", background: review === opt ? "var(--surface-2)" : "transparent", border: `1px solid ${review === opt ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: review === opt ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "24px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)", marginBottom: "8px", fontFamily: "var(--font-sans)" }}>Architecture style</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {["Monolith", "Microservices", "Serverless", "Event-driven"].map((opt) => (
+              <button key={opt} onClick={() => setArchStyle(opt.toLowerCase().replace("-", "_"))} style={{ padding: "6px 14px", background: archStyle === opt.toLowerCase().replace("-", "_") ? "var(--surface-2)" : "transparent", border: `1px solid ${archStyle === opt.toLowerCase().replace("-", "_") ? "var(--accent-blue)" : "var(--border)"}`, borderRadius: "4px", color: archStyle === opt.toLowerCase().replace("-", "_") ? "var(--text-primary)" : "var(--text-secondary)", fontSize: "13px", fontWeight: "500", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.15s ease" }}>{opt}</button>
             ))}
           </div>
         </div>
