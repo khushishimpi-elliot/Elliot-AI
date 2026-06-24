@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+import { api } from "../api";
 
 interface Step1Props {
   onContinue: () => void;
@@ -13,20 +12,31 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   const [uiState, setUiState] = useState<UIState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSSO = () => {
-    onContinue();
+  const handleAuth0 = async () => {
+    try {
+      const result = await api.auth0Login();
+      if (result.access_token) {
+        api.saveAuth(result.access_token, result.user || {});
+        onContinue();
+      }
+    } catch (e) {
+      setErrorMsg("Auth0 login failed");
+    }
+  };
+
+  const handleGoogle = () => {
+    api.googleLogin();
+  };
+
+  const handleEntra = () => {
+    api.entraLogin();
   };
 
   const handleMagicLink = async () => {
     if (!email.trim()) return;
     setUiState("sending");
     try {
-      const res = await fetch(`${API_URL}/auth/magic-link`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error(await res.text());
+      await api.sendMagicLink(email);
       setUiState("sent");
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : "Failed to send link");
@@ -35,18 +45,17 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
   };
 
   // Called when user returns from magic link click in email
-  // The /auth/callback page stores the token then redirects back here
   const token = new URLSearchParams(window.location.search).get("token");
   if (token) {
-    localStorage.setItem("elliot_token", token);
+    localStorage.setItem("elliot_jwt", token);
     window.history.replaceState({}, "", window.location.pathname);
     onContinue();
   }
 
   const SSO_BUTTONS = [
-    { icon: "O", name: "Continue with Okta",               proto: "SAML / SCIM",  provider: "auth0"   as const },
-    { icon: "E", name: "Continue with Microsoft Entra",    proto: "Azure AD",      provider: "entra"   as const },
-    { icon: "G", name: "Continue with Google Workspace",   proto: "OIDC",          provider: "google"  as const },
+    { icon: "O", name: "Continue with Okta", proto: "SAML / SCIM", handler: handleAuth0 },
+    { icon: "E", name: "Continue with Microsoft Entra", proto: "Azure AD", handler: handleEntra },
+    { icon: "G", name: "Continue with Google Workspace", proto: "OIDC", handler: handleGoogle },
   ];
 
   return (
@@ -68,7 +77,7 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
         {SSO_BUTTONS.map((btn) => (
           <button
             key={btn.icon}
-            onClick={handleSSO}
+            onClick={btn.handler}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "11px 14px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "5px", cursor: "pointer", transition: "all 0.15s ease", fontSize: "14px", fontWeight: "500", color: "var(--text-primary)", fontFamily: "var(--font-sans)", minHeight: "48px" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--accent-blue)"; (e.currentTarget as HTMLButtonElement).style.background = "#1e2235"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLButtonElement).style.background = "var(--surface-2)"; }}

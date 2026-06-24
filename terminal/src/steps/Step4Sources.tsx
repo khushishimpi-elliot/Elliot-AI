@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import OAuthModal from "../components/OAuthModal";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+import { api } from "../api";
 
 // Map backend provider names → frontend connector IDs (they are the same
 // in this codebase, but explicit mapping avoids silent mismatches)
@@ -63,34 +62,26 @@ export default function Step4Sources({ onContinue }: Step4Props) {
   const [modalSource, setModalSource] = useState<SourceConfig | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const tenantId = localStorage.getItem("elliot_tenant_id") ?? "";
-  const token    = localStorage.getItem("elliot_token")     ?? "";
-
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
   // ── Load already-connected connectors on mount ─────────────────────
   const loadConnectors = useCallback(async () => {
-    if (!tenantId) return;
     try {
-      const res = await fetch(`${API_URL}/connectors/${tenantId}`, {
-        headers: authHeaders,
-      });
-      if (!res.ok) return;
-      const data: { provider: string; status: string }[] = await res.json();
-      setStatuses((prev) => {
-        const next = { ...prev };
-        for (const c of data) {
-          const frontendId = PROVIDER_MAP[c.provider];
-          if (frontendId) {
-            next[frontendId] = c.status === "connected" ? "connected" : "idle";
+      const data = await api.listConnectors();
+      if (Array.isArray(data)) {
+        setStatuses((prev) => {
+          const next = { ...prev };
+          for (const c of data) {
+            const frontendId = PROVIDER_MAP[c.provider];
+            if (frontendId) {
+              next[frontendId] = c.status === "connected" ? "connected" : "idle";
+            }
           }
-        }
-        return next;
-      });
+          return next;
+        });
+      }
     } catch {
       // backend unreachable — leave statuses as-is
     }
-  }, [tenantId]);
+  }, []);
 
   useEffect(() => {
     loadConnectors();
@@ -124,19 +115,8 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     setModalSource(null);
     setStatuses((prev) => ({ ...prev, [source.id]: "loading" }));
 
-    if (!tenantId) {
-      // No tenant yet — fall back to optimistic mark
-      setStatuses((prev) => ({ ...prev, [source.id]: "connected" }));
-      return;
-    }
-
     try {
-      const res = await fetch(
-        `${API_URL}/connectors/${tenantId}/${source.provider}/authorize`,
-        { headers: authHeaders }
-      );
-      if (!res.ok) throw new Error(`${res.status}`);
-      const { authorization_url } = await res.json() as { authorization_url: string };
+      const { authorization_url } = await api.getConnectorAuthUrl(source.provider);
 
       // Open OAuth popup — backend will redirect back to /connectors/callback
       const popup = window.open(
@@ -175,17 +155,8 @@ export default function Step4Sources({ onContinue }: Step4Props) {
 
   const handleConnectSourceDirect = async (source: SourceConfig) => {
     setStatuses((prev) => ({ ...prev, [source.id]: "loading" }));
-    if (!tenantId) {
-      setStatuses((prev) => ({ ...prev, [source.id]: "connected" }));
-      return;
-    }
     try {
-      const res = await fetch(
-        `${API_URL}/connectors/${tenantId}/${source.provider}/authorize`,
-        { headers: authHeaders }
-      );
-      if (!res.ok) throw new Error();
-      const { authorization_url } = await res.json() as { authorization_url: string };
+      const { authorization_url } = await api.getConnectorAuthUrl(source.provider);
       window.open(authorization_url, "_blank", "width=640,height=720");
     } catch {
       setStatuses((prev) => ({ ...prev, [source.id]: "idle" }));
@@ -194,16 +165,8 @@ export default function Step4Sources({ onContinue }: Step4Props) {
 
   // ── Disconnect ──────────────────────────────────────────────────────
   const handleDisconnect = async (source: SourceConfig) => {
-    if (!tenantId) return;
-    try {
-      await fetch(`${API_URL}/connectors/${tenantId}/${source.provider}`, {
-        method: "DELETE",
-        headers: authHeaders,
-      });
-      setStatuses((prev) => ({ ...prev, [source.id]: "idle" }));
-    } catch {
-      // ignore
-    }
+    // TODO: Implement disconnect when backend DELETE endpoint is available
+    setStatuses((prev) => ({ ...prev, [source.id]: "idle" }));
   };
 
   const handleCancel = () => setModalSource(null);
@@ -230,11 +193,6 @@ export default function Step4Sources({ onContinue }: Step4Props) {
           Link the systems Elliot draws context from. OAuth is read-only by default and
           scoped per provider — review each grant before approving.
         </p>
-        {!tenantId && (
-          <div style={{ marginTop: 10, padding: "8px 14px", background: "rgba(246,173,85,.08)", border: "1px solid rgba(246,173,85,.3)", borderRadius: 6, fontSize: 12, color: "#F6AD55" }}>
-            Complete Step 2 (Workspace) first to persist connections to your account.
-          </div>
-        )}
       </div>
 
       {/* Connect All */}

@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+import { api } from "../api";
 
 interface Step2Props {
   onContinue: () => void;
@@ -20,27 +19,26 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
     setSaving(true);
     setError("");
     try {
-      const token = localStorage.getItem("elliot_token");
-      const res = await fetch(`${API_URL}/onboarding/workspace`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ name: orgName, domain, team_size: teamSize, residency }),
+      const result = await api.createOrganisation({
+        org_name: orgName,
+        domain,
+        team_size: teamSize,
+        data_residency: residency
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.tenant_id) localStorage.setItem("elliot_tenant_id", data.tenant_id);
-        if (data.token)     localStorage.setItem("elliot_token", data.token);
+      if (result.id || result.tenant_id) {
+        if (result.tenant_id) {
+          localStorage.setItem('elliot_tenant_id', result.tenant_id);
+        }
+        if (onConfigUpdate) onConfigUpdate({ orgName });
+        onContinue();
+      } else {
+        setError('Could not create workspace');
       }
-    } catch {
-      // backend unavailable — continue anyway in dev mode
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create workspace');
     } finally {
       setSaving(false);
     }
-    if (onConfigUpdate) onConfigUpdate({ orgName });
-    onContinue();
   };
 
   return (

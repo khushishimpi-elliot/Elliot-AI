@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+import { api } from "../api";
 
 interface Step3Props {
   onContinue: () => void;
@@ -18,26 +17,16 @@ export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
 
   const handleContinue = async () => {
     try {
-      const token = localStorage.getItem("elliot_token");
-      const tenantId = localStorage.getItem("elliot_tenant_id");
       const coverageMatch = testing.match(/·\s*(\d+)%/);
       const coverageGate = coverageMatch ? parseInt(coverageMatch[1]) : 80;
-      await fetch(`${API_URL}/onboarding/sdlc`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          tenant_id: tenantId,
-          stack: stack.join(" / "),
-          branching_model: branching,
-          test_framework: testing.split(" · ")[0],
-          coverage_gate: coverageGate,
-          ci_cd_platform: cicd.join(", "),
-          review_policy: review,
-          arch_style: archStyle,
-        }),
+      await api.saveSdlc({
+        stack: stack.join(" / "),
+        branching_model: branching,
+        test_framework: testing.split(" · ")[0],
+        coverage_gate: coverageGate,
+        ci_cd_platform: cicd.join(", "),
+        review_policy: review,
+        arch_style: archStyle
       });
     } catch {
       // backend unavailable — continue anyway
