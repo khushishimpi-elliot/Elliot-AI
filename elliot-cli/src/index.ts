@@ -6,6 +6,7 @@ import { askCommand } from "./commands/ask.js";
 import { statusCommand } from "./commands/status.js";
 import { logoutCommand } from "./commands/logout.js";
 import { localCommand } from "./commands/local.js";
+import { usageCommand } from "./commands/usage.js";
 
 const program = new Command();
 
@@ -38,5 +39,12 @@ program
   .command("local")
   .description("Run Elliot as a local coding agent (no backend required, uses ANTHROPIC_API_KEY)")
   .action(localCommand);
+
+program
+  .command("usage")
+  .description("Show how much Elliot-AI was used today (tokens, queries, models)")
+  .option("-d, --date <YYYY-MM-DD>", "Show usage for a specific date")
+  .option("-w, --week", "Show usage for the last 7 days")
+  .action((opts) => usageCommand(opts));
 
 program.parse(process.argv);

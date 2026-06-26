@@ -6,6 +6,7 @@ import chalk from "chalk";
 import { AgentLoop } from "../agent/loop.js";
 import { loadAgentContext } from "../agent/context.js";
 import { undoLastTurn } from "../agent/undo.js";
+import { usageCommand } from "./usage.js";
 
 // Tool registrations — side-effect imports, must come before AgentLoop is used
 import "../tools/read.js";
@@ -56,7 +57,7 @@ function printBanner(): void {
   console.log(chalk.hex(GREEN)("└─────────────────────────────────────┘"));
   console.log(
     chalk.hex(GRAY)(
-      "  Type your question. /undo /compact /clear /exit"
+      "  Type your question. /usage /undo /compact /clear /exit"
     )
   );
   console.log("");
@@ -127,6 +128,15 @@ export async function localCommand(): Promise<void> {
       console.log(chalk.hex(GRAY)("Bye!"));
       break;
     }
+    if (query === "/usage" || query === "/usage --week" || query === "/usage -w") {
+      await usageCommand({ week: query !== "/usage" });
+      continue;
+    }
+    if (query.startsWith("/usage --date ") || query.startsWith("/usage -d ")) {
+      const date = query.split(" ").pop() ?? "";
+      await usageCommand({ date });
+      continue;
+    }
     if (query === "/undo") {
       const msg = await undoLastTurn();
       console.log(chalk.hex(YELLOW)(msg));
@@ -140,6 +150,19 @@ export async function localCommand(): Promise<void> {
     if (query === "/clear") {
       loop.clearHistory();
       console.log(chalk.hex(GRAY)("History cleared."));
+      continue;
+    }
+    if (query === "/help") {
+      console.log("");
+      console.log(chalk.hex(CYAN)("  Slash commands:"));
+      console.log("  " + chalk.hex(YELLOW)("/usage          ") + chalk.hex(GRAY)("Show today's token usage"));
+      console.log("  " + chalk.hex(YELLOW)("/usage --week   ") + chalk.hex(GRAY)("Show last 7 days"));
+      console.log("  " + chalk.hex(YELLOW)("/usage --date X ") + chalk.hex(GRAY)("Show usage for YYYY-MM-DD"));
+      console.log("  " + chalk.hex(YELLOW)("/undo           ") + chalk.hex(GRAY)("Revert last file changes"));
+      console.log("  " + chalk.hex(YELLOW)("/compact        ") + chalk.hex(GRAY)("Trim history to last 20 messages"));
+      console.log("  " + chalk.hex(YELLOW)("/clear          ") + chalk.hex(GRAY)("Clear all conversation history"));
+      console.log("  " + chalk.hex(YELLOW)("/exit           ") + chalk.hex(GRAY)("Quit"));
+      console.log("");
       continue;
     }
 
