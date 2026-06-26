@@ -1,0 +1,256 @@
+.usage-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.summary-card {
+  background: #2d2d2d;
+  border: 1px solid #3d3d3d;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card-title {
+  color: #e8e8e8;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: "Inter", sans-serif;
+}
+
+.card-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-family: "Inter", sans-serif;
+}
+
+.card-subtext {
+  color: #9ca3af;
+  font-size: 12px;
+  font-family: "Inter", sans-serif;
+}
+
+/* Sections */
+.section {
+  background: #2d2d2d;
+  border: 1px solid #3d3d3d;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 20px 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Team Bars */
+.team-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.team-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-name {
+  width: 100px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8e8e8;
+  font-family: "Inter", sans-serif;
+}
+
+.bar-container {
+  flex: 1;
+  height: 24px;
+  background: #3d3d3d;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #7aa2f7;
+  transition: width 0.3s ease;
+}
+
+.bar-percentage {
+  width: 50px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e8e8e8;
+  font-family: "Inter", sans-serif;
+}
+
+/* Daily Chart */
+.chart-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.daily-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 200px;
+  width: 100%;
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.chart-bar {
+  width: 100%;
+  background: #7aa2f7;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  min-height: 20px;
+  transition: background-color 0.2s;
+}
+
+.chart-bar:hover {
+  background: #9ab5f9;
+}
+
+.bar-value {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: #e8e8e8;
+  white-space: nowrap;
+  font-family: "Inter", sans-serif;
+}
+
+.chart-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+  font-family: "Inter", sans-serif;
+}
+
+/* Table */
+.developer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+}
+
+.developer-table thead {
+  background: #3d3d3d;
+  color: #ffffff;
+}
+
+.developer-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #4d4d4d;
+  color: #ffffff;
+}
+
+.developer-table td {
+  padding: 12px;
+  border-bottom: 1px solid #3d3d3d;
+  color: #e8e8e8;
+}
+
+.developer-table tbody tr.even {
+  background: #333333;
+}
+
+.developer-table tbody tr.odd {
+  background: #2d2d2d;
+}
+
+.developer-table tbody tr:hover {
+  background: #3a3a3a;
+}
+
+.dev-email {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.cost {
+  font-weight: 600;
+  color: #5dd89b;
+}
+
+/* Demo Notice */
+.demo-notice {
+  background: #3d3d3d;
+  border: 1px solid #4d4d4d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 16px;
+  font-family: "Inter", sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .team-bar-row {
+    flex-wrap: wrap;
+  }
+
+  .bar-container {
+    flex-basis: 100%;
+  }
+
+  .daily-chart {
+    gap: 8px;
+  }
+
+  .developer-table {
+    font-size: 11px;
+  }
+
+  .developer-table th,
+  .developer-table td {
+    padding: 8px;
+  }
+}

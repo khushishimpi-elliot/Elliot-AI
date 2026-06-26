@@ -1,0 +1,88 @@
+name: Build & Publish CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies (CLI)
+        working-directory: ./elliot-cli
+        run: npm install
+
+      - name: Build TypeScript
+        working-directory: ./elliot-cli
+        run: npm run build
+
+      - name: Publish to npm
+        working-directory: ./elliot-cli
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            # Elliot-AI CLI v${{ github.ref_name }}
+
+            🚀 Interactive AI coding assistant for engineering teams.
+
+            ## Installation
+
+            ```bash
+            npm install -g elliot-ai
+            ```
+
+            ## Quick Start
+
+            ```bash
+            # First-time setup (browser-based onboarding)
+            elliot-ai init
+
+            # Open interactive TUI
+            elliot-ai
+
+            # Check status
+            elliot-ai status
+
+            # Disconnect
+            elliot-ai logout
+            ```
+
+            ## Features
+
+            ✨ **Interactive Terminal UI** — Real-time token streaming with animated thinking indicator
+            🔐 **Full Context Awareness** — Understands your entire codebase
+            🚀 **One-Click Setup** — Browser-based 6-step onboarding
+            💾 **Persistent Config** — Works from any terminal
+            📊 **Multi-Source** — GitHub, GitLab, Jira, Confluence, and more
+
+            ## Requirements
+
+            - **Node.js**: 18.0.0 or higher
+            - **npm**: 9.0.0 or higher
+
+            ## Documentation
+
+            - [README](https://github.com/khushishimpi-elliot/Elliot-AI/blob/main/elliot-cli/README.md)
+            - [Deployment Guide](https://github.com/khushishimpi-elliot/Elliot-AI/blob/main/elliot-cli/DEPLOYMENT_GUIDE.md)
+
+            Made with ❤️ by Elliot Systems
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

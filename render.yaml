@@ -1,0 +1,133 @@
+services:
+  - type: web
+    name: elliot-ai-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -e .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # Database
+      - key: DATABASE_URL
+        sync: false
+
+      # AI APIs
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+      # JWT & Auth
+      - key: JWT_SECRET
+        sync: false
+
+      # Auth0
+      - key: AUTH0_DOMAIN
+        sync: false
+      - key: AUTH0_CLIENT_ID
+        sync: false
+      - key: AUTH0_CLIENT_SECRET
+        sync: false
+      - key: AUTH0_CALLBACK_URL
+        value: https://elliot-ai-backend.onrender.com/auth/auth0/callback
+      - key: AUTH0_AUDIENCE
+        sync: false
+
+      # Google OAuth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+
+      # Microsoft Entra
+      - key: ENTRA_CLIENT_ID
+        sync: false
+      - key: ENTRA_CLIENT_SECRET
+        sync: false
+      - key: ENTRA_TENANT_ID
+        sync: false
+
+      # GitHub
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false
+
+      # GitLab
+      - key: GITLAB_CLIENT_ID
+        sync: false
+      - key: GITLAB_CLIENT_SECRET
+        sync: false
+
+      # Bitbucket
+      - key: BITBUCKET_CLIENT_ID
+        sync: false
+      - key: BITBUCKET_CLIENT_SECRET
+        sync: false
+
+      # Jira
+      - key: JIRA_CLIENT_ID
+        sync: false
+      - key: JIRA_CLIENT_SECRET
+        sync: false
+
+      # Linear
+      - key: LINEAR_CLIENT_ID
+        sync: false
+      - key: LINEAR_CLIENT_SECRET
+        sync: false
+
+      # Slack
+      - key: SLACK_CLIENT_ID
+        sync: false
+      - key: SLACK_CLIENT_SECRET
+        sync: false
+
+      # ClickUp
+      - key: CLICKUP_CLIENT_ID
+        sync: false
+      - key: CLICKUP_CLIENT_SECRET
+        sync: false
+
+      # App URLs
+      - key: BACKEND_URL
+        value: https://elliot-ai-backend.onrender.com
+      - key: TERMINAL_URL
+        value: https://elliot-ai-1.onrender.com
+      - key: DASHBOARD_URL
+        value: https://elliot-ai-dashboard.onrender.com
+      - key: OAUTH_REDIRECT_BASE_URL
+        value: https://elliot-ai-backend.onrender.com
+      - key: CORS_ORIGINS
+        value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
+
+      # Security
+      - key: FERNET_KEY
+        sync: false
+
+      # Environment
+      - key: APP_ENV
+        value: production
+
+  - type: web
+    name: elliot-ai-terminal
+    runtime: node
+    rootDir: terminal
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: node index.js
+    envVars:
+      - key: VITE_API_URL
+        value: https://elliot-ai-backend.onrender.com
+      - key: NODE_ENV
+        value: production
+
+  - type: web
+    name: elliot-ai-dashboard
+    runtime: static
+    rootDir: dashboard
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://elliot-ai-backend.onrender.com
