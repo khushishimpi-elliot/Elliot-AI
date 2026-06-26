@@ -46,12 +46,48 @@ elliot-ai local
 
 ## Commands inside the session
 
-| Command    | What it does                          |
-|------------|---------------------------------------|
-| `/undo`    | Revert the last file change           |
-| `/compact` | Trim history when context gets long   |
-| `/clear`   | Wipe the conversation                 |
-| `/exit`    | Quit                                  |
+| Command                  | What it does                              |
+|--------------------------|-------------------------------------------|
+| `/usage`                 | Show today's token & query usage          |
+| `/usage --week`          | Show usage for the last 7 days            |
+| `/usage --date YYYY-MM-DD` | Show usage for a specific date          |
+| `/help`                  | List all available slash commands         |
+| `/undo`                  | Revert the last file change               |
+| `/compact`               | Trim history when context gets long       |
+| `/clear`                 | Wipe the conversation                     |
+| `/exit`                  | Quit                                      |
+
+## Tracking usage
+
+Type `/usage` at any point inside the session to see how many tokens and queries
+you've used today — broken down by command (`local` vs `ask`) and by model:
+
+```
+› /usage
+
+┌─────────────────────────────────────────────┐
+│  Elliot-AI Usage  Today                      │
+└─────────────────────────────────────────────┘
+
+  Queries         5
+  Input tokens    9,080
+  Output tokens   2,590
+  Total tokens    11,670
+
+  ── By command ──────────────────────────────
+  elliot-ai local ████████████████  3 queries
+  elliot-ai ask   ███████████░░░░░  2 queries
+
+  ── By model ────────────────────────────────
+  llama-3.3-70b-versatile     █████████░░░  4,870 tokens
+  claude-sonnet-4-6           ████████████  6,800 tokens
+
+  ── Recent queries ──────────────────────────
+  11:20  [ask]   summarise this weeks slack discussion   4,090 tok
+  10:44  [local] write tests for the indexer service     2,050 tok
+```
+
+Usage is logged automatically to `~/.elliot/usage.jsonl` — one line per query.
 
 ## What it can do
 
