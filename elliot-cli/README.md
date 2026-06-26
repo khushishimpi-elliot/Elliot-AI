@@ -31,9 +31,34 @@ elliot-ai
 
 ## Getting Started
 
-### 1. First Time Setup
+### Option A: Local Mode (no backend, no sign-in)
 
-Run the interactive onboarding:
+Works immediately with a free Gemini API key.
+
+**1. Get a free API key**
+
+Go to [aistudio.google.com](https://aistudio.google.com) → **Get API key** (no credit card required)
+
+**2. Add it to `.env`**
+
+Create `elliot-cli/.env`:
+```
+GEMINI_API_KEY=AIzaSy...
+```
+
+**3. Run**
+
+```bash
+elliot-ai local
+```
+
+Elliot will read, write, and search files in whatever directory you run it from.
+
+---
+
+### Option B: Full Setup (backend + connectors)
+
+Connects to your organisation's repositories, Jira, Slack, etc.
 
 ```bash
 elliot-ai init
@@ -46,10 +71,8 @@ This will:
 - Automatically configure your CLI
 - Return to terminal ready to use
 
-### 2. Open the Interactive TUI
-
 ```bash
-elliot-ai
+elliot-ai ask
 ```
 
 You'll see:
@@ -70,9 +93,9 @@ Type your question and press Enter. Responses stream in real-time.
 
 | Command | Description |
 |---------|-------------|
-| `elliot-ai` | Open interactive TUI |
-| `elliot-ai init` | Complete setup wizard |
-| `elliot-ai ask "query"` | Ask a specific question |
+| `elliot-ai local` | **Local mode** — coding agent using Gemini, no backend needed |
+| `elliot-ai init` | Full setup wizard (connects backend, Jira, GitHub, etc.) |
+| `elliot-ai ask` | Interactive TUI (requires `init` first) |
 | `elliot-ai status` | Check connection & connectors |
 | `elliot-ai logout` | Disconnect from organization |
 | `elliot-ai --help` | Show help |
@@ -118,8 +141,8 @@ elliot-ai init
 
 - Node.js 18+
 - npm or yarn
-- Active internet connection
-- Browser (for initial setup only)
+- Free Gemini API key (for `local` mode) — [aistudio.google.com](https://aistudio.google.com)
+- Browser (for `init` full setup only)
 
 ## Support
 

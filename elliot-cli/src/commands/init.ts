@@ -7,7 +7,7 @@ import {
   printError,
   printInfo,
 } from "../display.js";
-import { startCallbackServer, getCallbackPort } from "../callback.js";
+import { startCallbackServer } from "../callback.js";
 
 function askQuestion(query: string): Promise<string> {
   const rl = readline.createInterface({
@@ -38,11 +38,9 @@ export async function initCommand(): Promise<void> {
 
     printWelcome();
     printInfo("Starting Elliot-AI setup...");
+    printInfo("Starting callback server on http://localhost:3333...");
 
-    const port = await getCallbackPort();
-    printInfo(`Starting callback server on http://localhost:${port}...`);
-
-    const callbackUrl = encodeURIComponent(`http://localhost:${port}/callback`);
+    const callbackUrl = encodeURIComponent("http://localhost:3333/callback");
     const onboardingUrl = `https://elliot-ai-1.onrender.com?callback=${callbackUrl}&source=cli`;
 
     printInfo("Opening browser for setup...");
@@ -67,6 +65,41 @@ export async function initCommand(): Promise<void> {
     printInfo("");
     printInfo(`Next: elliot ask "how does auth work?"`);
     printInfo("");
+
+    // Generate AGENT.md for the current project (non-fatal)
+    try {
+      const { writeAgentContext } = await import("../agent/context.js");
+      const { AgentLoop } = await import("../agent/loop.js");
+      await import("../tools/read.js");
+      await import("../tools/write.js");
+      await import("../tools/edit.js");
+      await import("../tools/bash.js");
+      await import("../tools/grep.js");
+      await import("../tools/glob.js");
+
+      printInfo("Analyzing project for AGENT.md...");
+      const initLoop = new AgentLoop("");
+      let agentMdContent = "";
+      await initLoop.run(
+        `Analyze this project directory. Produce a concise markdown document (max 400 words) covering:
+1. What this project does
+2. Tech stack and key dependencies
+3. Directory structure (key folders only)
+4. How to run, test, and build
+5. Coding conventions observed
+
+Output only the markdown content, no preamble.`,
+        (text) => { agentMdContent += text; },
+        () => {},
+        () => {}
+      );
+      if (agentMdContent.trim()) {
+        await writeAgentContext(agentMdContent);
+        printSuccess("AGENT.md created — commit this file to share project context with your team.");
+      }
+    } catch (err) {
+      printInfo(`Note: could not generate AGENT.md: ${(err as Error).message}`);
+    }
   } catch (error) {
     if (error instanceof Error) {
       printError(error.message);
