@@ -15,14 +15,13 @@ async def send_magic_link_email(
 ) -> bool:
     """Send magic link via SendGrid"""
     settings = get_settings()
-    logger.info(f"send_magic_link_email called for {to_email}")
+    logger.error(f"DEBUG: send_magic_link_email called for {to_email}")
 
     if not settings.sendgrid_api_key:
-        logger.warning("SENDGRID_API_KEY not configured, skipping email")
-        logger.info(f"Magic link for {to_email}: {magic_link}")
+        logger.error("DEBUG: SENDGRID_API_KEY not configured")
         return False
 
-    logger.info(f"SENDGRID_API_KEY is set, from_email={settings.sendgrid_from_email}")
+    logger.error(f"DEBUG: SENDGRID_API_KEY is set, from_email={settings.sendgrid_from_email}")
 
     try:
         html = (
@@ -55,14 +54,14 @@ async def send_magic_link_email(
         response = sg.send(message)
 
         if response.status_code in (200, 201, 202):
-            logger.info(f"Magic link sent to {to_email}")
+            logger.error(f"DEBUG: Magic link SENT to {to_email}")
             return True
         else:
             logger.error(
-                f"SendGrid returned {response.status_code}: {response.body}"
+                f"DEBUG: SendGrid returned {response.status_code}: {response.body}"
             )
             return False
 
     except Exception as e:
-        logger.error(f"Failed to send magic link email: {str(e)}")
+        logger.error(f"DEBUG: Failed to send magic link email: {str(e)}")
         return False
