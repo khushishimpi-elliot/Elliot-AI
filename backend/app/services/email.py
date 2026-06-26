@@ -15,11 +15,14 @@ async def send_magic_link_email(
 ) -> bool:
     """Send magic link via SendGrid"""
     settings = get_settings()
+    logger.info(f"send_magic_link_email called for {to_email}")
 
     if not settings.sendgrid_api_key:
         logger.warning("SENDGRID_API_KEY not configured, skipping email")
         logger.info(f"Magic link for {to_email}: {magic_link}")
         return False
+
+    logger.info(f"SENDGRID_API_KEY is set, from_email={settings.sendgrid_from_email}")
 
     try:
         html = (
