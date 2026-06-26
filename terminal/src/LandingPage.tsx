@@ -1,9 +1,8 @@
 interface LandingPageProps {
-  onSignIn: () => void;
   onSignUp: () => void;
 }
 
-export default function LandingPage({ onSignIn, onSignUp }: LandingPageProps) {
+export default function LandingPage({ onSignUp }: LandingPageProps) {
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
       <div style={{ textAlign: "center" }}>
