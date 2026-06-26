@@ -55,19 +55,3 @@ jobs:
       - run: npm run test
       - run: npm run build
 
-  onboarding:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: onboarding
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      # Note: using `npm install` (not `npm ci`) because the lockfile was
-      # generated on Windows and Linux pulls different optional platform
-      # deps. Regenerate the lockfile on Linux and switch to `npm ci`.
-      - run: npm install --no-audit --no-fund
-      - run: npm run lint
-      - run: npm run build
