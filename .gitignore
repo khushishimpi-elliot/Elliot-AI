@@ -32,3 +32,7 @@ Thumbs.db
 build/
 coverage/
 *.tsbuildinfo
+
+# CLI build artifacts
+elliot-cli/dist-standalone/
+elliot-cli/dist/

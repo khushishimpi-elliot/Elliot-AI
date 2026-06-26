@@ -5,6 +5,7 @@ import { initCommand } from "./commands/init.js";
 import { askCommand } from "./commands/ask.js";
 import { statusCommand } from "./commands/status.js";
 import { logoutCommand } from "./commands/logout.js";
+import { localCommand } from "./commands/local.js";
 
 const program = new Command();
 
@@ -32,5 +33,10 @@ program
   .command("logout")
   .description("Disconnect from your organisation")
   .action(logoutCommand);
+
+program
+  .command("local")
+  .description("Run Elliot as a local coding agent (no backend required, uses ANTHROPIC_API_KEY)")
+  .action(localCommand);
 
 program.parse(process.argv);
