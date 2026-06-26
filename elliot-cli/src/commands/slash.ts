@@ -5,6 +5,7 @@ import { promisify } from "util";
 import chalk from "chalk";
 import type { AgentLoop } from "../agent/loop.js";
 import { undoLastTurn } from "../agent/undo.js";
+import { usageCommand } from "./usage.js";
 import {
   getProviderStatus,
   activeProviderName,
@@ -32,6 +33,7 @@ const HELP = [
   ["/status", "Show provider, model, and working directory"],
   ["/context", "Show context (token) usage this session"],
   ["/cost", "Show estimated tokens used this session"],
+  ["/usage [--week|--date X]", "Show logged token usage (today / 7 days / a date)"],
   ["/cd <path>", "Change the working directory"],
   ["/diff", "Show uncommitted git changes"],
   ["/review", "Review the current git diff"],
@@ -79,7 +81,7 @@ export async function handleSlash(
     case "/help": {
       console.log("");
       for (const [c, desc] of HELP) {
-        console.log("  " + chalk.hex(GREEN)(c.padEnd(16)) + chalk.hex(GRAY)(desc));
+        console.log("  " + chalk.hex(GREEN)(c.padEnd(26)) + chalk.hex(GRAY)(desc));
       }
       console.log("");
       return { handled: true };
@@ -129,6 +131,17 @@ export async function handleSlash(
       console.log("  " + chalk.hex(GRAY)(`~${tokens.toLocaleString()} tokens of ~${CONTEXT_WINDOW.toLocaleString()} (estimated)`));
       if (pct > 70) console.log("  " + chalk.hex(YELLOW)("Context getting full — consider /compact"));
       console.log("");
+      return { handled: true };
+    }
+
+    case "/usage": {
+      if (arg === "--week" || arg === "-w") {
+        await usageCommand({ week: true });
+      } else if (arg.startsWith("--date ") || arg.startsWith("-d ")) {
+        await usageCommand({ date: arg.split(/\s+/).pop() ?? "" });
+      } else {
+        await usageCommand({});
+      }
       return { handled: true };
     }
 

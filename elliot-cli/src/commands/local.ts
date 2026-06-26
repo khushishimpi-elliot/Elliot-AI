@@ -121,7 +121,7 @@ export async function localCommand(): Promise<void> {
 
     if (!query) continue;
 
-    // Slash commands
+    // Slash commands — all routed through the unified handler
     if (query.startsWith("/") || query === "exit") {
       const result = await handleSlash(query, loop);
       if (result.exit) {

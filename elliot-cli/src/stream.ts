@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import EventSource from "eventsource";
 import { ElliotConfig } from "./config.js";
+import { logUsage } from "./usage.js";
 
 export async function streamQuery(
   query: string,
@@ -60,6 +61,13 @@ export async function streamQuery(
           if (data.sources_used) {
             sourcesUsed = data.sources_used;
           }
+          logUsage({
+            command: "ask",
+            model: data.tokens?.model ?? "claude-sonnet-4-6",
+            input_tokens: data.tokens?.input ?? 0,
+            output_tokens: data.tokens?.output ?? 0,
+            query_preview: query.slice(0, 80),
+          });
           eventSource.close();
           onDone(sourcesUsed);
         }
