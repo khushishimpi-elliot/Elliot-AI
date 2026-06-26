@@ -14,9 +14,43 @@ export class AgentLoop {
   private messages: ChatMessage[] = [];
   private system: string;
   private recentCalls: string[] = []; // last N "tool:args" strings for loop detection
+  private lastResponse = "";
 
   constructor(agentContext: string) {
     this.system = buildSystemPrompt(agentContext);
+  }
+
+  // ── Introspection (used by slash commands) ──────────────────────────────
+  /** Rough token estimate: ~4 chars per token across all messages + system. */
+  estimatedTokens(): number {
+    const chars =
+      this.system.length +
+      this.messages.reduce((sum, m) => {
+        let n = (m.content ?? "").length;
+        if (m.tool_calls) n += JSON.stringify(m.tool_calls).length;
+        return sum + n;
+      }, 0);
+    return Math.round(chars / 4);
+  }
+
+  messageCount(): number {
+    return this.messages.length;
+  }
+
+  lastResponseText(): string {
+    return this.lastResponse;
+  }
+
+  /** Plain-text transcript of the conversation, for /export. */
+  exportText(): string {
+    const lines: string[] = [];
+    for (const m of this.messages) {
+      if (m.role === "user" && m.content) lines.push(`> ${m.content}`);
+      else if (m.role === "assistant" && m.content) lines.push(`Elliot: ${m.content}`);
+      else if (m.role === "assistant" && m.tool_calls?.length)
+        lines.push(`Elliot: [called ${m.tool_calls.map((t) => t.function.name).join(", ")}]`);
+    }
+    return lines.join("\n\n");
   }
 
   private isStuckLoop(calls: ToolCall[]): boolean {
@@ -117,6 +151,7 @@ export class AgentLoop {
     }
 
     commitTurn();
+    this.lastResponse = finalText;
     return finalText || "(done)";
   }
 

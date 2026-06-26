@@ -26,6 +26,27 @@ const geminiKey  = () => loadKey("GEMINI_API_KEY",      "gemini_api_key");
 const groqKey    = () => loadKey("GROQ_API_KEY",         "groq_api_key");
 const orKey      = () => loadKey("OPENROUTER_API_KEY",   "openrouter_api_key");
 
+// ── Session model override (set via /model) ──────────────────────────────────
+let modelOverride: string | null = null;
+
+export function setModelOverride(model: string | null): void {
+  modelOverride = model;
+}
+
+/** Status of every provider — which has a key and which models it offers. */
+export function getProviderStatus(): Array<{ name: string; hasKey: boolean; models: string[] }> {
+  return [
+    { name: "Gemini", hasKey: !!geminiKey(), models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"] },
+    { name: "Groq", hasKey: !!groqKey(), models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"] },
+    { name: "OpenRouter", hasKey: !!orKey(), models: ["meta-llama/llama-3.3-70b-instruct:free", "nousresearch/hermes-3-llama-3.1-405b:free"] },
+  ];
+}
+
+/** Name of the provider that will be tried first (has a key). */
+export function activeProviderName(): string {
+  return getProviderStatus().find((p) => p.hasKey)?.name ?? "none";
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ChatMessage {
@@ -316,6 +337,16 @@ function buildProviders(baseMessages: ChatMessage[]): Provider[] {
   }
 
   if (list.length === 0) throw new Error("No API key found. Add GEMINI_API_KEY or GROQ_API_KEY to elliot-cli/.env");
+
+  // If the user pinned a model via /model, move its provider to front and try it first.
+  if (modelOverride) {
+    const owner = list.find((p) => p.models.includes(modelOverride!));
+    if (owner) {
+      owner.models = [modelOverride, ...owner.models.filter((m) => m !== modelOverride)];
+      list.sort((a, b) => (a === owner ? -1 : b === owner ? 1 : 0));
+    }
+  }
+
   return list;
 }
 
