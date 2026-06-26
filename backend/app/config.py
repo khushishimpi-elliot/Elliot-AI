@@ -102,7 +102,7 @@ class Settings(BaseSettings):
 
     # ── Email (SendGrid) ─────────────────────────────
     sendgrid_api_key: str = ""
-    sendgrid_from_email: str = "shrushti.kadam@elliotsystems.com"
+    sendgrid_from_email: str = "shrutzz232@gmail.com"
 
     # ── Security ─────────────────────────────────────
     fernet_key: str = ""
