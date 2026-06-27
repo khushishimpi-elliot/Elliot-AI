@@ -32,13 +32,14 @@ def test_callback_returns_jwt_for_valid_token():
     email = "khushi@elliotsystems.com"
     token, _ = magic_link.issue_link(email)
 
-    r = client.get(f"/auth/callback?token={token}")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["token_type"] == "bearer"
-    assert body["email"] == email
+    r = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert r.status_code == 302
+    assert "step=2" in r.headers["location"]
+    assert f"email={email}" in r.headers["location"]
 
-    payload = decode_access_token(body["access_token"])
+    redirect_url = r.headers["location"]
+    jwt_param = [p.split("=")[1] for p in redirect_url.split("&") if p.startswith("jwt=")][0]
+    payload = decode_access_token(jwt_param)
     assert payload["sub"] == email
     assert payload["typ"] == "access"
 
@@ -51,8 +52,8 @@ def test_callback_rejects_unknown_token():
 
 def test_callback_rejects_reused_token():
     token, _ = magic_link.issue_link("khushi@elliotsystems.com")
-    first = client.get(f"/auth/callback?token={token}")
-    assert first.status_code == 200
+    first = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert first.status_code == 302
 
     second = client.get(f"/auth/callback?token={token}")
     assert second.status_code == 400
@@ -82,8 +83,11 @@ def test_end_to_end_flow():
     assert len(magic_link._store) == 1
     token = next(iter(magic_link._store.keys()))
 
-    r2 = client.get(f"/auth/callback?token={token}")
-    assert r2.status_code == 200
+    r2 = client.get(f"/auth/callback?token={token}", follow_redirects=False)
+    assert r2.status_code == 302
+    assert "step=2" in r2.headers["location"]
 
-    payload = decode_access_token(r2.json()["access_token"])
+    redirect_url = r2.headers["location"]
+    jwt_param = [p.split("=")[1] for p in redirect_url.split("&") if p.startswith("jwt=")][0]
+    payload = decode_access_token(jwt_param)
     assert payload["sub"] == email
