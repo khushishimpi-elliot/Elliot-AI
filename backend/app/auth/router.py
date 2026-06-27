@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import email as email_sender
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
 from app.auth.jwt import issue_access_token
-from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
+from app.auth.schemas import MagicLinkRequest, MagicLinkResponse
 from app.config import get_settings
 from app.db.session import get_db
 from app.services.auth0 import Auth0Service
