@@ -87,7 +87,10 @@ def test_callback_happy_path(configured_google):
         patch.object(sso_google, "exchange_code_for_tokens", return_value=fake_tokens),
         patch.object(sso_google, "verify_id_token", return_value=fake_claims),
     ):
-        r = client.get(f"/auth/google/callback?code=auth-code&state={state}", follow_redirects=False)
+        r = client.get(
+            f"/auth/google/callback?code=auth-code&state={state}",
+            follow_redirects=False,
+        )
 
     assert r.status_code == 302
     assert "step=2" in r.headers["location"]
