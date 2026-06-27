@@ -19,7 +19,6 @@ export default function App() {
       if (jwt && step) {
         localStorage.setItem("jwt", jwt);
         setScreen("onboarding");
-        window.history.replaceState({}, document.title, "/");
         return;
       }
 
