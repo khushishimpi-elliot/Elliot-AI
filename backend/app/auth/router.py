@@ -132,7 +132,7 @@ async def auth0_callback(
     code: str = Query(...),
     state: str = Query(...),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+):
     """Auth0 OAuth callback handler"""
     settings = get_settings()
     auth0_service = Auth0Service()
@@ -159,18 +159,13 @@ async def auth0_callback(
             db, default_tenant_id, user_info
         )
 
-        # Create JWT
-        jwt_token = auth0_service.create_jwt(user)
-
-        return {
-            "jwt_token": jwt_token,
-            "user": {
-                "email": user["email"],
-                "role": user["role"],
-                "tenant_id": user["tenant_id"],
-            },
-            "message": "Successfully authenticated with Auth0",
-        }
+        email = user["email"]
+        jwt_token, ttl = issue_access_token(email)
+        redirect_url = (
+            f"{settings.terminal_url}/onboarding?"
+            f"step=2&jwt={jwt_token}&email={quote(email)}"
+        )
+        return RedirectResponse(url=redirect_url, status_code=302)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
