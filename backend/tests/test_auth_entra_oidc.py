@@ -122,13 +122,12 @@ def test_callback_happy_path(configured_entra):
         patch.object(sso_entra, "exchange_code_for_tokens", return_value=fake_tokens),
         patch.object(sso_entra, "verify_id_token", return_value=fake_claims),
     ):
-        r = client.get(f"/auth/entra/callback?code=auth-code&state={state}")
+        r = client.get(f"/auth/entra/callback?code=auth-code&state={state}", follow_redirects=False)
 
-    assert r.status_code == 200
-    body = r.json()
-    assert body["email"] == "astika@elliotsystems.com"
-    assert body["token_type"] == "bearer"
-    assert body["access_token"]
+    assert r.status_code == 302
+    assert "step=2" in r.headers["location"]
+    assert "email=astika%40elliotsystems.com" in r.headers["location"]
+    assert "jwt=" in r.headers["location"]
 
 
 def test_callback_rejects_on_oidc_error(configured_entra):
