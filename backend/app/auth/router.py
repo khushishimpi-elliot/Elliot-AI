@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -32,7 +33,10 @@ def redeem_magic_link(token: str = Query(...)):
 
     access_token, ttl = issue_access_token(email)
     settings = get_settings()
-    redirect_url = f"{settings.terminal_url}/onboarding?step=2&jwt={access_token}&email={email}"
+    redirect_url = (
+        f"{settings.terminal_url}/onboarding?"
+        f"step=2&jwt={access_token}&email={quote(email)}"
+    )
     return RedirectResponse(url=redirect_url, status_code=302)
 
 
@@ -60,7 +64,10 @@ def google_callback(code: str = Query(...), state: str = Query(...)):
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
     settings = get_settings()
-    redirect_url = f"{settings.terminal_url}/onboarding?step=2&jwt={access_token}&email={email}"
+    redirect_url = (
+        f"{settings.terminal_url}/onboarding?"
+        f"step=2&jwt={access_token}&email={quote(email)}"
+    )
     return RedirectResponse(url=redirect_url, status_code=302)
 
 
@@ -88,7 +95,10 @@ def entra_callback(code: str = Query(...), state: str = Query(...)):
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
     settings = get_settings()
-    redirect_url = f"{settings.terminal_url}/onboarding?step=2&jwt={access_token}&email={email}"
+    redirect_url = (
+        f"{settings.terminal_url}/onboarding?"
+        f"step=2&jwt={access_token}&email={quote(email)}"
+    )
     return RedirectResponse(url=redirect_url, status_code=302)
 
 
