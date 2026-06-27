@@ -1,5 +1,4 @@
 import fetch from "node-fetch";
-import EventSource from "eventsource";
 import { ElliotConfig } from "./config.js";
 import { logUsage } from "./usage.js";
 
@@ -31,55 +30,63 @@ export async function streamQuery(
 
     if (!response.ok) {
       if (response.status === 401) {
-        throw new Error("Authentication failed. Run 'elliot-ai init' to reconfigure.");
+        throw new Error(
+          "Authentication failed. Run 'elliot-ai init' to reconfigure."
+        );
       }
       if (response.status === 404) {
-        throw new Error("Backend endpoint not found. Check your backend configuration.");
+        throw new Error(
+          "Backend endpoint not found. Check your backend configuration."
+        );
       }
-      throw new Error(
-        `Backend error: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`Backend error: ${response.status} ${response.statusText}`);
     }
 
-    const eventSource = new EventSource(url, {
-      method: "POST",
-      headers,
-      body,
-    } as any);
-
+    const reader = (response as any).body.getReader();
+    const decoder = new TextDecoder();
     let sourcesUsed: Record<string, number> = {};
 
-    eventSource.addEventListener("message", (event: any) => {
-      try {
-        const data = JSON.parse(event.data);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-        if (data.token) {
-          onToken(data.token);
-        }
+      const chunk = decoder.decode(value);
+      const lines = chunk.split("\n");
 
-        if (data.done) {
-          if (data.sources_used) {
-            sourcesUsed = data.sources_used;
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+
+        try {
+          const data = JSON.parse(line.slice(6));
+
+          if (data.token) {
+            onToken(data.token);
           }
-          logUsage({
-            command: "ask",
-            model: data.tokens?.model ?? "claude-sonnet-4-6",
-            input_tokens: data.tokens?.input ?? 0,
-            output_tokens: data.tokens?.output ?? 0,
-            query_preview: query.slice(0, 80),
-          });
-          eventSource.close();
-          onDone(sourcesUsed);
-        }
-      } catch (error) {
-        eventSource.close();
-      }
-    });
 
-    eventSource.addEventListener("error", (event: any) => {
-      eventSource.close();
-      onError("Connection lost or backend error");
-    });
+          if (data.done) {
+            if (data.sources_used) {
+              sourcesUsed = data.sources_used;
+            }
+            logUsage({
+              command: "ask",
+              model: data.tokens?.model ?? "claude-sonnet-4-6",
+              input_tokens: data.tokens?.input ?? 0,
+              output_tokens: data.tokens?.output ?? 0,
+              query_preview: query.slice(0, 80),
+            });
+            onDone(sourcesUsed);
+            return;
+          }
+
+          if (data.error) {
+            onError(data.error);
+            return;
+          }
+        } catch {
+          // Skip malformed JSON lines
+        }
+      }
+    }
   } catch (error) {
     if (error instanceof Error) {
       onError(error.message);
