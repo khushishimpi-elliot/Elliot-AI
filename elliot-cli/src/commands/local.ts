@@ -5,7 +5,7 @@ import * as url from "url";
 import chalk from "chalk";
 import { AgentLoop } from "../agent/loop.js";
 import { loadAgentContext } from "../agent/context.js";
-import { undoLastTurn } from "../agent/undo.js";
+import { handleSlash } from "./slash.js";
 
 // Tool registrations — side-effect imports, must come before AgentLoop is used
 import "../tools/read.js";
@@ -35,7 +35,6 @@ const GREEN = "#4FFFB0";
 const BLUE = "#58A6FF";
 const GRAY = "#888888";
 const CYAN = "#79C0FF";
-const YELLOW = "#F0C040";
 
 function printBanner(): void {
   console.log("");
@@ -56,7 +55,7 @@ function printBanner(): void {
   console.log(chalk.hex(GREEN)("└─────────────────────────────────────┘"));
   console.log(
     chalk.hex(GRAY)(
-      "  Type your question. /undo /compact /clear /exit"
+      "  Type your question, or /help for commands."
     )
   );
   console.log("");
@@ -122,52 +121,55 @@ export async function localCommand(): Promise<void> {
 
     if (!query) continue;
 
-    // Slash commands
-    if (query === "/exit" || query === "/quit" || query === "exit") {
-      console.log(chalk.hex(GRAY)("Bye!"));
-      break;
-    }
-    if (query === "/undo") {
-      const msg = await undoLastTurn();
-      console.log(chalk.hex(YELLOW)(msg));
-      continue;
-    }
-    if (query === "/compact") {
-      loop.compactHistory();
-      console.log(chalk.hex(GRAY)("History compacted to last 20 messages."));
-      continue;
-    }
-    if (query === "/clear") {
-      loop.clearHistory();
-      console.log(chalk.hex(GRAY)("History cleared."));
-      continue;
+    // Slash commands — all routed through the unified handler
+    if (query.startsWith("/") || query === "exit") {
+      const result = await handleSlash(query, loop);
+      if (result.exit) {
+        console.log(chalk.hex(GRAY)("Bye!"));
+        break;
+      }
+      if (!result.runPrompt) continue;
+      query = result.runPrompt; // /review and /init feed a prompt to the agent
     }
 
     console.log("");
-    process.stdout.write(chalk.hex(BLUE)("Elliot: "));
+
+    // Track whether we're mid-line so tool calls and text never collide.
+    let textOpen = false; // currently streaming a run of assistant text
+    const ensureLabel = () => {
+      if (!textOpen) {
+        process.stdout.write(chalk.hex(BLUE)("Elliot: "));
+        textOpen = true;
+      }
+    };
 
     try {
       await loop.run(
         query,
         (text) => {
+          ensureLabel();
           process.stdout.write(text);
         },
         (toolName, args) => {
+          // Close any open text line before printing a tool action
+          if (textOpen) {
+            process.stdout.write("\n");
+            textOpen = false;
+          }
           let preview = "";
           try {
             const parsed = JSON.parse(args);
             const first = Object.values(parsed)[0];
             preview = first ? ` ${String(first).slice(0, 50)}` : "";
           } catch { /* ignore */ }
-          process.stdout.write("\n");
-          console.log(chalk.hex(CYAN)(`  ⚙ ${toolName}${preview}`));
-          process.stdout.write(chalk.hex(BLUE)("Elliot: "));
+          console.log(chalk.hex(GRAY)(`  ⚙ ${toolName}${chalk.hex(CYAN)(preview)}`));
         },
         (_result) => {
           // Tool results are not shown — model uses them internally
         }
       );
-      console.log("\n");
+      if (textOpen) console.log(""); // close the final text line
+      console.log("");
     } catch (e) {
       console.log("");
       const msg = e instanceof Error ? e.message : "Unknown error";

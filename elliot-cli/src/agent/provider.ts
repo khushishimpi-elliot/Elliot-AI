@@ -26,6 +26,27 @@ const geminiKey  = () => loadKey("GEMINI_API_KEY",      "gemini_api_key");
 const groqKey    = () => loadKey("GROQ_API_KEY",         "groq_api_key");
 const orKey      = () => loadKey("OPENROUTER_API_KEY",   "openrouter_api_key");
 
+// ── Session model override (set via /model) ──────────────────────────────────
+let modelOverride: string | null = null;
+
+export function setModelOverride(model: string | null): void {
+  modelOverride = model;
+}
+
+/** Status of every provider — which has a key and which models it offers. */
+export function getProviderStatus(): Array<{ name: string; hasKey: boolean; models: string[] }> {
+  return [
+    { name: "Gemini", hasKey: !!geminiKey(), models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"] },
+    { name: "Groq", hasKey: !!groqKey(), models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"] },
+    { name: "OpenRouter", hasKey: !!orKey(), models: ["meta-llama/llama-3.3-70b-instruct:free", "nousresearch/hermes-3-llama-3.1-405b:free"] },
+  ];
+}
+
+/** Name of the provider that will be tried first (has a key). */
+export function activeProviderName(): string {
+  return getProviderStatus().find((p) => p.hasKey)?.name ?? "none";
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ChatMessage {
@@ -51,6 +72,9 @@ export interface LLMResponse {
   content: string | null;
   tool_calls: ToolCall[];
   stop_reason: string;
+  input_tokens: number;
+  output_tokens: number;
+  model_used: string;
 }
 
 // ─── Error helpers ────────────────────────────────────────────────────────────
@@ -189,7 +213,7 @@ async function callGemini(
     stopSpinner();
     const response = result.response;
     const candidate = response.candidates?.[0];
-    if (!candidate) return { content: null, tool_calls: [], stop_reason: "stop" };
+    if (!candidate) return { content: null, tool_calls: [], stop_reason: "stop", input_tokens: 0, output_tokens: 0, model_used: model };
 
     const { parts } = candidate.content;
     const textParts = parts.filter((p: Part) => p.text);
@@ -207,7 +231,15 @@ async function callGemini(
       },
     }));
 
-    return { content: textContent, tool_calls, stop_reason: fnParts.length ? "tool_calls" : "stop" };
+    const usage = response.usageMetadata;
+    return {
+      content: textContent,
+      tool_calls,
+      stop_reason: fnParts.length ? "tool_calls" : "stop",
+      input_tokens: usage?.promptTokenCount ?? 0,
+      output_tokens: usage?.candidatesTokenCount ?? 0,
+      model_used: model,
+    };
   } catch (err) {
     stopSpinner();
     throw err;
@@ -238,22 +270,32 @@ async function callOpenAI(
         ...tc,
         function: { ...tc.function, name: tc.function.name.split("=")[0].split("{")[0].trim() },
       }));
-      return { content, tool_calls, stop_reason: choice.finish_reason ?? "stop" };
+      return {
+        content,
+        tool_calls,
+        stop_reason: choice.finish_reason ?? "stop",
+        input_tokens: response.usage?.prompt_tokens ?? 0,
+        output_tokens: response.usage?.completion_tokens ?? 0,
+        model_used: model,
+      };
     } catch (err) { stopSpinner(); throw err; }
   }
 
   // Text-only: stream
   const stream = await client.chat.completions.create({
-    model, max_tokens: 8096, stream: true, messages,
+    model, max_tokens: 8096, stream: true, stream_options: { include_usage: true }, messages,
   });
-  let content = ""; let stopReason = "stop";
+  let content = ""; let stopReason = "stop"; let inputTok = 0; let outputTok = 0;
   for await (const chunk of stream) {
     const choice = chunk.choices[0];
-    if (!choice) continue;
+    if (!choice) {
+      if (chunk.usage) { inputTok = chunk.usage.prompt_tokens; outputTok = chunk.usage.completion_tokens; }
+      continue;
+    }
     stopReason = choice.finish_reason ?? stopReason;
     if (choice.delta.content) { content += choice.delta.content; onToken(choice.delta.content); }
   }
-  return { content: content || null, tool_calls: [], stop_reason: stopReason };
+  return { content: content || null, tool_calls: [], stop_reason: stopReason, input_tokens: inputTok, output_tokens: outputTok, model_used: model };
 }
 
 // ─── Provider registry ────────────────────────────────────────────────────────
@@ -316,6 +358,16 @@ function buildProviders(baseMessages: ChatMessage[]): Provider[] {
   }
 
   if (list.length === 0) throw new Error("No API key found. Add GEMINI_API_KEY or GROQ_API_KEY to elliot-cli/.env");
+
+  // If the user pinned a model via /model, move its provider to front and try it first.
+  if (modelOverride) {
+    const owner = list.find((p) => p.models.includes(modelOverride!));
+    if (owner) {
+      owner.models = [modelOverride, ...owner.models.filter((m) => m !== modelOverride)];
+      list.sort((a, b) => (a === owner ? -1 : b === owner ? 1 : 0));
+    }
+  }
+
   return list;
 }
 
@@ -344,7 +396,7 @@ export async function streamLLM(
         if (isBadToolCall(err) && tools.length > 0) {
           const result = await provider.call(model, messages, [], system, onToken);
           worked = true;
-          return result;
+          return { ...result, model_used: model };
         }
         if (isContextOverflow(err)) throw new Error("Context too long. Use /compact to trim history.");
         throw err;
