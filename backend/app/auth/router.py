@@ -23,19 +23,17 @@ def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
 
 
-@router.get("/callback", response_model=TokenResponse)
-def redeem_magic_link(token: str = Query(...)) -> TokenResponse:
+@router.get("/callback")
+def redeem_magic_link(token: str = Query(...)):
     try:
         email = magic_link.redeem(token)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
-    )
+    settings = get_settings()
+    redirect_url = f"{settings.terminal_url}/onboarding?step=2&jwt={access_token}&email={email}"
+    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/google/login")
