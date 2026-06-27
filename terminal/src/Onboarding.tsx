@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Step1SignIn from "./steps/Step1SignIn";
 import Step2Workspace from "./steps/Step2Workspace";
 import Step3SDLC from "./steps/Step3SDLC";
@@ -28,6 +28,24 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [config, setConfig] = useState<OnboardingConfig>({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const step = params.get("step");
+    const jwt = params.get("jwt");
+    const email = params.get("email");
+
+    if (step) {
+      setCurrentStep(parseInt(step, 10));
+    }
+    if (jwt) {
+      localStorage.setItem("jwt", jwt);
+      setConfig((prev) => ({ ...prev, jwtToken: jwt }));
+    }
+    if (email) {
+      localStorage.setItem("email", email);
+    }
+  }, []);
 
   const handleContinue = () => {
     const newCompleted = new Set(completedSteps);
