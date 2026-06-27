@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -35,7 +37,7 @@ def test_callback_returns_jwt_for_valid_token():
     r = client.get(f"/auth/callback?token={token}", follow_redirects=False)
     assert r.status_code == 302
     assert "step=2" in r.headers["location"]
-    assert f"email={email}" in r.headers["location"]
+    assert f"email={quote(email)}" in r.headers["location"]
 
     redirect_url = r.headers["location"]
     jwt_param = [p.split("=")[1] for p in redirect_url.split("&") if p.startswith("jwt=")][0]
