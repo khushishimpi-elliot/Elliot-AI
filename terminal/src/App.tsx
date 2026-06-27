@@ -12,7 +12,18 @@ export default function App() {
     const handleAuthCallback = async () => {
       const params = new URLSearchParams(window.location.search);
       const token = params.get("token");
+      const jwt = params.get("jwt");
+      const step = params.get("step");
 
+      // OAuth callback (Google, Entra, etc.)
+      if (jwt && step) {
+        localStorage.setItem("jwt", jwt);
+        setScreen("onboarding");
+        window.history.replaceState({}, document.title, "/");
+        return;
+      }
+
+      // Magic link callback
       if (token) {
         try {
           const response = await fetch(
