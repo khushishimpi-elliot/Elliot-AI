@@ -44,7 +44,7 @@ async def send_magic_link_email(
             response = await client.post(
                 "https://api.resend.com/emails",
                 json={
-                    "from": "Elliot AI <noreply@elliot-ai.cloud>",
+                    "from": "onboarding@resend.dev",
                     "to": to_email,
                     "subject": "Sign in to Elliot-AI",
                     "html": html,
