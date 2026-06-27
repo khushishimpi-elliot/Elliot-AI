@@ -100,9 +100,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
-    # ── Email (SendGrid) ─────────────────────────────
-    sendgrid_api_key: str = ""
-    sendgrid_from_email: str = "shrutzz232@gmail.com"
+    # ── Email (Resend) ───────────────────────────────
+    resend_api_key: str = ""
 
     # ── Security ─────────────────────────────────────
     fernet_key: str = ""
