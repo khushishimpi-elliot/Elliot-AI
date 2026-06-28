@@ -249,10 +249,16 @@ async def get_onboarding_config(
         sdlc = sdlc_result.scalar_one_or_none()
 
         # Get connected connectors
+        # Note: only query columns that exist in the database schema
         connectors_result = await db.execute(
-            select(Connector).where(Connector.tenant_id == tenant_id)
+            select(Connector.provider, Connector.status).where(
+                Connector.tenant_id == tenant_id
+            )
         )
-        connectors = connectors_result.scalars().all()
+        connector_rows = connectors_result.all()
+        connectors = [
+            {"provider": row[0], "status": row[1]} for row in connector_rows
+        ]
 
         # Get chunk count
         chunks_result = await db.execute(
