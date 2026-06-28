@@ -1,19 +1,19 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.jwt import decode_access_token
 from app.db.session import get_db
 from app.models.connector import Connector
+from app.models.knowledge_chunk import KnowledgeChunk
 from app.models.organisation import Organisation
 from app.models.sdlc import SDLCProfile
 from app.models.tenant import Tenant
-from app.models.knowledge_chunks import KnowledgeChunk
 from app.schemas.sdlc import SDLCCreate
 from app.schemas.workspace import WorkspaceCreate, WorkspaceResponse
-from app.auth.jwt import decode_access_token
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 logger = logging.getLogger(__name__)
