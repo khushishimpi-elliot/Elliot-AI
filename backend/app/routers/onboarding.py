@@ -257,7 +257,11 @@ async def get_onboarding_config(
         )
         connector_rows = connectors_result.all()
         connectors = [
-            {"provider": row[0], "status": row[1]} for row in connector_rows
+            {
+                "provider": row[0],
+                "status": "connected" if row[1] == "connected" else "not_connected"
+            }
+            for row in connector_rows
         ]
 
         # Get chunk count
@@ -284,13 +288,7 @@ async def get_onboarding_config(
             "branching_model": sdlc.branching_model if sdlc else "Not configured",
             "review_policy": sdlc.review_policy if sdlc else "Not configured",
             "ci_cd_platform": sdlc.ci_cd_platform if sdlc else "Not configured",
-            "connectors": [
-                {
-                    "provider": c.provider,
-                    "status": "connected" if c.status == "connected" else "not_connected"
-                }
-                for c in connectors
-            ],
+            "connectors": connectors,
             "chunk_count": chunk_count,
         }
 
