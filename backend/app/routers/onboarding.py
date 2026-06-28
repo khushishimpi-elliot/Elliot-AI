@@ -227,13 +227,20 @@ async def get_onboarding_config(
             raise HTTPException(status_code=401, detail="Invalid or expired token") from e
 
         # Get organisation
-        org_result = await db.execute(
-            select(Organisation).where(Organisation.tenant_id == tenant_id)
-        )
-        org = org_result.scalar_one_or_none()
+        try:
+            org_result = await db.execute(
+                select(Organisation).where(Organisation.tenant_id == tenant_id)
+            )
+            org = org_result.scalar_one_or_none()
 
-        if not org:
-            raise HTTPException(status_code=404, detail="Organisation not found")
+            if not org:
+                logger.error(f"Organisation not found for tenant {tenant_id}")
+                raise HTTPException(status_code=404, detail="Organisation not found")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching organisation: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to fetch organisation") from e
 
         # Get SDLC profile
         sdlc_result = await db.execute(

@@ -41,6 +41,17 @@ export default function Onboarding() {
     if (jwt) {
       localStorage.setItem("jwt", jwt);
       setConfig((prev) => ({ ...prev, jwtToken: jwt }));
+
+      // Extract tenant_id from JWT payload
+      try {
+        const payload = JSON.parse(atob(jwt.split(".")[1]));
+        if (payload.tenant_id) {
+          localStorage.setItem("elliot_tenant_id", payload.tenant_id);
+          setConfig((prev) => ({ ...prev, tenantId: payload.tenant_id }));
+        }
+      } catch {
+        console.error("Failed to extract tenant_id from JWT");
+      }
     }
     if (email) {
       localStorage.setItem("email", email);
