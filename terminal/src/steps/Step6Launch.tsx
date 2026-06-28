@@ -34,7 +34,6 @@ export default function Step6Launch({ config = {} }: Step6Props) {
   const coverageGate = localStorage.getItem("elliot_coverage_gate") || "0";
   const reviewPolicy = localStorage.getItem("elliot_review_policy") || "—";
   const branchingModel = localStorage.getItem("elliot_branching_model") || "—";
-  const cicdPlatform = localStorage.getItem("elliot_ci_cd_platform") || "—";
 
   useEffect(() => {
     const fetchConfig = async () => {
