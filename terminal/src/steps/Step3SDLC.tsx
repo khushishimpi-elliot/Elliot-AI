@@ -37,6 +37,16 @@ export default function Step3SDLC({ onContinue, onConfigUpdate }: Step3Props) {
     } catch {
       // backend unavailable — continue anyway
     }
+
+    // Save to localStorage for Step 6
+    localStorage.setItem("elliot_stack", stack.join(", "));
+    localStorage.setItem("elliot_branching_model", branching);
+    const testParts = testing.split(" · ");
+    localStorage.setItem("elliot_test_framework", testParts[0]);
+    localStorage.setItem("elliot_coverage_gate", testParts[1]?.replace("%", "") || "0");
+    localStorage.setItem("elliot_review_policy", review);
+    localStorage.setItem("elliot_ci_cd_platform", cicd.join(", "));
+
     if (onConfigUpdate) onConfigUpdate({ stack: stack.join(" / ") });
     onContinue();
   };

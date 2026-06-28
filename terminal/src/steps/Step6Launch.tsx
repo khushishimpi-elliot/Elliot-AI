@@ -24,8 +24,17 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export default function Step6Launch({ config = {} }: Step6Props) {
   const [fullConfig, setFullConfig] = useState<OnboardingConfig>({});
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [copiedSetup, setCopiedSetup] = useState(false);
+  const [copiedNpm, setCopiedNpm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Read from localStorage for stack, test, etc
+  const stack = localStorage.getItem("elliot_stack") || "—";
+  const testFramework = localStorage.getItem("elliot_test_framework") || "—";
+  const coverageGate = localStorage.getItem("elliot_coverage_gate") || "0";
+  const reviewPolicy = localStorage.getItem("elliot_review_policy") || "—";
+  const branchingModel = localStorage.getItem("elliot_branching_model") || "—";
+  const cicdPlatform = localStorage.getItem("elliot_ci_cd_platform") || "—";
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -69,8 +78,18 @@ export default function Step6Launch({ config = {} }: Step6Props) {
     try {
       const command = `elliot setup --token ${fullConfig.jwt_token} --tenant-id ${fullConfig.tenant_id}`;
       await navigator.clipboard.writeText(command);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedSetup(true);
+      setTimeout(() => setCopiedSetup(false), 2000);
+    } catch {
+      console.error("Failed to copy");
+    }
+  };
+
+  const handleCopyNpmCommand = async () => {
+    try {
+      await navigator.clipboard.writeText("npm install -g elliot-ai");
+      setCopiedNpm(true);
+      setTimeout(() => setCopiedNpm(false), 2000);
     } catch {
       console.error("Failed to copy");
     }
@@ -170,12 +189,12 @@ export default function Step6Launch({ config = {} }: Step6Props) {
       >
         {[
           { label: "Organization", value: fullConfig.org_name || "—" },
-          { label: "Stack", value: fullConfig.stack || "—" },
+          { label: "Stack", value: stack },
           {
             label: "Standards",
-            value: `${fullConfig.test_framework || "—"} · ${fullConfig.coverage_gate || 0}% · ${fullConfig.review_policy || "—"}`,
+            value: `${testFramework} · ${coverageGate}% · ${reviewPolicy}`,
           },
-          { label: "Architecture", value: fullConfig.arch_style || "—" },
+          { label: "Architecture", value: branchingModel },
           {
             label: "Connected",
             value: `${connectedCount} sources · ${fullConfig.chunk_count?.toLocaleString() || 0} chunks`,
@@ -213,6 +232,195 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             </span>
           </div>
         ))}
+      </div>
+
+      {/* Download Section */}
+      <div
+        style={{
+          background: "#141414",
+          border: "1px solid #1E1E1E",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "24px",
+        }}
+      >
+        <p
+          style={{
+            color: "#FFFFFF",
+            fontFamily: "monospace",
+            fontSize: "14px",
+            fontWeight: "bold",
+            margin: "0 0 4px 0",
+          }}
+        >
+          Get the Elliot-AI CLI
+        </p>
+        <p
+          style={{
+            color: "#AAAAAA",
+            fontFamily: "monospace",
+            fontSize: "12px",
+            margin: "0 0 16px 0",
+          }}
+        >
+          Install the CLI to use Elliot from your terminal
+        </p>
+
+        {/* Download buttons row */}
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            marginBottom: "16px",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Mac download button */}
+          <a
+            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-mac"
+            download
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "#4FFFB0",
+              color: "#000000",
+              padding: "10px 20px",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontFamily: "monospace",
+              fontWeight: "bold",
+              fontSize: "13px",
+              cursor: "pointer",
+            }}
+          >
+            ↓ Download for Mac
+          </a>
+
+          {/* Windows download button */}
+          <a
+            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-win.exe"
+            download
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "transparent",
+              color: "#AAAAAA",
+              padding: "10px 20px",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontFamily: "monospace",
+              fontSize: "13px",
+              border: "1px solid #333333",
+              cursor: "pointer",
+            }}
+          >
+            ↓ Download for Windows
+          </a>
+
+          {/* Linux download button */}
+          <a
+            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-linux"
+            download
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "transparent",
+              color: "#AAAAAA",
+              padding: "10px 20px",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontFamily: "monospace",
+              fontSize: "13px",
+              border: "1px solid #333333",
+              cursor: "pointer",
+            }}
+          >
+            ↓ Download for Linux
+          </a>
+        </div>
+
+        {/* Divider */}
+        <div
+          style={{
+            borderTop: "1px solid #1E1E1E",
+            margin: "16px 0",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          <span
+            style={{
+              color: "#444444",
+              fontSize: "11px",
+              fontFamily: "monospace",
+              whiteSpace: "nowrap",
+            }}
+          >
+            or install via npm
+          </span>
+          <div style={{ flex: 1, borderTop: "1px solid #1E1E1E" }} />
+        </div>
+
+        {/* npm install command */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "#0D0D0D",
+            border: "1px solid #333333",
+            borderRadius: "6px",
+            padding: "12px 16px",
+          }}
+        >
+          <code
+            style={{
+              color: "#4FFFB0",
+              fontFamily: "monospace",
+              fontSize: "13px",
+            }}
+          >
+            npm install -g elliot-ai
+          </code>
+          <button
+            onClick={handleCopyNpmCommand}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: copiedNpm ? "#4FFFB0" : "#666666",
+              fontFamily: "monospace",
+              fontSize: "11px",
+              cursor: "pointer",
+              padding: "4px 8px",
+            }}
+          >
+            {copiedNpm ? "✓ Copied" : "Copy"}
+          </button>
+        </div>
+
+        {/* npm link */}
+        <p
+          style={{
+            color: "#444444",
+            fontSize: "11px",
+            fontFamily: "monospace",
+            margin: "8px 0 0 0",
+          }}
+        >
+          Requires Node.js 18+ ·{" "}
+          <a
+            href="https://www.npmjs.com/package/elliot-ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#555555", textDecoration: "none" }}
+          >
+            View on npm →
+          </a>
+        </p>
       </div>
 
       {/* Setup Steps */}
@@ -293,9 +501,47 @@ export default function Step6Launch({ config = {} }: Step6Props) {
               color: "var(--accent-green)",
               overflow: "auto",
               wordBreak: "break-all",
+              marginBottom: "8px",
             }}
           >
-            elliot setup --token {fullConfig.jwt_token} --tenant-id {fullConfig.tenant_id}
+            elliot setup --token {fullConfig.jwt_token} --tenant-id{" "}
+            {fullConfig.tenant_id}
+          </div>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <button
+              onClick={handleCopySetupCommand}
+              style={{
+                background: copiedSetup ? "var(--accent-green)" : "var(--border)",
+                color: copiedSetup ? "black" : "var(--text-primary)",
+                border: "none",
+                borderRadius: "5px",
+                fontSize: "13px",
+                fontWeight: "600",
+                padding: "8px 16px",
+                cursor: "pointer",
+                fontFamily: "var(--font-mono)",
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) =>
+                !copiedSetup &&
+                ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")
+              }
+              onMouseLeave={(e) =>
+                !copiedSetup &&
+                ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
+              }
+            >
+              {copiedSetup ? "✓ Copied" : "📋 Copy setup command"}
+            </button>
+            <span
+              style={{
+                fontSize: "11px",
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {copiedSetup ? "Ready to paste in terminal" : ""}
+            </span>
           </div>
           <div
             style={{
@@ -348,40 +594,54 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         </div>
       </div>
 
-      {/* Copy Button */}
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      {/* Launch Buttons */}
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          marginTop: "32px",
+        }}
+      >
         <button
-          onClick={handleCopySetupCommand}
+          onClick={() => {
+            const currentUrl = window.location.href;
+            const terminalUrl = currentUrl.replace(/\/onboarding.*/, "/terminal");
+            window.location.href = terminalUrl;
+          }}
           style={{
-            background: copied ? "var(--accent-green)" : "var(--border)",
-            color: copied ? "black" : "var(--text-primary)",
+            flex: 1,
+            background: "#4FFFB0",
+            color: "#000000",
             border: "none",
-            borderRadius: "5px",
-            fontSize: "13px",
-            fontWeight: "600",
-            padding: "8px 16px",
+            padding: "14px",
+            borderRadius: "6px",
+            fontFamily: "monospace",
+            fontWeight: "bold",
+            fontSize: "14px",
             cursor: "pointer",
-            fontFamily: "var(--font-mono)",
-            transition: "all 0.15s ease",
           }}
-          onMouseEnter={(e) =>
-            !copied && ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")
-          }
-          onMouseLeave={(e) =>
-            !copied && ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
-          }
         >
-          {copied ? "✓ Copied" : "Copy Setup Command"}
+          Open web terminal →
         </button>
-        <span
+
+        <button
+          onClick={() => {
+            window.open("https://elliot-ai.onrender.com/dashboard", "_blank");
+          }}
           style={{
-            fontSize: "12px",
-            color: "var(--text-muted)",
-            fontFamily: "var(--font-sans)",
+            flex: 1,
+            background: "transparent",
+            color: "#AAAAAA",
+            border: "1px solid #333333",
+            padding: "14px",
+            borderRadius: "6px",
+            fontFamily: "monospace",
+            fontSize: "14px",
+            cursor: "pointer",
           }}
         >
-          {copied ? "Ready to paste in terminal" : "Copy step 02 command"}
-        </span>
+          Open dashboard →
+        </button>
       </div>
     </div>
   );
