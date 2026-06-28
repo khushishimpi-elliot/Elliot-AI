@@ -7,6 +7,7 @@ import { statusCommand } from "./commands/status.js";
 import { logoutCommand } from "./commands/logout.js";
 import { localCommand } from "./commands/local.js";
 import { usageCommand } from "./commands/usage.js";
+import { setupCommand } from "./commands/setup.js";
 
 const program = new Command();
 
@@ -19,6 +20,12 @@ program
   .command("init")
   .description("Set up Elliot-AI for your organisation")
   .action(initCommand);
+
+program
+  .command("setup")
+  .description("Configure Elliot-AI with workspace settings (from onboarding)")
+  .requiredOption("--token <token>", "Your Elliot-AI JWT token from Step 6")
+  .action((options) => setupCommand(options));
 
 program
   .command("ask", { isDefault: true })

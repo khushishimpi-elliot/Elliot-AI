@@ -1,7 +1,8 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -9,8 +10,10 @@ from app.models.connector import Connector
 from app.models.organisation import Organisation
 from app.models.sdlc import SDLCProfile
 from app.models.tenant import Tenant
+from app.models.knowledge_chunks import KnowledgeChunk
 from app.schemas.sdlc import SDLCCreate
 from app.schemas.workspace import WorkspaceCreate, WorkspaceResponse
+from app.auth.jwt import decode_access_token
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
 logger = logging.getLogger(__name__)
@@ -201,4 +204,86 @@ async def handle_oauth_callback(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to complete OAuth: {str(e)}",
+        ) from e
+
+
+@router.get("/config/{tenant_id}")
+async def get_onboarding_config(
+    tenant_id: UUID,
+    authorization: str = Header(...),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Get full configuration for CLI setup — returns everything needed for auto-configuration"""
+    try:
+        # Verify JWT token
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+        token = authorization.replace("Bearer ", "")
+        try:
+            token_data = decode_access_token(token)
+        except Exception as e:
+            logger.error(f"Invalid token: {str(e)}")
+            raise HTTPException(status_code=401, detail="Invalid or expired token") from e
+
+        # Get organisation
+        org_result = await db.execute(
+            select(Organisation).where(Organisation.tenant_id == tenant_id)
+        )
+        org = org_result.scalar_one_or_none()
+
+        if not org:
+            raise HTTPException(status_code=404, detail="Organisation not found")
+
+        # Get SDLC profile
+        sdlc_result = await db.execute(
+            select(SDLCProfile).where(SDLCProfile.tenant_id == tenant_id)
+        )
+        sdlc = sdlc_result.scalar_one_or_none()
+
+        # Get connected connectors
+        connectors_result = await db.execute(
+            select(Connector).where(Connector.tenant_id == tenant_id)
+        )
+        connectors = connectors_result.scalars().all()
+
+        # Get chunk count
+        chunks_result = await db.execute(
+            select(KnowledgeChunk).where(KnowledgeChunk.tenant_id == tenant_id)
+        )
+        chunk_count = len(chunks_result.scalars().all())
+
+        return {
+            "jwt_token": token,
+            "tenant_id": str(tenant_id),
+            "user_id": str(token_data.get("sub", "")),
+            "email": token_data.get("email", ""),
+            "org_name": org.org_name,
+            "domain": org.domain,
+            "backend_url": "https://elliot-ai.onrender.com",
+            "onboarding_url": "https://elliot-ai-1.onrender.com",
+            "stack": sdlc.stack if sdlc else "Not configured",
+            "arch_style": sdlc.arch_style if sdlc else "Not configured",
+            "test_framework": sdlc.test_framework if sdlc else "Not configured",
+            "coverage_gate": sdlc.coverage_gate if sdlc else 0,
+            "branching_model": sdlc.branching_model if sdlc else "Not configured",
+            "review_policy": sdlc.review_policy if sdlc else "Not configured",
+            "ci_cd_platform": sdlc.ci_cd_platform if sdlc else "Not configured",
+            "connectors": [
+                {
+                    "provider": c.provider,
+                    "status": "connected" if c.status == "connected" else "not_connected"
+                }
+                for c in connectors
+            ],
+            "chunk_count": chunk_count,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching onboarding config: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch configuration",
         ) from e
