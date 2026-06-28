@@ -233,7 +233,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         ))}
       </div>
 
-      {/* Download Section */}
+      {/* Install CLI Section */}
       <div
         style={{
           background: "#141414",
@@ -252,7 +252,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             margin: "0 0 4px 0",
           }}
         >
-          Get the Elliot-AI CLI
+          Install Elliot-AI CLI
         </p>
         <p
           style={{
@@ -262,107 +262,8 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             margin: "0 0 16px 0",
           }}
         >
-          Install the CLI to use Elliot from your terminal
+          Available on npm — works on Mac, Windows, and Linux
         </p>
-
-        {/* Download buttons row */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginBottom: "16px",
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Mac download button */}
-          <a
-            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-mac"
-            download
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#4FFFB0",
-              color: "#000000",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontFamily: "monospace",
-              fontWeight: "bold",
-              fontSize: "13px",
-              cursor: "pointer",
-            }}
-          >
-            ↓ Download for Mac
-          </a>
-
-          {/* Windows download button */}
-          <a
-            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-win.exe"
-            download
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "transparent",
-              color: "#AAAAAA",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontFamily: "monospace",
-              fontSize: "13px",
-              border: "1px solid #333333",
-              cursor: "pointer",
-            }}
-          >
-            ↓ Download for Windows
-          </a>
-
-          {/* Linux download button */}
-          <a
-            href="https://github.com/khushishimpi-elliot/Elliot-AI/releases/download/v1.0.0/elliot-linux"
-            download
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "transparent",
-              color: "#AAAAAA",
-              padding: "10px 20px",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontFamily: "monospace",
-              fontSize: "13px",
-              border: "1px solid #333333",
-              cursor: "pointer",
-            }}
-          >
-            ↓ Download for Linux
-          </a>
-        </div>
-
-        {/* Divider */}
-        <div
-          style={{
-            borderTop: "1px solid #1E1E1E",
-            margin: "16px 0",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <span
-            style={{
-              color: "#444444",
-              fontSize: "11px",
-              fontFamily: "monospace",
-              whiteSpace: "nowrap",
-            }}
-          >
-            or install via npm
-          </span>
-          <div style={{ flex: 1, borderTop: "1px solid #1E1E1E" }} />
-        </div>
 
         {/* npm install command */}
         <div
@@ -374,6 +275,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             border: "1px solid #333333",
             borderRadius: "6px",
             padding: "12px 16px",
+            marginBottom: "12px",
           }}
         >
           <code
@@ -401,23 +303,23 @@ export default function Step6Launch({ config = {} }: Step6Props) {
           </button>
         </div>
 
-        {/* npm link */}
+        {/* Help text and link */}
         <p
           style={{
-            color: "#444444",
+            color: "#666666",
             fontSize: "11px",
             fontFamily: "monospace",
-            margin: "8px 0 0 0",
+            margin: "0",
           }}
         >
-          Requires Node.js 18+ ·{" "}
+          Requires Node.js 18+ · {" "}
           <a
             href="https://www.npmjs.com/package/elliot-ai"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "#555555", textDecoration: "none" }}
+            style={{ color: "#888888", textDecoration: "none" }}
           >
-            View on npm →
+            View package on npm →
           </a>
         </p>
       </div>
