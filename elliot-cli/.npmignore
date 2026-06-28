@@ -1,0 +1,14 @@
+src/
+scripts/
+node_modules/
+dist/*.map
+dist/*.d.ts
+.git/
+.gitignore
+.env
+.env.example
+tsconfig.json
+*.test.ts
+*.spec.ts
+CLAUDE.md
+.DS_Store
