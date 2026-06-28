@@ -67,7 +67,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
 
   const handleCopySetupCommand = async () => {
     try {
-      const command = `elliot setup --token ${fullConfig.jwt_token}`;
+      const command = `elliot setup --token ${fullConfig.jwt_token} --tenant-id ${fullConfig.tenant_id}`;
       await navigator.clipboard.writeText(command);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -295,7 +295,7 @@ export default function Step6Launch({ config = {} }: Step6Props) {
               wordBreak: "break-all",
             }}
           >
-            elliot setup --token {fullConfig.jwt_token}
+            elliot setup --token {fullConfig.jwt_token} --tenant-id {fullConfig.tenant_id}
           </div>
           <div
             style={{

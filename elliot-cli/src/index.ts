@@ -25,6 +25,7 @@ program
   .command("setup")
   .description("Configure Elliot-AI with workspace settings (from onboarding)")
   .requiredOption("--token <token>", "Your Elliot-AI JWT token from Step 6")
+  .option("--tenant-id <tenantId>", "Your workspace tenant ID (from Step 6 command)")
   .action((options) => setupCommand(options));
 
 program

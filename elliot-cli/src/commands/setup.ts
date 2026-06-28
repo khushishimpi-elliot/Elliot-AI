@@ -5,6 +5,7 @@ import { join } from "path";
 
 interface SetupOptions {
   token: string;
+  tenantId?: string;
 }
 
 interface OnboardingConfig {
@@ -54,9 +55,20 @@ export async function setupCommand(options: SetupOptions): Promise<void> {
   console.log("Configuring Elliot-AI...\n");
 
   try {
-    // Decode JWT to get tenant_id
-    const payload = decodeJWT(options.token);
-    const tenantId = payload.tenant_id || "00000000-0000-0000-0000-000000000001";
+    // Get tenant_id from parameter or JWT payload
+    let tenantId = options.tenantId;
+
+    if (!tenantId) {
+      const payload = decodeJWT(options.token);
+      tenantId = payload.tenant_id;
+    }
+
+    if (!tenantId) {
+      throw new Error(
+        "Missing tenant_id. Please provide --tenant-id parameter or use the full setup command from Step 6."
+      );
+    }
+
     const backendUrl = "https://elliot-ai.onrender.com";
 
     console.log("Fetching configuration from backend...");
