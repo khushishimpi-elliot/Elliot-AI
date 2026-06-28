@@ -33,6 +33,7 @@ async def create_workspace(
             data_residency=payload.residency,
         )
         db.add(tenant)
+        await db.flush()
 
         org = Organisation(
             tenant_id=tenant.id,
