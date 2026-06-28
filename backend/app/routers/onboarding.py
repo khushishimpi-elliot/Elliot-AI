@@ -2,7 +2,7 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.jwt import decode_access_token
@@ -261,10 +261,12 @@ async def get_onboarding_config(
         ]
 
         # Get chunk count
-        chunks_result = await db.execute(
-            select(KnowledgeChunk).where(KnowledgeChunk.tenant_id == tenant_id)
+        chunk_count_result = await db.execute(
+            select(func.count(KnowledgeChunk.id)).where(
+                KnowledgeChunk.tenant_id == tenant_id
+            )
         )
-        chunk_count = len(chunks_result.scalars().all())
+        chunk_count = chunk_count_result.scalar() or 0
 
         return {
             "jwt_token": token,
