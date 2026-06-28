@@ -1,5 +1,5 @@
 import logging
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -26,17 +26,20 @@ async def create_workspace(
 ) -> WorkspaceResponse:
     """Create workspace — onboarding step 1"""
     try:
+        # Generate tenant ID explicitly to ensure it's available
+        tenant_id = uuid4()
+
         tenant = Tenant(
+            id=tenant_id,
             org_name=payload.name,
             domain=payload.domain,
             team_size=payload.team_size,
             data_residency=payload.residency,
         )
         db.add(tenant)
-        await db.flush()
 
         org = Organisation(
-            tenant_id=tenant.id,
+            tenant_id=tenant_id,
             org_name=payload.name,
             domain=payload.domain,
             team_size=payload.team_size,
