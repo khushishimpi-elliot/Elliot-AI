@@ -77,7 +77,8 @@ export class AgentLoop {
     userPrompt: string,
     onText: (chunk: string) => void,
     onTool: (name: string, args: string) => void,
-    onToolResult: (result: string) => void
+    onToolResult: (result: string) => void,
+    signal?: AbortSignal
   ): Promise<string> {
     this.messages.push({ role: "user", content: userPrompt });
     beginTurn();
@@ -90,6 +91,7 @@ export class AgentLoop {
     let lastModelUsed = "";
 
     while (steps < MAX_STEPS) {
+      if (signal?.aborted) { onText("\n[interrupted]"); break; }
       steps++;
       const isLastStep = steps >= MAX_STEPS;
 
@@ -99,12 +101,24 @@ export class AgentLoop {
         ? `${this.system}\n\n${MAX_STEPS_PROMPT}`
         : this.system;
 
-      const response = await streamLLM(
-        this.messages,
-        tools,
-        system,
-        (token) => onText(token)
-      );
+      let response;
+      try {
+        response = await streamLLM(
+          this.messages,
+          tools,
+          system,
+          (token) => onText(token),
+          signal
+        );
+      } catch (err) {
+        if (signal?.aborted) { onText("\n[interrupted]"); break; }
+        throw err;
+      }
+
+      if (response.stop_reason === "aborted" || signal?.aborted) {
+        onText("\n[interrupted]");
+        break;
+      }
 
       totalInputTokens += response.input_tokens;
       totalOutputTokens += response.output_tokens;
@@ -114,7 +128,7 @@ export class AgentLoop {
 
       // Empty response with no tool calls — retry plain text
       if (!response.content && !response.tool_calls.length) {
-        const plain = await streamLLM(this.messages, [], this.system, onText);
+        const plain = await streamLLM(this.messages, [], this.system, onText, signal);
         totalInputTokens += plain.input_tokens;
         totalOutputTokens += plain.output_tokens;
         if (plain.model_used) lastModelUsed = plain.model_used;

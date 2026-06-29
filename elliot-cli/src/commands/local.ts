@@ -172,6 +172,17 @@ export async function localCommand(): Promise<void> {
     process.exit(0);
   });
 
+  // Ctrl-C: interrupt the running turn if there is one; otherwise quit.
+  let currentAbort: AbortController | null = null;
+  rl.on("SIGINT", () => {
+    if (currentAbort && !currentAbort.signal.aborted) {
+      currentAbort.abort();
+      process.stdout.write(chalk.hex(GRAY)("\n  (interrupting…)\n"));
+    } else {
+      rl.close();
+    }
+  });
+
   while (true) {
     let query: string;
     try {
@@ -204,6 +215,7 @@ export async function localCommand(): Promise<void> {
       }
     };
 
+    currentAbort = new AbortController();
     try {
       await loop.run(
         query,
@@ -227,18 +239,27 @@ export async function localCommand(): Promise<void> {
         },
         (_result) => {
           // Tool results are not shown — model uses them internally
-        }
+        },
+        currentAbort.signal
       );
       if (textOpen) console.log(""); // close the final text line
       console.log("");
     } catch (e) {
-      console.log("");
-      const msg = e instanceof Error ? e.message : "Unknown error";
-      console.error(chalk.red(`✗ ${msg}`));
-      if (msg.includes("401"))
-        console.log(chalk.hex(GRAY)("  Invalid key — edit ~/.elliot/config.json"));
-      if (msg.includes("429"))
-        console.log(chalk.hex(GRAY)("  Rate limited — wait a moment and try again"));
+      // A user abort surfaces as an SDK error; it's already been reported as
+      // an interrupt, so don't print a scary red error for it.
+      if (currentAbort?.signal.aborted) {
+        console.log("");
+      } else {
+        console.log("");
+        const msg = e instanceof Error ? e.message : "Unknown error";
+        console.error(chalk.red(`✗ ${msg}`));
+        if (msg.includes("401"))
+          console.log(chalk.hex(GRAY)("  Invalid key — edit ~/.elliot/config.json"));
+        if (msg.includes("429"))
+          console.log(chalk.hex(GRAY)("  Rate limited — wait a moment and try again"));
+      }
+    } finally {
+      currentAbort = null;
     }
   }
 

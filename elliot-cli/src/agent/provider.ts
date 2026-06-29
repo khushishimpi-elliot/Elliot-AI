@@ -229,7 +229,8 @@ async function callGemini(
   messages: ChatMessage[],
   tools: ToolDef[],
   system: string,
-  onToken: (t: string) => void
+  onToken: (t: string) => void,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   const genAI = new GoogleGenerativeAI(apiKey);
   const geminiModel = genAI.getGenerativeModel({
@@ -240,24 +241,43 @@ async function callGemini(
 
   // Pass the full conversation as `contents` — this is the format Gemini
   // documents for tool conversations. startChat/sendMessage rejects
-  // functionResponse history, so we use generateContent directly.
+  // functionResponse history, so we use generateContentStream directly.
   const contents = toGeminiHistory(messages, system);
 
   const stopSpinner = startSpinner();
+  let spinning = true;
+  const stop = () => { if (spinning) { stopSpinner(); spinning = false; } };
   try {
-    const result = await geminiModel.generateContent({ contents });
-    stopSpinner();
-    const response = result.response;
+    const result = await geminiModel.generateContentStream(
+      { contents },
+      signal ? { signal } : undefined
+    );
+
+    // Always keep a handler on the response promise so an abort/error can't
+    // surface as an unhandled rejection if we return or throw before reading it.
+    const responsePromise = result.response;
+    responsePromise.catch(() => {});
+
+    // Stream text as it arrives. Read parts directly rather than chunk.text()
+    // so function-call chunks don't trigger the SDK's "no text" warning.
+    let textContent = "";
+    for await (const chunk of result.stream) {
+      if (signal?.aborted) {
+        stop();
+        return { content: textContent || null, tool_calls: [], stop_reason: "aborted", input_tokens: 0, output_tokens: 0, model_used: model };
+      }
+      const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+      for (const p of parts as Part[]) {
+        if (p.text) { stop(); textContent += p.text; onToken(p.text); }
+      }
+    }
+    stop();
+
+    const response = await responsePromise;
     const candidate = response.candidates?.[0];
-    if (!candidate) return { content: null, tool_calls: [], stop_reason: "stop", input_tokens: 0, output_tokens: 0, model_used: model };
+    if (!candidate) return { content: textContent || null, tool_calls: [], stop_reason: "stop", input_tokens: 0, output_tokens: 0, model_used: model };
 
-    const { parts } = candidate.content;
-    const textParts = parts.filter((p: Part) => p.text);
-    const fnParts = parts.filter((p: Part) => p.functionCall);
-
-    const textContent = textParts.map((p: Part) => p.text!).join("") || null;
-    if (textContent) onToken(textContent);
-
+    const fnParts = candidate.content.parts.filter((p: Part) => p.functionCall);
     const tool_calls: ToolCall[] = fnParts.map((p: Part, i: number) => ({
       id: `gemini_call_${i}`,
       type: "function" as const,
@@ -269,7 +289,7 @@ async function callGemini(
 
     const usage = response.usageMetadata;
     return {
-      content: textContent,
+      content: textContent || null,
       tool_calls,
       stop_reason: fnParts.length ? "tool_calls" : "stop",
       input_tokens: usage?.promptTokenCount ?? 0,
@@ -277,7 +297,7 @@ async function callGemini(
       model_used: model,
     };
   } catch (err) {
-    stopSpinner();
+    stop();
     throw err;
   }
 }
@@ -289,40 +309,76 @@ async function callOpenAI(
   model: string,
   messages: OpenAI.ChatCompletionMessageParam[],
   tools: ToolDef[],
-  onToken: (t: string) => void
+  onToken: (t: string) => void,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   if (tools.length > 0) {
     const stopSpinner = startSpinner();
+    let spinning = true;
+    const stop = () => { if (spinning) { stopSpinner(); spinning = false; } };
     try {
-      const response = await client.chat.completions.create({
-        model, max_tokens: 8096, stream: false,
-        tools: tools as OpenAI.ChatCompletionTool[], tool_choice: "auto", messages,
-      });
-      stopSpinner();
-      const choice = response.choices[0];
-      const content = choice.message.content ?? null;
-      if (content) onToken(content);
-      const tool_calls = ((choice.message.tool_calls ?? []) as ToolCall[]).map((tc) => ({
-        ...tc,
-        function: { ...tc.function, name: tc.function.name.split("=")[0].split("{")[0].trim() },
-      }));
+      const stream = await client.chat.completions.create(
+        {
+          model, max_tokens: 8096, stream: true,
+          stream_options: { include_usage: true },
+          tools: tools as OpenAI.ChatCompletionTool[], tool_choice: "auto", messages,
+        },
+        signal ? { signal } : undefined
+      );
+
+      let content = ""; let stopReason = "stop"; let inputTok = 0; let outputTok = 0;
+      // Tool-call fragments arrive split across chunks, keyed by index.
+      const toolAcc = new Map<number, { id: string; name: string; args: string }>();
+
+      for await (const chunk of stream) {
+        if (signal?.aborted) break;
+        const choice = chunk.choices[0];
+        if (!choice) {
+          if (chunk.usage) { inputTok = chunk.usage.prompt_tokens; outputTok = chunk.usage.completion_tokens; }
+          continue;
+        }
+        stopReason = choice.finish_reason ?? stopReason;
+        if (choice.delta?.content) { stop(); content += choice.delta.content; onToken(choice.delta.content); }
+        for (const tc of choice.delta?.tool_calls ?? []) {
+          const idx = tc.index ?? 0;
+          const cur = toolAcc.get(idx) ?? { id: "", name: "", args: "" };
+          if (tc.id) cur.id = tc.id;
+          if (tc.function?.name) cur.name += tc.function.name;
+          if (tc.function?.arguments) cur.args += tc.function.arguments;
+          toolAcc.set(idx, cur);
+        }
+      }
+      stop();
+
+      const tool_calls: ToolCall[] = [...toolAcc.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([i, t]) => ({
+          id: t.id || `call_${i}`,
+          type: "function" as const,
+          function: { name: t.name.split("=")[0].split("{")[0].trim(), arguments: t.args || "{}" },
+        }));
+
       return {
-        content,
+        content: content || null,
         tool_calls,
-        stop_reason: choice.finish_reason ?? "stop",
-        input_tokens: response.usage?.prompt_tokens ?? 0,
-        output_tokens: response.usage?.completion_tokens ?? 0,
+        stop_reason: signal?.aborted ? "aborted" : stopReason,
+        input_tokens: inputTok,
+        output_tokens: outputTok,
         model_used: model,
       };
-    } catch (err) { stopSpinner(); throw err; }
+    } catch (err) { stop(); throw err; }
   }
 
   // Text-only: stream
-  const stream = await client.chat.completions.create({
-    model, max_tokens: 8096, stream: true, stream_options: { include_usage: true }, messages,
-  });
+  const stream = await client.chat.completions.create(
+    {
+      model, max_tokens: 8096, stream: true, stream_options: { include_usage: true }, messages,
+    },
+    signal ? { signal } : undefined
+  );
   let content = ""; let stopReason = "stop"; let inputTok = 0; let outputTok = 0;
   for await (const chunk of stream) {
+    if (signal?.aborted) break;
     const choice = chunk.choices[0];
     if (!choice) {
       if (chunk.usage) { inputTok = chunk.usage.prompt_tokens; outputTok = chunk.usage.completion_tokens; }
@@ -331,12 +387,12 @@ async function callOpenAI(
     stopReason = choice.finish_reason ?? stopReason;
     if (choice.delta.content) { content += choice.delta.content; onToken(choice.delta.content); }
   }
-  return { content: content || null, tool_calls: [], stop_reason: stopReason, input_tokens: inputTok, output_tokens: outputTok, model_used: model };
+  return { content: content || null, tool_calls: [], stop_reason: signal?.aborted ? "aborted" : stopReason, input_tokens: inputTok, output_tokens: outputTok, model_used: model };
 }
 
 // ─── Provider registry ────────────────────────────────────────────────────────
 
-type CallFn = (model: string, messages: ChatMessage[], tools: ToolDef[], system: string, onToken: (t: string) => void) => Promise<LLMResponse>;
+type CallFn = (model: string, messages: ChatMessage[], tools: ToolDef[], system: string, onToken: (t: string) => void, signal?: AbortSignal) => Promise<LLMResponse>;
 
 interface Provider { name: string; models: string[]; call: CallFn; }
 
@@ -348,8 +404,8 @@ function buildProviders(baseMessages: ChatMessage[]): Provider[] {
     list.push({
       name: "Gemini",
       models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"],
-      call: (model, msgs, tools, system, onToken) =>
-        callGemini(gm, model, msgs, tools, system, onToken),
+      call: (model, msgs, tools, system, onToken, signal) =>
+        callGemini(gm, model, msgs, tools, system, onToken, signal),
     });
   }
 
@@ -363,13 +419,13 @@ function buildProviders(baseMessages: ChatMessage[]): Provider[] {
     list.push({
       name: "Groq",
       models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
-      call: (model, _msgs, tools, system, onToken) => {
+      call: (model, _msgs, tools, system, onToken, signal) => {
         const msgs = [
           { role: "system" as const, content: system },
           ...baseMessages,
         ] as OpenAI.ChatCompletionMessageParam[];
         void oaiMsgs; // suppress lint
-        return callOpenAI(client, model, msgs, tools, onToken);
+        return callOpenAI(client, model, msgs, tools, onToken, signal);
       },
     });
   }
@@ -383,12 +439,12 @@ function buildProviders(baseMessages: ChatMessage[]): Provider[] {
     list.push({
       name: "OpenRouter",
       models: ["meta-llama/llama-3.3-70b-instruct:free", "nousresearch/hermes-3-llama-3.1-405b:free"],
-      call: (model, _msgs, tools, system, onToken) => {
+      call: (model, _msgs, tools, system, onToken, signal) => {
         const msgs = [
           { role: "system" as const, content: system },
           ...baseMessages,
         ] as OpenAI.ChatCompletionMessageParam[];
-        return callOpenAI(client, model, msgs, tools, onToken);
+        return callOpenAI(client, model, msgs, tools, onToken, signal);
       },
     });
   }
@@ -416,21 +472,25 @@ export async function streamLLM(
   messages: ChatMessage[],
   tools: ToolDef[],
   system: string,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
+  signal?: AbortSignal
 ): Promise<LLMResponse> {
   const providers = buildProviders(messages).filter((p) => !exhaustedProviders.has(p.name));
 
   for (const provider of providers) {
+    if (signal?.aborted) break;
     let worked = false;
     for (const model of provider.models) {
+      if (signal?.aborted) break;
       try {
-        const result = await provider.call(model, messages, tools, system, onToken);
+        const result = await provider.call(model, messages, tools, system, onToken, signal);
         worked = true;
         return result;
       } catch (err) {
+        if (signal?.aborted) throw err; // don't fall through to other providers
         if (isSkippable(err)) continue;
         if (isBadToolCall(err) && tools.length > 0) {
-          const result = await provider.call(model, messages, [], system, onToken);
+          const result = await provider.call(model, messages, [], system, onToken, signal);
           worked = true;
           return { ...result, model_used: model };
         }
@@ -438,10 +498,15 @@ export async function streamLLM(
         throw err;
       }
     }
+    if (signal?.aborted) break;
     if (!worked) {
       exhaustedProviders.add(provider.name);
       process.stdout.write(`\n  [${provider.name} unavailable, trying next...]\n`);
     }
+  }
+
+  if (signal?.aborted) {
+    return { content: null, tool_calls: [], stop_reason: "aborted", input_tokens: 0, output_tokens: 0, model_used: "" };
   }
 
   exhaustedProviders.clear();
