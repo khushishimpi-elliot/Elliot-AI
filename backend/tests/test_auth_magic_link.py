@@ -35,13 +35,12 @@ def test_callback_returns_jwt_for_valid_token():
     token, _ = magic_link.issue_link(email)
 
     r = client.get(f"/auth/callback?token={token}", follow_redirects=False)
-    assert r.status_code == 302
-    assert "step=2" in r.headers["location"]
-    assert f"email={quote(email)}" in r.headers["location"]
-
-    redirect_url = r.headers["location"]
-    jwt_param = [p.split("=")[1] for p in redirect_url.split("&") if p.startswith("jwt=")][0]
-    payload = decode_access_token(jwt_param)
+    # Callback returns JSON token response
+    assert r.status_code == 200
+    body = r.json()
+    assert "access_token" in body
+    assert body["email"] == email
+    payload = decode_access_token(body["access_token"])
     assert payload["sub"] == email
     assert payload["typ"] == "access"
 
@@ -86,10 +85,9 @@ def test_end_to_end_flow():
     token = next(iter(magic_link._store.keys()))
 
     r2 = client.get(f"/auth/callback?token={token}", follow_redirects=False)
-    assert r2.status_code == 302
-    assert "step=2" in r2.headers["location"]
-
-    redirect_url = r2.headers["location"]
-    jwt_param = [p.split("=")[1] for p in redirect_url.split("&") if p.startswith("jwt=")][0]
-    payload = decode_access_token(jwt_param)
+    assert r2.status_code == 200
+    body = r2.json()
+    assert "access_token" in body
+    assert body["email"] == email
+    payload = decode_access_token(body["access_token"])
     assert payload["sub"] == email
