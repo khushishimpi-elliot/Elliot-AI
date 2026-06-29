@@ -45,7 +45,7 @@ program
 
 program
   .command("local")
-  .description("Run Elliot as a local coding agent (no backend required, uses ANTHROPIC_API_KEY)")
+  .description("Run Elliot as a local coding agent (no backend required; uses GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY)")
   .action(localCommand);
 
 program
