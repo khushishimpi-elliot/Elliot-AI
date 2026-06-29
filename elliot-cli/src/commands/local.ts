@@ -15,6 +15,8 @@ import "../tools/edit.js";
 import "../tools/bash.js";
 import "../tools/grep.js";
 import "../tools/glob.js";
+import "../tools/list.js";
+import "../tools/todo.js";
 
 // Load .env from the elliot-cli directory if present
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -36,6 +38,39 @@ const GREEN = "#4FFFB0";
 const BLUE = "#58A6FF";
 const GRAY = "#888888";
 const CYAN = "#79C0FF";
+
+const MAX_PREVIEW_LINES = 40;
+
+// Render a human-readable preview of what a tool is about to do, so the user
+// approves a real diff instead of a wall of raw JSON.
+function renderPreview(name: string, input: unknown): string {
+  const obj = (input ?? {}) as Record<string, unknown>;
+
+  const clip = (lines: string[], color: (s: string) => string, sign: string) => {
+    const shown = lines.slice(0, MAX_PREVIEW_LINES).map((l) => color(`  ${sign} ${l}`));
+    if (lines.length > MAX_PREVIEW_LINES)
+      shown.push(chalk.hex(GRAY)(`  … ${lines.length - MAX_PREVIEW_LINES} more line(s)`));
+    return shown.join("\n");
+  };
+
+  if (name === "edit" && typeof obj.old_str === "string" && typeof obj.new_str === "string") {
+    return (
+      chalk.hex(GRAY)(`  ${obj.path}\n`) +
+      clip(String(obj.old_str).split("\n"), chalk.red, "-") +
+      "\n" +
+      clip(String(obj.new_str).split("\n"), chalk.green, "+")
+    );
+  }
+
+  if (name === "write" && typeof obj.content === "string") {
+    return (
+      chalk.hex(GRAY)(`  ${obj.path} (new contents)\n`) +
+      clip(String(obj.content).split("\n"), chalk.green, "+")
+    );
+  }
+
+  return chalk.hex(GRAY)(JSON.stringify(input, null, 2).slice(0, 300));
+}
 
 function printBanner(): void {
   console.log("");
@@ -123,10 +158,9 @@ export async function localCommand(): Promise<void> {
   setPermissionPrompt(
     (name, input) =>
       new Promise((resolve) => {
-        const preview = JSON.stringify(input, null, 2).slice(0, 300);
         rl.question(
           chalk.hex(CYAN)(`\n  permission → ${name}\n`) +
-            chalk.hex(GRAY)(preview) +
+            renderPreview(name, input) +
             chalk.hex(GREEN)("\n  Allow? [y/N] "),
           (answer) => resolve(answer.trim().toLowerCase() === "y")
         );

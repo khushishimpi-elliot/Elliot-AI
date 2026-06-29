@@ -27,6 +27,16 @@ registerTool({
       const e = (end_line as number) ?? lines.length;
       return lines.slice(s, e).join("\n");
     }
+    // Whole-file read: cap so a huge file can't blow the context window.
+    const MAX_LINES = 2000;
+    const lines = content.split("\n");
+    if (lines.length > MAX_LINES) {
+      return (
+        lines.slice(0, MAX_LINES).join("\n") +
+        `\n... [file truncated at ${MAX_LINES} of ${lines.length} lines — ` +
+        `re-read with start_line/end_line for the rest]`
+      );
+    }
     return content;
   },
 });
