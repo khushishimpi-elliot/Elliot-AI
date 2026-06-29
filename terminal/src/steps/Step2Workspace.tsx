@@ -20,7 +20,8 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
     setSaving(true);
     setError("");
     try {
-      const token = localStorage.getItem("elliot_token");
+      // Read JWT from either key name used across the app
+      const token = localStorage.getItem("jwt") || localStorage.getItem("elliot_token");
       const res = await fetch(`${API_URL}/workspace`, {
         method: "POST",
         headers: {
@@ -33,6 +34,7 @@ export default function Step2Workspace({ onContinue, onConfigUpdate }: Step2Prop
         const data = await res.json();
         if (data.tenant_id) localStorage.setItem("elliot_tenant_id", data.tenant_id);
         if (data.token)     localStorage.setItem("elliot_token", data.token);
+        if (data.token)     localStorage.setItem("jwt", data.token);
       }
     } catch {
       // backend unavailable — continue anyway in dev mode

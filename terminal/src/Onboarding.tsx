@@ -42,7 +42,8 @@ export default function Onboarding() {
       localStorage.setItem("jwt", jwt);
       setConfig((prev) => ({ ...prev, jwtToken: jwt }));
 
-      // Extract tenant_id from JWT payload
+      // Try to extract tenant_id from JWT payload
+      // (only present if backend embeds it — falls back to Step2 workspace creation)
       try {
         const payload = JSON.parse(atob(jwt.split(".")[1]));
         if (payload.tenant_id) {
@@ -50,7 +51,7 @@ export default function Onboarding() {
           setConfig((prev) => ({ ...prev, tenantId: payload.tenant_id }));
         }
       } catch {
-        console.error("Failed to extract tenant_id from JWT");
+        // JWT doesn't contain tenant_id — that's fine, Step2 workspace creation sets it
       }
     }
     if (email) {

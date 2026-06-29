@@ -39,10 +39,10 @@ export default function Step6Launch({ config = {} }: Step6Props) {
     const fetchConfig = async () => {
       try {
         const tenantId = localStorage.getItem("elliot_tenant_id") || config.tenant_id;
-        const jwt = localStorage.getItem("jwt");
+        const jwt = localStorage.getItem("jwt") || localStorage.getItem("elliot_token");
 
         if (!tenantId || !jwt) {
-          setError("Missing configuration. Please restart onboarding.");
+          setError("Setup incomplete — please complete Step 2 (Workspace) before launching.");
           setLoading(false);
           return;
         }
