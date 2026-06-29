@@ -1,4 +1,3 @@
-from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import email as email_sender
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
 from app.auth.jwt import issue_access_token
-from app.auth.schemas import MagicLinkRequest, MagicLinkResponse
+from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
 from app.config import get_settings
 from app.db.session import get_db
 from app.services.auth0 import Auth0Service
@@ -16,28 +15,36 @@ from app.services.auth0 import Auth0Service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+ALLOWED_DOMAIN = "elliotsystems.com"
+
+
 @router.post("/magic-link", response_model=MagicLinkResponse)
 def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
+    email_domain = payload.email.split("@")[-1].lower()
+    if email_domain != ALLOWED_DOMAIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Only Elliot Systems employees can sign in."
+        )
     token, ttl = magic_link.issue_link(payload.email)
     link_url = magic_link.build_link_url(token)
     email_sender.send_magic_link(payload.email, link_url)
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
 
 
-@router.get("/callback")
-def redeem_magic_link(token: str = Query(...)):
+@router.get("/callback", response_model=TokenResponse)
+def redeem_magic_link(token: str = Query(...)) -> TokenResponse:
     try:
         email = magic_link.redeem(token)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     access_token, ttl = issue_access_token(email)
-    settings = get_settings()
-    redirect_url = (
-        f"{settings.terminal_url}/onboarding?"
-        f"step=2&jwt={access_token}&email={quote(email)}"
+    return TokenResponse(
+        access_token=access_token,
+        expires_in_seconds=ttl,
+        email=email,
     )
-    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/google/login")
@@ -50,8 +57,8 @@ def google_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/google/callback")
-def google_callback(code: str = Query(...), state: str = Query(...)):
+@router.get("/google/callback", response_model=TokenResponse)
+def google_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
 
@@ -63,12 +70,11 @@ def google_callback(code: str = Query(...), state: str = Query(...)):
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    settings = get_settings()
-    redirect_url = (
-        f"{settings.terminal_url}/onboarding?"
-        f"step=2&jwt={access_token}&email={quote(email)}"
+    return TokenResponse(
+        access_token=access_token,
+        expires_in_seconds=ttl,
+        email=email,
     )
-    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/entra/login")
@@ -81,8 +87,8 @@ def entra_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/entra/callback")
-def entra_callback(code: str = Query(...), state: str = Query(...)):
+@router.get("/entra/callback", response_model=TokenResponse)
+def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
 
@@ -94,12 +100,11 @@ def entra_callback(code: str = Query(...), state: str = Query(...)):
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    settings = get_settings()
-    redirect_url = (
-        f"{settings.terminal_url}/onboarding?"
-        f"step=2&jwt={access_token}&email={quote(email)}"
+    return TokenResponse(
+        access_token=access_token,
+        expires_in_seconds=ttl,
+        email=email,
     )
-    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/auth0/login", response_model=None)
@@ -132,7 +137,7 @@ async def auth0_callback(
     code: str = Query(...),
     state: str = Query(...),
     db: AsyncSession = Depends(get_db),
-):
+) -> dict:
     """Auth0 OAuth callback handler"""
     settings = get_settings()
     auth0_service = Auth0Service()
@@ -159,13 +164,18 @@ async def auth0_callback(
             db, default_tenant_id, user_info
         )
 
-        email = user["email"]
-        jwt_token, ttl = issue_access_token(email)
-        redirect_url = (
-            f"{settings.terminal_url}/onboarding?"
-            f"step=2&jwt={jwt_token}&email={quote(email)}"
-        )
-        return RedirectResponse(url=redirect_url, status_code=302)
+        # Create JWT
+        jwt_token = auth0_service.create_jwt(user)
+
+        return {
+            "jwt_token": jwt_token,
+            "user": {
+                "email": user["email"],
+                "role": user["role"],
+                "tenant_id": user["tenant_id"],
+            },
+            "message": "Successfully authenticated with Auth0",
+        }
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
