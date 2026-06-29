@@ -100,8 +100,13 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
-    # ── Email (Resend) ───────────────────────────────
+    # ── Email (Gmail SMTP) ───────────────────────────
+    gmail_user: str = ""
+    gmail_app_password: str = ""
+
+    # ── Email (Resend — production) ──────────────────
     resend_api_key: str = ""
+    resend_from_address: str = "onboarding@resend.dev"
 
     # ── Security ─────────────────────────────────────
     fernet_key: str = ""
