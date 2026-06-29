@@ -11,6 +11,15 @@ const MAX_STEPS_PROMPT =
   "Write a concise text summary of: what you accomplished, what remains, and suggested next steps. " +
   "Do NOT call any tools. Text only.";
 
+// Tools that mutate the filesystem — executed serially, never in parallel.
+const MUTATING_TOOLS = new Set(["edit", "write"]);
+
+// Some providers prefix/garble tool names (e.g. "edit={...}" or "edit{..."),
+// so strip everything after the first '=' or '{' to recover the bare name.
+function normalizeToolName(raw: string): string {
+  return raw.split("=")[0].split("{")[0].trim();
+}
+
 export class AgentLoop {
   private messages: ChatMessage[] = [];
   private system: string;
@@ -68,7 +77,8 @@ export class AgentLoop {
     userPrompt: string,
     onText: (chunk: string) => void,
     onTool: (name: string, args: string) => void,
-    onToolResult: (result: string) => void
+    onToolResult: (result: string) => void,
+    signal?: AbortSignal
   ): Promise<string> {
     this.messages.push({ role: "user", content: userPrompt });
     beginTurn();
@@ -81,6 +91,7 @@ export class AgentLoop {
     let lastModelUsed = "";
 
     while (steps < MAX_STEPS) {
+      if (signal?.aborted) { onText("\n[interrupted]"); break; }
       steps++;
       const isLastStep = steps >= MAX_STEPS;
 
@@ -90,12 +101,24 @@ export class AgentLoop {
         ? `${this.system}\n\n${MAX_STEPS_PROMPT}`
         : this.system;
 
-      const response = await streamLLM(
-        this.messages,
-        tools,
-        system,
-        (token) => onText(token)
-      );
+      let response;
+      try {
+        response = await streamLLM(
+          this.messages,
+          tools,
+          system,
+          (token) => onText(token),
+          signal
+        );
+      } catch (err) {
+        if (signal?.aborted) { onText("\n[interrupted]"); break; }
+        throw err;
+      }
+
+      if (response.stop_reason === "aborted" || signal?.aborted) {
+        onText("\n[interrupted]");
+        break;
+      }
 
       totalInputTokens += response.input_tokens;
       totalOutputTokens += response.output_tokens;
@@ -105,7 +128,7 @@ export class AgentLoop {
 
       // Empty response with no tool calls — retry plain text
       if (!response.content && !response.tool_calls.length) {
-        const plain = await streamLLM(this.messages, [], this.system, onText);
+        const plain = await streamLLM(this.messages, [], this.system, onText, signal);
         totalInputTokens += plain.input_tokens;
         totalOutputTokens += plain.output_tokens;
         if (plain.model_used) lastModelUsed = plain.model_used;
@@ -130,35 +153,54 @@ export class AgentLoop {
         tool_calls: response.tool_calls,
       });
 
-      // Execute all tool calls in parallel
-      const results = await Promise.all(
-        response.tool_calls.map(async (call) => {
-          const toolName = call.function.name
-            .split("=")[0]
-            .split("{")[0]
-            .trim();
-          onTool(toolName, call.function.arguments);
+      // Execute one tool call and surface it to the UI.
+      const execOne = async (call: ToolCall) => {
+        const toolName = normalizeToolName(call.function.name);
+        onTool(toolName, call.function.arguments);
 
-          let input: Record<string, unknown> = {};
-          try {
-            input = JSON.parse(call.function.arguments);
-          } catch {
-            // leave empty — tool handler will receive {}
-          }
+        let input: Record<string, unknown> = {};
+        try {
+          input = JSON.parse(call.function.arguments);
+        } catch {
+          // leave empty — tool handler will receive {}
+        }
 
-          const result = await executeTool(toolName, input);
-          onToolResult(result);
-          return { call, toolName, result };
-        })
+        const result = await executeTool(toolName, input);
+        onToolResult(result);
+        return { call, toolName, result };
+      };
+
+      // Read-only tools can run together; mutating tools (edit/write) must run
+      // one at a time so they don't race on the same file or interleave their
+      // permission prompts.
+      const parallelCalls = response.tool_calls.filter(
+        (c) => !MUTATING_TOOLS.has(normalizeToolName(c.function.name))
+      );
+      const serialCalls = response.tool_calls.filter((c) =>
+        MUTATING_TOOLS.has(normalizeToolName(c.function.name))
       );
 
-      // Append all tool results to history
-      for (const { call, toolName, result } of results) {
+      const resultById = new Map<string, { toolName: string; result: string }>();
+      await Promise.all(
+        parallelCalls.map(async (c) => {
+          const { toolName, result } = await execOne(c);
+          resultById.set(c.id, { toolName, result });
+        })
+      );
+      for (const c of serialCalls) {
+        const { toolName, result } = await execOne(c);
+        resultById.set(c.id, { toolName, result });
+      }
+
+      // Append tool results in the model's original call order
+      for (const call of response.tool_calls) {
+        const r = resultById.get(call.id);
+        if (!r) continue;
         this.messages.push({
           role: "tool",
           tool_call_id: call.id,
-          name: toolName,
-          content: result,
+          name: r.toolName,
+          content: r.result,
         });
       }
     }
@@ -182,8 +224,18 @@ export class AgentLoop {
   }
 
   compactHistory(): void {
-    if (this.messages.length > 20) {
-      this.messages = this.messages.slice(-20);
+    const KEEP = 20;
+    if (this.messages.length <= KEEP) return;
+    let start = this.messages.length - KEEP;
+    // Advance to the next clean turn boundary (a user message) so we never
+    // keep an orphaned `tool` result whose assistant `tool_calls` got trimmed
+    // away — most provider APIs reject that and the next call would 400.
+    while (start < this.messages.length && this.messages[start].role !== "user") {
+      start++;
     }
+    // If no boundary remains (rare), keep the trailing window as-is.
+    this.messages = this.messages.slice(
+      start < this.messages.length ? start : this.messages.length - KEEP
+    );
   }
 }

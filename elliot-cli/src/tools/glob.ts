@@ -1,5 +1,32 @@
 import fg from "fast-glob";
+import { readFileSync, existsSync } from "fs";
+import path from "path";
 import { registerTool } from "./registry.js";
+
+const DEFAULT_IGNORE = [
+  "**/node_modules/**",
+  "**/.git/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/.next/**",
+  "**/coverage/**",
+];
+
+// fast-glob doesn't read .gitignore itself; translate its entries into the
+// ignore patterns fast-glob understands so generated/vendored files stay out.
+function gitignorePatterns(cwd: string): string[] {
+  const file = path.join(cwd, ".gitignore");
+  if (!existsSync(file)) return [];
+  const patterns: string[] = [];
+  for (const raw of readFileSync(file, "utf-8").split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#") || line.startsWith("!")) continue;
+    const body = line.replace(/^\/+/, "").replace(/\/+$/, "");
+    if (!body) continue;
+    patterns.push(`**/${body}/**`, `**/${body}`);
+  }
+  return patterns;
+}
 
 registerTool({
   name: "glob",
@@ -18,10 +45,11 @@ registerTool({
     required: ["pattern"],
   },
   async handler({ pattern, cwd, limit }) {
+    const root = (cwd as string) || process.cwd();
     const files = await fg(pattern as string, {
-      cwd: (cwd as string) || process.cwd(),
+      cwd: root,
       dot: false,
-      ignore: ["**/node_modules/**", "**/.git/**"],
+      ignore: [...DEFAULT_IGNORE, ...gitignorePatterns(root)],
       stats: true,
     });
     const sorted = (

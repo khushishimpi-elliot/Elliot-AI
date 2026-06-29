@@ -27,7 +27,10 @@ registerTool({
     if (count > 1)
       throw new Error(`old_str appears ${count} times — must be unique`);
     await snapshot(path as string);
-    const updated = content.replace(old_str as string, new_str as string);
+    // Use a replacer function, not a string: String.replace interprets `$&`,
+    // `$1`, `$$` etc. in the replacement string as special patterns, which
+    // would corrupt any new_str containing a literal `$` (regex, shell vars…).
+    const updated = content.replace(old_str as string, () => new_str as string);
     await writeFile(path as string, updated, "utf-8");
     return `Edited: ${path}`;
   },

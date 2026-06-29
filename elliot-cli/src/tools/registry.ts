@@ -33,7 +33,12 @@ export function getToolDefs(): ToolDef[] {
   }));
 }
 
-async function askPermission(name: string, input: unknown): Promise<boolean> {
+export type PermissionPrompt = (name: string, input: unknown) => Promise<boolean>;
+
+// Default prompt: opens its own readline. The REPL overrides this via
+// setPermissionPrompt() so it can reuse the single stdin reader it already
+// owns — two readline interfaces on stdin at once drop/double keystrokes.
+const defaultPrompt: PermissionPrompt = (name, input) => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -46,6 +51,12 @@ async function askPermission(name: string, input: unknown): Promise<boolean> {
       resolve(answer.trim().toLowerCase() === "y");
     });
   });
+};
+
+let askPermission: PermissionPrompt = defaultPrompt;
+
+export function setPermissionPrompt(fn: PermissionPrompt): void {
+  askPermission = fn;
 }
 
 export async function executeTool(
