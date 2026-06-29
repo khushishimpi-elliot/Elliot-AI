@@ -6,6 +6,7 @@ import chalk from "chalk";
 import { AgentLoop } from "../agent/loop.js";
 import { loadAgentContext } from "../agent/context.js";
 import { handleSlash } from "./slash.js";
+import { setPermissionPrompt } from "../tools/registry.js";
 
 // Tool registrations — side-effect imports, must come before AgentLoop is used
 import "../tools/read.js";
@@ -62,8 +63,13 @@ function printBanner(): void {
 }
 
 export async function localCommand(): Promise<void> {
-  // Validate API key is reachable (provider reads from config or env)
-  const hasEnvKey = !!(process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY);
+  // Validate API key is reachable (provider reads from config or env).
+  // Must cover every provider the agent supports — Gemini is the default.
+  const hasEnvKey = !!(
+    process.env.GEMINI_API_KEY ||
+    process.env.GROQ_API_KEY ||
+    process.env.OPENROUTER_API_KEY
+  );
   const hasConfigKey = (() => {
     try {
       const p = path.join(
@@ -72,7 +78,12 @@ export async function localCommand(): Promise<void> {
         "config.json"
       );
       const cfg = JSON.parse(fs.readFileSync(p, "utf-8"));
-      return !!(cfg.groq_api_key || cfg.openrouter_api_key || cfg.apiKey);
+      return !!(
+        cfg.gemini_api_key ||
+        cfg.groq_api_key ||
+        cfg.openrouter_api_key ||
+        cfg.apiKey
+      );
     } catch {
       return false;
     }
@@ -82,7 +93,8 @@ export async function localCommand(): Promise<void> {
     console.error(
       chalk.red("✗ No API key found.\n") +
         chalk.hex(GRAY)(
-          "  Add GROQ_API_KEY to elliot-cli/.env, or run: elliot-ai init"
+          "  Add GEMINI_API_KEY (free at aistudio.google.com), GROQ_API_KEY, or\n" +
+          "  OPENROUTER_API_KEY to elliot-cli/.env, or run: elliot-ai init"
         )
     );
     process.exit(1);
@@ -105,6 +117,21 @@ export async function localCommand(): Promise<void> {
         resolve(answer);
       });
     });
+
+  // Route tool permission prompts through the REPL's single stdin reader
+  // instead of letting the registry spin up a second, conflicting readline.
+  setPermissionPrompt(
+    (name, input) =>
+      new Promise((resolve) => {
+        const preview = JSON.stringify(input, null, 2).slice(0, 300);
+        rl.question(
+          chalk.hex(CYAN)(`\n  permission → ${name}\n`) +
+            chalk.hex(GRAY)(preview) +
+            chalk.hex(GREEN)("\n  Allow? [y/N] "),
+          (answer) => resolve(answer.trim().toLowerCase() === "y")
+        );
+      })
+  );
 
   rl.on("close", () => {
     console.log(chalk.hex(GRAY)("\nBye!"));

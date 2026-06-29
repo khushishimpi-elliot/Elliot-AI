@@ -127,25 +127,61 @@ function startSpinner(): () => void {
 
 // ─── Gemini native call ───────────────────────────────────────────────────────
 
+// JSON-schema "type" → Gemini SchemaType. Preserving the real type matters:
+// flattening everything to STRING makes Gemini pass numbers/arrays as strings.
+function toGeminiType(t: string | undefined): SchemaType {
+  switch (t) {
+    case "number": return SchemaType.NUMBER;
+    case "integer": return SchemaType.INTEGER;
+    case "boolean": return SchemaType.BOOLEAN;
+    case "array": return SchemaType.ARRAY;
+    case "object": return SchemaType.OBJECT;
+    default: return SchemaType.STRING;
+  }
+}
+
+interface JsonSchemaProp {
+  type?: string;
+  description?: string;
+  enum?: string[];
+  items?: JsonSchemaProp;
+  properties?: Record<string, JsonSchemaProp>;
+  required?: string[];
+}
+
+// Recursively convert a JSON-schema property to a Gemini schema node.
+function toGeminiSchema(prop: JsonSchemaProp): Record<string, unknown> {
+  const node: Record<string, unknown> = { type: toGeminiType(prop.type) };
+  if (prop.description) node.description = prop.description;
+  if (prop.enum) node.enum = prop.enum;
+  if (prop.type === "array" && prop.items) node.items = toGeminiSchema(prop.items);
+  if (prop.type === "object" && prop.properties) {
+    node.properties = Object.fromEntries(
+      Object.entries(prop.properties).map(([k, v]) => [k, toGeminiSchema(v)])
+    );
+    if (prop.required) node.required = prop.required;
+  }
+  return node;
+}
+
 function toGeminiFunctions(tools: ToolDef[]): FunctionDeclaration[] {
-  return tools.map((t) => ({
-    name: t.function.name,
-    description: t.function.description,
-    parameters: {
-      type: SchemaType.OBJECT,
-      properties: Object.fromEntries(
-        Object.entries(
-          (t.function.parameters as { properties?: Record<string, { type: string; description?: string }> })
-            .properties ?? {}
-        ).map(([k, v]) => [
-          k,
-          { type: SchemaType.STRING, description: v.description ?? "" },
-        ])
-      ),
-      required:
-        (t.function.parameters as { required?: string[] }).required ?? [],
-    },
-  }));
+  return tools.map((t) => {
+    const params = t.function.parameters as JsonSchemaProp;
+    return {
+      name: t.function.name,
+      description: t.function.description,
+      parameters: {
+        type: SchemaType.OBJECT,
+        properties: Object.fromEntries(
+          Object.entries(params.properties ?? {}).map(([k, v]) => [
+            k,
+            toGeminiSchema(v),
+          ])
+        ),
+        required: params.required ?? [],
+      },
+    } as unknown as FunctionDeclaration;
+  });
 }
 
 function toGeminiHistory(messages: ChatMessage[], system: string): Content[] {
