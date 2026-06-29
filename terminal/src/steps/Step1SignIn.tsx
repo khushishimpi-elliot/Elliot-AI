@@ -42,7 +42,8 @@ export default function Step1SignIn({ onContinue }: Step1Props) {
 
   // Called when user returns from magic link click in email
   // The /auth/callback page stores the token then redirects back here
-  const token = new URLSearchParams(window.location.search).get("token");
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token") || params.get("jwt");
   if (token) {
     localStorage.setItem("elliot_token", token);
     window.history.replaceState({}, "", window.location.pathname);
