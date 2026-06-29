@@ -52,7 +52,7 @@ def test_callback_rejects_unknown_token():
 def test_callback_rejects_reused_token():
     token, _ = magic_link.issue_link("khushi@elliotsystems.com")
     first = client.get(f"/auth/callback?token={token}", follow_redirects=False)
-    assert first.status_code == 302
+    assert first.status_code == 200
 
     second = client.get(f"/auth/callback?token={token}")
     assert second.status_code == 400

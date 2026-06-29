@@ -124,10 +124,10 @@ def test_callback_happy_path(configured_entra):
     ):
         r = client.get(f"/auth/entra/callback?code=auth-code&state={state}", follow_redirects=False)
 
-    assert r.status_code == 302
-    assert "step=2" in r.headers["location"]
-    assert "email=astika%40elliotsystems.com" in r.headers["location"]
-    assert "jwt=" in r.headers["location"]
+    assert r.status_code == 200
+    body = r.json()
+    assert "access_token" in body
+    assert body["email"] == "astika@elliotsystems.com"
 
 
 def test_callback_rejects_on_oidc_error(configured_entra):
