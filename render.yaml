@@ -102,6 +102,22 @@ services:
       - key: CORS_ORIGINS
         value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
 
+      # Email (Gmail SMTP)
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+
+      # Email (Resend — production alternative)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_ADDRESS
+        sync: false
+
+      # Magic Link
+      - key: MAGIC_LINK_BASE_URL
+        value: https://elliot-ai-1.onrender.com/auth/callback
+
       # Security
       - key: FERNET_KEY
         sync: false

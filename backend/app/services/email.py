@@ -88,7 +88,7 @@ def _send_via_gmail(
         return True
 
     except Exception as e:
-        logger.error(f"Gmail SMTP failed: {str(e)}")
+        logger.error(f"Gmail SMTP failed: {type(e).__name__}: {str(e)}")
         return False
 
 

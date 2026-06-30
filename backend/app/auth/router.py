@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import email as email_sender
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
+from app.services.email import send_magic_link_email
 from app.auth.jwt import issue_access_token
 from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
 from app.config import get_settings
@@ -19,7 +19,7 @@ ALLOWED_DOMAIN = "elliotsystems.com"
 
 
 @router.post("/magic-link", response_model=MagicLinkResponse)
-def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
+async def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
     email_domain = payload.email.split("@")[-1].lower()
     if email_domain != ALLOWED_DOMAIN:
         raise HTTPException(
@@ -28,7 +28,12 @@ def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
         )
     token, ttl = magic_link.issue_link(payload.email)
     link_url = magic_link.build_link_url(token)
-    email_sender.send_magic_link(payload.email, link_url)
+    sent = await send_magic_link_email(payload.email, link_url)
+    if not sent:
+        raise HTTPException(
+            status_code=503,
+            detail="Email delivery failed. Check GMAIL_USER/GMAIL_APP_PASSWORD or RESEND_API_KEY on the server."
+        )
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
 
 
@@ -189,3 +194,27 @@ def auth0_logout(return_to: str | None = None) -> RedirectResponse:
     auth0_service = Auth0Service()
     logout_url = auth0_service.get_logout_url(return_to)
     return RedirectResponse(url=logout_url, status_code=302)
+
+
+
+@router.get("/test-email")
+async def test_email_config() -> dict:
+    """Debug endpoint — shows email config state and attempts a test send."""
+    settings = get_settings()
+    config_status = {
+        "gmail_user_set": bool(settings.gmail_user),
+        "gmail_app_password_set": bool(settings.gmail_app_password),
+        "resend_api_key_set": bool(settings.resend_api_key),
+        "resend_from_address": settings.resend_from_address,
+        "magic_link_base_url": settings.magic_link_base_url,
+        "gmail_user": settings.gmail_user if settings.gmail_user else "(not set)",
+    }
+
+    test_target = settings.gmail_user or "test@elliotsystems.com"
+    sent = await send_magic_link_email(test_target, "https://example.com/auth/callback?token=test")
+
+    return {
+        "config": config_status,
+        "test_send_succeeded": sent,
+        "test_sent_to": test_target,
+    }
