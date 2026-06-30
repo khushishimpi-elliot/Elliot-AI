@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     # ── App URLs ───────────────────────────────────────
     backend_url: str = "http://localhost:8000"
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "http://localhost:5173"  # Override with FRONTEND_URL env var for deployed
     terminal_url: str = "http://localhost:5173"
     dashboard_url: str = "http://localhost:5174"
     oauth_redirect_base_url: str = "http://localhost:8000"

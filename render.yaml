@@ -93,6 +93,8 @@ services:
       # App URLs
       - key: BACKEND_URL
         value: https://elliot-ai-backend.onrender.com
+      - key: FRONTEND_URL
+        value: https://elliot-ai-1.onrender.com
       - key: TERMINAL_URL
         value: https://elliot-ai-1.onrender.com
       - key: DASHBOARD_URL
