@@ -73,27 +73,30 @@ function renderPreview(name: string, input: unknown): string {
 }
 
 function printBanner(): void {
+  const W = 44; // inner width (between the vertical borders)
+
+  // Pad based on the VISIBLE length, which we pass explicitly — the rendered
+  // string carries invisible ANSI color codes, so its .length can't be used.
+  const row = (rendered: string, visibleLen: number): string =>
+    chalk.hex(GREEN)("│") +
+    rendered +
+    " ".repeat(Math.max(0, W - visibleLen)) +
+    chalk.hex(GREEN)("│");
+
+  // Show the tail of the path (most relevant) with a leading ellipsis if long.
+  let cwd = process.cwd();
+  const cwdMax = W - 2; // account for the 2 leading spaces
+  if (cwd.length > cwdMax) cwd = "…" + cwd.slice(cwd.length - (cwdMax - 1));
+
+  const title = "  ELLIOT-AI  ";
+  const mode = "local mode";
+
   console.log("");
-  console.log(chalk.hex(GREEN)("┌─────────────────────────────────────┐"));
-  console.log(
-    chalk.hex(GREEN)("│") +
-      "  ELLIOT-AI  " +
-      chalk.hex(GRAY)("local mode") +
-      "               " +
-      chalk.hex(GREEN)("│")
-  );
-  console.log(
-    chalk.hex(GREEN)("│") +
-      chalk.hex(GRAY)(`  ${process.cwd()}`.substring(0, 35).padEnd(35)) +
-      "  " +
-      chalk.hex(GREEN)("│")
-  );
-  console.log(chalk.hex(GREEN)("└─────────────────────────────────────┘"));
-  console.log(
-    chalk.hex(GRAY)(
-      "  Type your question, or /help for commands."
-    )
-  );
+  console.log(chalk.hex(GREEN)("┌" + "─".repeat(W) + "┐"));
+  console.log(row(title + chalk.hex(GRAY)(mode), title.length + mode.length));
+  console.log(row("  " + chalk.hex(GRAY)(cwd), 2 + cwd.length));
+  console.log(chalk.hex(GREEN)("└" + "─".repeat(W) + "┘"));
+  console.log(chalk.hex(GRAY)("  Type your question, or /help for commands."));
   console.log("");
 }
 
