@@ -38,12 +38,9 @@ class TestAuth0TokenExchange:
 
         # Verify the POST call used form-encoded data, not JSON
         call_kwargs = mock_client.post.call_args.kwargs
-        assert "data" in call_kwargs, "Should use 'data' parameter for form encoding"
-        assert "json" not in call_kwargs, "Should not use 'json' parameter"
-        assert (
-            call_kwargs["headers"]["Content-Type"]
-            == "application/x-www-form-urlencoded"
-        )
+        assert "data" in call_kwargs
+        assert "json" not in call_kwargs
+        assert call_kwargs["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
 
         # Verify the data payload
         assert call_kwargs["data"]["client_id"]
