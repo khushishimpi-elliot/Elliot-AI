@@ -25,7 +25,6 @@ export default function Step6Launch({ config = {} }: Step6Props) {
   const [fullConfig, setFullConfig] = useState<OnboardingConfig>({});
   const [loading, setLoading] = useState(true);
   const [copiedSetup, setCopiedSetup] = useState(false);
-  const [copiedNpm, setCopiedNpm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Read from localStorage for stack, test, etc
@@ -86,22 +85,16 @@ export default function Step6Launch({ config = {} }: Step6Props) {
     fetchConfig();
   }, [config]);
 
+  // One global command: installs the CLI and configures it with this user's
+  // workspace in a single paste. `setup` derives tenant_id from the JWT, so no
+  // separate --tenant-id flag is needed.
+  const setupCommand = `npm install -g elliot-ai && elliot-ai setup --token ${fullConfig.jwt_token}`;
+
   const handleCopySetupCommand = async () => {
     try {
-      const command = `elliot setup --token ${fullConfig.jwt_token} --tenant-id ${fullConfig.tenant_id}`;
-      await navigator.clipboard.writeText(command);
+      await navigator.clipboard.writeText(setupCommand);
       setCopiedSetup(true);
       setTimeout(() => setCopiedSetup(false), 2000);
-    } catch {
-      console.error("Failed to copy");
-    }
-  };
-
-  const handleCopyNpmCommand = async () => {
-    try {
-      await navigator.clipboard.writeText("npm install -g elliot-ai");
-      setCopiedNpm(true);
-      setTimeout(() => setCopiedNpm(false), 2000);
     } catch {
       console.error("Failed to copy");
     }
@@ -246,265 +239,94 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         ))}
       </div>
 
-      {/* Install CLI Section */}
-      <div
-        style={{
-          background: "#141414",
-          border: "1px solid #1E1E1E",
-          borderRadius: "8px",
-          padding: "20px",
-          marginBottom: "24px",
-        }}
-      >
-        <p
-          style={{
-            color: "#FFFFFF",
-            fontFamily: "monospace",
-            fontSize: "14px",
-            fontWeight: "bold",
-            margin: "0 0 4px 0",
-          }}
-        >
-          Install Elliot-AI CLI
-        </p>
-        <p
-          style={{
-            color: "#AAAAAA",
-            fontFamily: "monospace",
-            fontSize: "12px",
-            margin: "0 0 16px 0",
-          }}
-        >
-          Available on npm — works on Mac, Windows, and Linux
-        </p>
-
-        {/* npm install command */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            background: "#0D0D0D",
-            border: "1px solid #333333",
-            borderRadius: "6px",
-            padding: "12px 16px",
-            marginBottom: "12px",
-          }}
-        >
-          <code
-            style={{
-              color: "#4FFFB0",
-              fontFamily: "monospace",
-              fontSize: "13px",
-            }}
-          >
-            npm install -g elliot-ai
-          </code>
-          <button
-            onClick={handleCopyNpmCommand}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: copiedNpm ? "#4FFFB0" : "#666666",
-              fontFamily: "monospace",
-              fontSize: "11px",
-              cursor: "pointer",
-              padding: "4px 8px",
-            }}
-          >
-            {copiedNpm ? "✓ Copied" : "Copy"}
-          </button>
-        </div>
-
-        {/* Help text and link */}
-        <p
-          style={{
-            color: "#666666",
-            fontSize: "11px",
-            fontFamily: "monospace",
-            margin: "0",
-          }}
-        >
-          Requires Node.js 18+ · {" "}
-          <a
-            href="https://www.npmjs.com/package/elliot-ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#888888", textDecoration: "none" }}
-          >
-            View package on npm →
-          </a>
-        </p>
-      </div>
-
-      {/* Setup Steps */}
+      {/* Set up Elliot-AI — one global command */}
       <div style={{ marginBottom: "28px" }}>
         <h3
           style={{
             fontSize: "14px",
             fontWeight: "600",
             color: "var(--text-primary)",
-            marginBottom: "16px",
+            marginBottom: "8px",
             fontFamily: "var(--font-sans)",
           }}
         >
-          Set up your CLI
+          Set up the Elliot-AI CLI
         </h3>
+        <p
+          style={{
+            fontSize: "13px",
+            color: "var(--text-secondary)",
+            marginBottom: "16px",
+            maxWidth: "540px",
+            fontFamily: "var(--font-sans)",
+          }}
+        >
+          Run this one command in your terminal — it installs the CLI and
+          configures it with your workspace in a single step. Works on macOS,
+          Windows, and Linux (requires Node.js 18+).
+        </p>
 
-        {/* Step 1: Install */}
-        <div style={{ marginBottom: "20px" }}>
-          <div
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            background: "#0D0D0D",
+            border: "1px solid var(--border)",
+            borderRadius: "6px",
+            padding: "12px 16px",
+            maxWidth: "540px",
+          }}
+        >
+          <code
             style={{
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            01 · Install
-          </div>
-          <div
-            style={{
-              background: "#0D0D0D",
-              border: "1px solid var(--border)",
-              borderRadius: "4px",
-              padding: "12px 16px",
+              color: "var(--accent-green)",
               fontFamily: "var(--font-mono)",
               fontSize: "13px",
-              color: "var(--accent-green)",
-              overflow: "auto",
+              overflowX: "auto",
+              whiteSpace: "nowrap",
             }}
           >
-            npm install -g elliot-ai
-          </div>
+            {setupCommand}
+          </code>
+          <button
+            onClick={handleCopySetupCommand}
+            style={{
+              flexShrink: 0,
+              background: copiedSetup ? "var(--accent-green)" : "var(--border)",
+              color: copiedSetup ? "black" : "var(--text-primary)",
+              border: "none",
+              borderRadius: "5px",
+              fontSize: "12px",
+              fontWeight: "600",
+              padding: "6px 12px",
+              cursor: "pointer",
+              fontFamily: "var(--font-mono)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            {copiedSetup ? "✓ Copied" : "Copy"}
+          </button>
         </div>
 
-        {/* Step 2: Configure */}
-        <div style={{ marginBottom: "20px" }}>
-          <div
-            style={{
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
+        <div
+          style={{
+            fontSize: "11px",
+            color: "var(--text-muted)",
+            marginTop: "8px",
+            maxWidth: "540px",
+            fontFamily: "var(--font-sans)",
+          }}
+        >
+          ⚠️ This token is unique to you. Do not share it. Once setup finishes,
+          run{" "}
+          <code
+            style={{ color: "var(--accent-green)", fontFamily: "var(--font-mono)" }}
           >
-            02 · Configure
-          </div>
-          <p
-            style={{
-              fontSize: "12px",
-              color: "var(--text-secondary)",
-              marginBottom: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            Run this command to automatically configure Elliot with your
-            workspace settings:
-          </p>
-          <div
-            style={{
-              background: "#0D0D0D",
-              border: "1px solid var(--border)",
-              borderRadius: "4px",
-              padding: "12px 16px",
-              fontFamily: "var(--font-mono)",
-              fontSize: "13px",
-              color: "var(--accent-green)",
-              overflow: "auto",
-              wordBreak: "break-all",
-              marginBottom: "8px",
-            }}
-          >
-            elliot setup --token {fullConfig.jwt_token} --tenant-id{" "}
-            {fullConfig.tenant_id}
-          </div>
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <button
-              onClick={handleCopySetupCommand}
-              style={{
-                background: copiedSetup ? "var(--accent-green)" : "var(--border)",
-                color: copiedSetup ? "black" : "var(--text-primary)",
-                border: "none",
-                borderRadius: "5px",
-                fontSize: "13px",
-                fontWeight: "600",
-                padding: "8px 16px",
-                cursor: "pointer",
-                fontFamily: "var(--font-mono)",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) =>
-                !copiedSetup &&
-                ((e.currentTarget as HTMLButtonElement).style.opacity = "0.9")
-              }
-              onMouseLeave={(e) =>
-                !copiedSetup &&
-                ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
-              }
-            >
-              {copiedSetup ? "✓ Copied" : "📋 Copy setup command"}
-            </button>
-            <span
-              style={{
-                fontSize: "11px",
-                color: "var(--text-muted)",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              {copiedSetup ? "Ready to paste in terminal" : ""}
-            </span>
-          </div>
-          <div
-            style={{
-              fontSize: "11px",
-              color: "var(--text-muted)",
-              marginTop: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            ⚠️ This token is unique to you. Do not share it.
-          </div>
-        </div>
-
-        {/* Step 3: Start */}
-        <div style={{ marginBottom: "20px" }}>
-          <div
-            style={{
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "var(--text-muted)",
-              marginBottom: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            03 · Start
-          </div>
-          <div
-            style={{
-              background: "#0D0D0D",
-              border: "1px solid var(--border)",
-              borderRadius: "4px",
-              padding: "12px 16px",
-              fontFamily: "var(--font-mono)",
-              fontSize: "13px",
-              color: "var(--accent-green)",
-            }}
-          >
-            elliot
-          </div>
-          <div
-            style={{
-              fontSize: "12px",
-              color: "var(--text-secondary)",
-              marginTop: "8px",
-              fontFamily: "var(--font-sans)",
-            }}
-          >
-            Opens the interactive terminal. Ask anything about your codebase.
-          </div>
+            elliot-ai
+          </code>{" "}
+          to start the interactive terminal.
         </div>
       </div>
 

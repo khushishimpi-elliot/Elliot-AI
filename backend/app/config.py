@@ -24,9 +24,13 @@ class Settings(BaseSettings):
     magic_link_base_url: str = "http://localhost:5173/auth/callback"
 
     # ── Google OAuth ───────────────────────────────────
+    # redirect_uri is left blank by default and derived from
+    # oauth_redirect_base_url in model_post_init (see below) so production
+    # never accidentally sends the localhost callback to Google. Set the
+    # *_REDIRECT_URI / *_CALLBACK_URL env var to override the derived value.
     google_client_id: str = ""
     google_client_secret: str = ""
-    google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
+    google_redirect_uri: str = ""
     google_workspace_domain: str = ""
     google_login_success_url: str = "http://localhost:5173/auth/success"
 
@@ -34,14 +38,14 @@ class Settings(BaseSettings):
     entra_tenant_id: str = ""
     entra_client_id: str = ""
     entra_client_secret: str = ""
-    entra_redirect_uri: str = "http://localhost:8000/auth/entra/callback"
+    entra_redirect_uri: str = ""
     entra_login_success_url: str = "http://localhost:5173/auth/success"
 
     # ── Auth0 SSO ──────────────────────────────────────
     auth0_domain: str = ""
     auth0_client_id: str = ""
     auth0_client_secret: str = ""
-    auth0_callback_url: str = "http://localhost:8000/auth/auth0/callback"
+    auth0_callback_url: str = ""
     auth0_audience: str = ""
 
     # ── GitHub ────────────────────────────────────────
@@ -114,6 +118,23 @@ class Settings(BaseSettings):
 
     # ── Environment ──────────────────────────────────
     app_env: str = "development"
+
+    def model_post_init(self, __context) -> None:
+        """Derive SSO callback URLs from oauth_redirect_base_url when not set.
+
+        The connector OAuth flows already build their redirect_uri from
+        OAUTH_REDIRECT_BASE_URL (see connector_registry.py); SSO must do the
+        same, otherwise production sends the localhost callback to the IdP and
+        the provider rejects it with redirect_uri_mismatch. An explicit
+        GOOGLE_REDIRECT_URI / ENTRA_REDIRECT_URI / AUTH0_CALLBACK_URL still wins.
+        """
+        base = self.oauth_redirect_base_url.rstrip("/")
+        if not self.google_redirect_uri:
+            self.google_redirect_uri = f"{base}/auth/google/callback"
+        if not self.entra_redirect_uri:
+            self.entra_redirect_uri = f"{base}/auth/entra/callback"
+        if not self.auth0_callback_url:
+            self.auth0_callback_url = f"{base}/auth/auth0/callback"
 
 
 @lru_cache
