@@ -5,6 +5,7 @@ services:
     rootDir: backend
     buildCommand: pip install -e .
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # Deploy marker: 2026-06-30 - OAuth step=2 + FRONTEND_URL config
     envVars:
       # Database
       - key: DATABASE_URL
