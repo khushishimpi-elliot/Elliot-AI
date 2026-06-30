@@ -20,7 +20,6 @@ class Organisation(Base):
     team_size = Column(Text)
     data_residency = Column(Text, default="US")
     created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
 
 class Role(Base):

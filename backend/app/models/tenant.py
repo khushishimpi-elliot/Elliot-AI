@@ -18,8 +18,3 @@ class Tenant(Base):
     sdlc_profile = Column(JSON, nullable=True)
     status = Column(Text, nullable=False, server_default="active")
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
