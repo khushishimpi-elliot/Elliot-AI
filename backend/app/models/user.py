@@ -19,9 +19,3 @@ class User(Base):
     role = Column(Text, nullable=False, server_default="developer")
     sso_provider = Column(Text, nullable=True)
     last_active = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
