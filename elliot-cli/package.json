@@ -1,6 +1,6 @@
 {
   "name": "elliot-ai",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "type": "module",
   "description": "Interactive AI coding assistant for engineering teams",
   "author": "Elliot Systems",
