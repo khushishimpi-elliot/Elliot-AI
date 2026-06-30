@@ -29,8 +29,13 @@ program
   .action((options) => setupCommand(options));
 
 program
-  .command("ask", { isDefault: true })
-  .description("Start interactive Elliot-AI terminal")
+  .command("local", { isDefault: true })
+  .description("Start Elliot-AI (local or cloud mode)")
+  .action(localCommand);
+
+program
+  .command("ask")
+  .description("(Deprecated: use 'elliot-ai local' instead)")
   .action(askCommand);
 
 program
@@ -42,11 +47,6 @@ program
   .command("logout")
   .description("Disconnect from your organisation")
   .action(logoutCommand);
-
-program
-  .command("local")
-  .description("Run Elliot as a local coding agent (no backend required; uses GEMINI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY)")
-  .action(localCommand);
 
 program
   .command("usage")
