@@ -1,11 +1,12 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from jose import JWTError, jwt
 
 from app.config import get_settings
 
 
-def issue_access_token(email: str) -> tuple[str, int]:
+def issue_access_token(email: str, tenant_id: UUID | None = None) -> tuple[str, int]:
     settings = get_settings()
     expires_delta = timedelta(minutes=settings.jwt_expire_min)
     expire = datetime.now(UTC) + expires_delta
@@ -15,6 +16,8 @@ def issue_access_token(email: str) -> tuple[str, int]:
         "iat": int(datetime.now(UTC).timestamp()),
         "typ": "access",
     }
+    if tenant_id:
+        payload["tenant_id"] = str(tenant_id)
     token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algo)
     return token, int(expires_delta.total_seconds())
 

@@ -1,5 +1,5 @@
 import logging
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -22,35 +22,67 @@ logger = logging.getLogger(__name__)
 @router.post("/workspace", response_model=WorkspaceResponse, status_code=status.HTTP_201_CREATED)
 async def create_workspace(
     payload: WorkspaceCreate,
+    authorization: str = Header(...),
     db: AsyncSession = Depends(get_db),
 ) -> WorkspaceResponse:
-    """Create workspace — onboarding step 1"""
+    """Create workspace — onboarding step 2"""
     try:
-        # Generate tenant ID explicitly to ensure it's available
-        tenant_id = uuid4()
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Invalid authorization header")
 
-        tenant = Tenant(
-            id=tenant_id,
-            org_name=payload.name,
-            domain=payload.domain,
-            team_size=payload.team_size,
-            data_residency=payload.residency,
-        )
-        db.add(tenant)
+        token = authorization.replace("Bearer ", "")
+        token_data = decode_access_token(token)
 
-        org = Organisation(
-            tenant_id=tenant_id,
-            org_name=payload.name,
-            domain=payload.domain,
-            team_size=payload.team_size,
-            data_residency=payload.residency,
+        tenant_id_str = token_data.get("tenant_id")
+        if not tenant_id_str:
+            raise HTTPException(status_code=401, detail="tenant_id not in token")
+
+        tenant_id = UUID(tenant_id_str)
+
+        result = await db.execute(
+            select(Tenant).where(Tenant.id == tenant_id)
         )
-        db.add(org)
+        tenant = result.scalar_one_or_none()
+
+        if tenant:
+            tenant.org_name = payload.name
+            tenant.domain = payload.domain
+            tenant.team_size = payload.team_size
+            tenant.data_residency = payload.residency
+        else:
+            tenant = Tenant(
+                id=tenant_id,
+                org_name=payload.name,
+                domain=payload.domain,
+                team_size=payload.team_size,
+                data_residency=payload.residency,
+            )
+            db.add(tenant)
+
+        org_result = await db.execute(
+            select(Organisation).where(Organisation.tenant_id == tenant_id)
+        )
+        org = org_result.scalar_one_or_none()
+
+        if org:
+            org.org_name = payload.name
+            org.domain = payload.domain
+            org.team_size = payload.team_size
+            org.data_residency = payload.residency
+        else:
+            org = Organisation(
+                tenant_id=tenant_id,
+                org_name=payload.name,
+                domain=payload.domain,
+                team_size=payload.team_size,
+                data_residency=payload.residency,
+            )
+            db.add(org)
 
         await db.commit()
         await db.refresh(tenant)
 
-        logger.info(f"Created workspace {tenant.id}")
+        logger.info(f"Created/updated workspace {tenant.id}")
 
         return WorkspaceResponse(
             tenant_id=tenant.id,
@@ -61,6 +93,8 @@ async def create_workspace(
             created_at=tenant.created_at,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
         logger.error(f"Error creating workspace: {str(e)}")

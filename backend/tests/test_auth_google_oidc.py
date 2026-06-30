@@ -73,7 +73,13 @@ def test_callback_rejects_unknown_state(configured_google):
     assert "invalid or expired state" in r.json()["detail"]
 
 
-def test_callback_happy_path(configured_google):
+def test_callback_happy_path(configured_google, monkeypatch):
+    from unittest.mock import AsyncMock, MagicMock
+    from uuid import uuid4
+
+    from app.db.session import get_db
+    from app.models.user import User
+
     state = oauth_state.issue()
 
     fake_tokens = {"id_token": "fake.jwt.here", "access_token": "fake-access"}
@@ -84,14 +90,40 @@ def test_callback_happy_path(configured_google):
         "sub": "google-user-123",
     }
 
+    tenant_id = uuid4()
+    fake_user = User(
+        id=uuid4(),
+        tenant_id=tenant_id,
+        email="khushi@elliotsystems.com",
+        sso_provider="google",
+        role="owner",
+    )
+
+    async def mock_execute(query):
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none = MagicMock(return_value=fake_user)
+        return mock_result
+
+    mock_db = AsyncMock()
+    mock_db.execute = mock_execute
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+
+    async def override_get_db():
+        return mock_db
+
     with (
         patch.object(sso_google, "exchange_code_for_tokens", return_value=fake_tokens),
         patch.object(sso_google, "verify_id_token", return_value=fake_claims),
     ):
-        r = client.get(
-            f"/auth/google/callback?code=auth-code&state={state}",
-            follow_redirects=False,
-        )
+        app.dependency_overrides[get_db] = override_get_db
+        try:
+            r = client.get(
+                f"/auth/google/callback?code=auth-code&state={state}",
+                follow_redirects=False,
+            )
+        finally:
+            app.dependency_overrides.clear()
 
     # Callback now redirects to frontend with JWT in URL (step=2 since Sign in is complete)
     assert r.status_code == 302

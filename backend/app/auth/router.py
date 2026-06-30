@@ -66,7 +66,18 @@ def google_login() -> RedirectResponse:
 
 
 @router.get("/google/callback")
-def google_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+async def google_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> RedirectResponse:
+    from uuid import uuid4
+
+    from sqlalchemy import select
+
+    from app.models.tenant import Tenant
+    from app.models.user import User
+
     settings = get_settings()
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
@@ -78,9 +89,32 @@ def google_callback(code: str = Query(...), state: str = Query(...)) -> Redirect
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     email = claims["email"]
-    access_token, ttl = issue_access_token(email)
 
-    # Redirect to frontend with JWT in URL (skip to Step 2 since Sign in is complete via OAuth)
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if user:
+        tenant_id = user.tenant_id
+    else:
+        tenant_id = uuid4()
+        tenant = Tenant(
+            id=tenant_id,
+            org_name=email.split("@")[0],
+            domain=email.split("@")[1],
+        )
+        db.add(tenant)
+
+        user = User(
+            tenant_id=tenant_id,
+            email=email,
+            sso_provider="google",
+            role="owner",
+        )
+        db.add(user)
+        await db.commit()
+
+    access_token, ttl = issue_access_token(email, tenant_id=tenant_id)
+
     frontend_url = settings.frontend_url or "http://localhost:5173"
     redirect_url = (
         f"{frontend_url}/onboarding?jwt={access_token}&step=2&email={email}"
@@ -99,7 +133,18 @@ def entra_login() -> RedirectResponse:
 
 
 @router.get("/entra/callback")
-def entra_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+async def entra_callback(
+    code: str = Query(...),
+    state: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> RedirectResponse:
+    from uuid import uuid4
+
+    from sqlalchemy import select
+
+    from app.models.tenant import Tenant
+    from app.models.user import User
+
     settings = get_settings()
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
@@ -111,9 +156,32 @@ def entra_callback(code: str = Query(...), state: str = Query(...)) -> RedirectR
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     email = claims["email"]
-    access_token, ttl = issue_access_token(email)
 
-    # Redirect to frontend with JWT in URL (skip to Step 2 since Sign in is complete via OAuth)
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if user:
+        tenant_id = user.tenant_id
+    else:
+        tenant_id = uuid4()
+        tenant = Tenant(
+            id=tenant_id,
+            org_name=email.split("@")[0],
+            domain=email.split("@")[1],
+        )
+        db.add(tenant)
+
+        user = User(
+            tenant_id=tenant_id,
+            email=email,
+            sso_provider="entra",
+            role="owner",
+        )
+        db.add(user)
+        await db.commit()
+
+    access_token, ttl = issue_access_token(email, tenant_id=tenant_id)
+
     frontend_url = settings.frontend_url or "http://localhost:5173"
     redirect_url = (
         f"{frontend_url}/onboarding?jwt={access_token}&step=2&email={email}"
