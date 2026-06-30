@@ -1,8 +1,9 @@
+import logging
 import secrets
 import uuid
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,8 @@ from app.services.oauth import (
     exchange_code_for_token,
     get_authorization_url,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/connectors", tags=["connectors"])
 
@@ -64,6 +67,7 @@ async def oauth_callback(
     code: str = Query(...),
     state: str = Query(...),
     db: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """Handle OAuth callback from provider"""
     if state not in oauth_states:
@@ -122,6 +126,14 @@ async def oauth_callback(
 
     await db.commit()
 
+    if provider == "github":
+        logger.info(f"Queuing GitHub indexing for tenant {tenant_id}")
+        background_tasks.add_task(
+            _index_github_background,
+            tenant_id=tenant_id,
+            connector_id=connector.id,
+        )
+
     settings = get_settings()
     redirect_url = (
         f"{settings.terminal_url}/connectors/callback?"
@@ -153,3 +165,19 @@ async def disconnect_connector(
     await db.commit()
 
     return {"status": "disconnected"}
+
+
+async def _index_github_background(
+    tenant_id: uuid.UUID,
+    connector_id: int,
+):
+    """Background task: Index GitHub repositories after OAuth connection."""
+    from app.db.session import AsyncSessionLocal
+    from app.services.initial_indexing import index_github_repositories
+
+    async with AsyncSessionLocal() as db:
+        try:
+            result = await index_github_repositories(db, tenant_id, connector_id)
+            logger.info(f"GitHub indexing complete: {result}")
+        except Exception as e:
+            logger.error(f"GitHub indexing failed: {type(e).__name__}: {e}")

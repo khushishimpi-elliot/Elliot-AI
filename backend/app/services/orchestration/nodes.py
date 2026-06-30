@@ -106,19 +106,46 @@ async def fetch_code_context_node(
         return state
 
     try:
-        # For now, return empty chunks (pgvector search would be added)
-        # In production, we would:
-        # 1. Embed the query
-        # 2. Search pgvector using cosine similarity
-        # 3. Filter by repo if specified
-        # 4. Return top 5 chunks
+        from sqlalchemy import text
+
+        from app.services.embedder import Embedder
 
         logger.info("Fetching code context from vector DB")
 
-        # Placeholder: return empty for now
-        code_chunks = []
+        embedder = Embedder()
+        query_embedding = await embedder.embed_text(state["query"])
 
-        return {**state, "code_chunks": code_chunks}
+        sql = """
+            SELECT id, source, content, chunk_type, chunk_name, start_line, end_line, language,
+                   1 - (embedding <=> CAST(:emb AS vector)) AS similarity
+            FROM knowledge_chunks
+            WHERE tenant_id = :tenant_id
+            ORDER BY embedding <=> CAST(:emb AS vector)
+            LIMIT 5
+        """
+
+        rows = (await db.execute(
+            text(sql),
+            {"tenant_id": str(state["tenant_id"]), "emb": str(query_embedding)}
+        )).all()
+
+        formatted_chunks = [
+            {
+                "id": row.id,
+                "source": row.source,
+                "content": row.content,
+                "similarity": float(row.similarity),
+                "chunk_type": row.chunk_type,
+                "chunk_name": row.chunk_name,
+                "start_line": row.start_line,
+                "end_line": row.end_line,
+                "language": row.language,
+            }
+            for row in rows
+        ]
+
+        logger.info(f"Found {len(formatted_chunks)} code chunks for query")
+        return {**state, "code_chunks": formatted_chunks}
 
     except Exception as e:
         logger.error(f"Error fetching code context: {str(e)}")
