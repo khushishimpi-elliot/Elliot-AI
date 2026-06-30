@@ -29,7 +29,7 @@ services:
       - key: AUTH0_CLIENT_SECRET
         sync: false
       - key: AUTH0_CALLBACK_URL
-        value: https://elliot-ai-backend.onrender.com/auth/auth0/callback
+        value: https://elliot-ai.onrender.com/auth/auth0/callback
       - key: AUTH0_AUDIENCE
         sync: false
 
@@ -38,6 +38,10 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://elliot-ai.onrender.com/auth/google/callback
+      - key: GOOGLE_WORKSPACE_DOMAIN
+        value: elliotsystems.com
 
       # Microsoft Entra
       - key: ENTRA_CLIENT_ID
@@ -93,7 +97,7 @@ services:
 
       # App URLs
       - key: BACKEND_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: FRONTEND_URL
         value: https://elliot-ai-1.onrender.com
       - key: TERMINAL_URL
@@ -101,25 +105,27 @@ services:
       - key: DASHBOARD_URL
         value: https://elliot-ai-dashboard.onrender.com
       - key: OAUTH_REDIRECT_BASE_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: CORS_ORIGINS
         value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
 
-      # Email (Gmail SMTP)
-      - key: GMAIL_USER
+      # Email (Gmail SMTP only - single provider)
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: shrushti.kadam@elliotsystems.com
+      - key: SMTP_PASS
         sync: false
-      - key: GMAIL_APP_PASSWORD
-        sync: false
-
-      # Email (Resend — production alternative)
-      - key: RESEND_API_KEY
-        sync: false
-      - key: RESEND_FROM_ADDRESS
-        sync: false
+      - key: EMAIL_FROM
+        value: shrushti.kadam@elliotsystems.com
 
       # Magic Link
       - key: MAGIC_LINK_BASE_URL
         value: https://elliot-ai-1.onrender.com/auth/callback
+      - key: ENTRA_REDIRECT_URI
+        value: https://elliot-ai.onrender.com/auth/entra/callback
 
       # Security
       - key: FERNET_KEY

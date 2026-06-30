@@ -101,13 +101,12 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
-    # ── Email (Gmail SMTP) ───────────────────────────
-    gmail_user: str = ""
-    gmail_app_password: str = ""
-
-    # ── Email (Resend — production) ──────────────────
-    resend_api_key: str = ""
-    resend_from_address: str = "onboarding@resend.dev"
+    # ── Email (SMTP) ──────────────────────────────────
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_pass: str = ""
+    email_from: str = "onboarding@elliotsystems.com"
 
     # ── Security ─────────────────────────────────────
     fernet_key: str = ""
