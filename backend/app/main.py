@@ -28,7 +28,6 @@ from app.routers import (
     webhook,
 )
 from app.routers.onboarding import router as onboarding_router
-from app.routers.workspace import router as workspace_router
 
 app = FastAPI(title="Elliot-AI", version="0.1.0")
 
@@ -47,7 +46,6 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(organisation.router)
 app.include_router(sdlc.router)
-app.include_router(workspace_router)
 app.include_router(onboarding_router)
 app.include_router(users.router)
 app.include_router(teams.router)

@@ -41,14 +41,22 @@ export default function Step6Launch({ config = {} }: Step6Props) {
         const tenantId = localStorage.getItem("elliot_tenant_id") || config.tenant_id;
         const jwt = localStorage.getItem("jwt") || localStorage.getItem("elliot_token");
 
+        console.log("Step6Launch - Loading config:", { tenantId, jwt, config });
+        console.log("Step6Launch - All localStorage:", Object.fromEntries(
+          Object.entries(localStorage).filter(([k]) => k.includes("elliot") || k.includes("jwt"))
+        ));
+
         if (!tenantId || !jwt) {
           setError("Setup incomplete — please complete Step 2 (Workspace) before launching.");
           setLoading(false);
           return;
         }
 
+        const configUrl = `${API_URL}/onboarding/config/${tenantId}`;
+        console.log("Step6Launch - Fetching from:", configUrl);
+
         const response = await fetch(
-          `${API_URL}/onboarding/config/${tenantId}`,
+          configUrl,
           {
             headers: {
               Authorization: `Bearer ${jwt}`,
@@ -56,11 +64,16 @@ export default function Step6Launch({ config = {} }: Step6Props) {
           }
         );
 
+        console.log("Step6Launch - Response status:", response.status);
+
         if (!response.ok) {
-          throw new Error("Failed to load configuration");
+          const errorText = await response.text();
+          console.error("Step6Launch - Error response:", errorText);
+          throw new Error(`Failed to load configuration: ${response.status} ${errorText}`);
         }
 
         const data = await response.json();
+        console.log("Step6Launch - Config data:", data);
         setFullConfig(data);
       } catch (err) {
         console.error("Error fetching config:", err);
