@@ -93,11 +93,11 @@ def test_callback_happy_path(configured_google):
             follow_redirects=False,
         )
 
-    # Callback now redirects to frontend with JWT in URL
+    # Callback now redirects to frontend with JWT in URL (step=2 since Sign in is complete)
     assert r.status_code == 302
     location = r.headers["location"]
     assert "?jwt=" in location
-    assert "&step=1" in location
+    assert "&step=2" in location
     assert "email=khushi" in location
 
 

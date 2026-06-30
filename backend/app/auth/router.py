@@ -80,10 +80,10 @@ def google_callback(code: str = Query(...), state: str = Query(...)) -> Redirect
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
 
-    # Redirect to frontend with JWT in URL
+    # Redirect to frontend with JWT in URL (skip to Step 2 since Sign in is complete via OAuth)
     frontend_url = settings.frontend_url or "http://localhost:5173"
     redirect_url = (
-        f"{frontend_url}/onboarding?jwt={access_token}&step=1&email={email}"
+        f"{frontend_url}/onboarding?jwt={access_token}&step=2&email={email}"
     )
     return RedirectResponse(url=redirect_url, status_code=302)
 
@@ -113,10 +113,10 @@ def entra_callback(code: str = Query(...), state: str = Query(...)) -> RedirectR
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
 
-    # Redirect to frontend with JWT in URL
+    # Redirect to frontend with JWT in URL (skip to Step 2 since Sign in is complete via OAuth)
     frontend_url = settings.frontend_url or "http://localhost:5173"
     redirect_url = (
-        f"{frontend_url}/onboarding?jwt={access_token}&step=1&email={email}"
+        f"{frontend_url}/onboarding?jwt={access_token}&step=2&email={email}"
     )
     return RedirectResponse(url=redirect_url, status_code=302)
 
