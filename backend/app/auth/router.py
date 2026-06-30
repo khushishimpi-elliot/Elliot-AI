@@ -62,8 +62,9 @@ def google_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/google/callback", response_model=TokenResponse)
-def google_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
+@router.get("/google/callback")
+def google_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+    settings = get_settings()
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
 
@@ -75,11 +76,11 @@ def google_callback(code: str = Query(...), state: str = Query(...)) -> TokenRes
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
-    )
+
+    # Redirect to frontend with JWT in URL
+    frontend_url = settings.frontend_url or "http://localhost:5173"
+    redirect_url = f"{frontend_url}/onboarding?jwt={access_token}&step=1&email={email}"
+    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/entra/login")
@@ -92,8 +93,9 @@ def entra_login() -> RedirectResponse:
     return RedirectResponse(url=url, status_code=302)
 
 
-@router.get("/entra/callback", response_model=TokenResponse)
-def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResponse:
+@router.get("/entra/callback")
+def entra_callback(code: str = Query(...), state: str = Query(...)) -> RedirectResponse:
+    settings = get_settings()
     if not oauth_state.consume(state):
         raise HTTPException(status_code=400, detail="invalid or expired state")
 
@@ -105,11 +107,11 @@ def entra_callback(code: str = Query(...), state: str = Query(...)) -> TokenResp
 
     email = claims["email"]
     access_token, ttl = issue_access_token(email)
-    return TokenResponse(
-        access_token=access_token,
-        expires_in_seconds=ttl,
-        email=email,
-    )
+
+    # Redirect to frontend with JWT in URL
+    frontend_url = settings.frontend_url or "http://localhost:5173"
+    redirect_url = f"{frontend_url}/onboarding?jwt={access_token}&step=1&email={email}"
+    return RedirectResponse(url=redirect_url, status_code=302)
 
 
 @router.get("/auth0/login", response_model=None)
