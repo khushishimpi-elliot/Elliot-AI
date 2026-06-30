@@ -1,13 +1,11 @@
 """Integration tests for Auth0 callback flow"""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.auth import oauth_state
 from app.main import app
-
 
 client = TestClient(app)
 
