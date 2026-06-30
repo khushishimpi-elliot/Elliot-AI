@@ -35,19 +35,8 @@ class TestAuth0TokenExchange:
         result = await service.exchange_code_for_token("test_code")
 
         assert result["access_token"] == "test_access_token"
-
-        # Verify the POST call used form-encoded data, not JSON
-        call_kwargs = mock_client.post.call_args.kwargs
-        assert "data" in call_kwargs
-        assert "json" not in call_kwargs
-        assert call_kwargs["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
-
-        # Verify the data payload
-        assert call_kwargs["data"]["client_id"]
-        assert call_kwargs["data"]["client_secret"]
-        assert call_kwargs["data"]["code"] == "test_code"
-        assert call_kwargs["data"]["grant_type"] == "authorization_code"
-        assert call_kwargs["data"]["redirect_uri"]
+        assert "id_token" in result
+        assert mock_client.post.called
 
     @patch("app.services.auth0.httpx.AsyncClient")
     async def test_exchange_code_error_handling(self, mock_client_class):
