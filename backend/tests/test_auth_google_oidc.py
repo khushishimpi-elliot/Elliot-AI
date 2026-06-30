@@ -17,6 +17,7 @@ def configured_google(monkeypatch):
     monkeypatch.setenv("google_client_id", "test-client-id.apps.googleusercontent.com")
     monkeypatch.setenv("google_client_secret", "test-secret")
     monkeypatch.setenv("google_workspace_domain", "elliotsystems.com")
+    monkeypatch.setenv("frontend_url", "http://localhost:5173")
     yield
     get_settings.cache_clear()
 
@@ -92,10 +93,12 @@ def test_callback_happy_path(configured_google):
             follow_redirects=False,
         )
 
-    assert r.status_code == 200
-    body = r.json()
-    assert "access_token" in body
-    assert body["email"] == "khushi@elliotsystems.com"
+    # Callback now redirects to frontend with JWT in URL
+    assert r.status_code == 302
+    location = r.headers["location"]
+    assert "?jwt=" in location
+    assert "&step=1" in location
+    assert "email=khushi" in location
 
 
 def test_callback_rejects_wrong_workspace_domain(configured_google):

@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -13,6 +15,17 @@ def reset_store():
     magic_link._reset_for_tests()
     yield
     magic_link._reset_for_tests()
+
+
+@pytest.fixture(autouse=True)
+def mock_email_service():
+    """Mock the email sending service for all tests."""
+    with patch(
+        "app.auth.router.send_magic_link_email",
+        new_callable=AsyncMock,
+        return_value=True,
+    ):
+        yield
 
 
 def test_request_magic_link_returns_sent_true():

@@ -16,6 +16,7 @@ def configured_entra(monkeypatch):
     monkeypatch.setenv("entra_tenant_id", "test-tenant-id")
     monkeypatch.setenv("entra_client_id", "test-client-id")
     monkeypatch.setenv("entra_client_secret", "test-secret")
+    monkeypatch.setenv("frontend_url", "http://localhost:5173")
     yield
     get_settings.cache_clear()
 
@@ -124,10 +125,12 @@ def test_callback_happy_path(configured_entra):
     ):
         r = client.get(f"/auth/entra/callback?code=auth-code&state={state}", follow_redirects=False)
 
-    assert r.status_code == 200
-    body = r.json()
-    assert "access_token" in body
-    assert body["email"] == "astika@elliotsystems.com"
+    # Callback now redirects to frontend with JWT in URL
+    assert r.status_code == 302
+    location = r.headers["location"]
+    assert "?jwt=" in location
+    assert "&step=1" in location
+    assert "email=astika" in location
 
 
 def test_callback_rejects_on_oidc_error(configured_entra):
