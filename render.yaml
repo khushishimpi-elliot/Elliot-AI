@@ -137,7 +137,7 @@ services:
     startCommand: node index.js
     envVars:
       - key: VITE_API_URL
-        value: https://elliot-ai-backend.onrender.com
+        value: https://elliot-ai.onrender.com
       - key: NODE_ENV
         value: production
 
