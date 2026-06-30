@@ -126,12 +126,19 @@ async def oauth_callback(
 
     await db.commit()
 
+    logger.info(f"Queuing {provider} indexing for tenant {tenant_id}")
     if provider == "github":
-        logger.info(f"Queuing GitHub indexing for tenant {tenant_id}")
         background_tasks.add_task(
             _index_github_background,
             tenant_id=tenant_id,
             connector_id=connector.id,
+        )
+    else:
+        background_tasks.add_task(
+            _index_connector_background,
+            tenant_id=tenant_id,
+            provider=provider,
+            encrypted_token=encrypted_token,
         )
 
     settings = get_settings()
@@ -181,3 +188,47 @@ async def _index_github_background(
             logger.info(f"GitHub indexing complete: {result}")
         except Exception as e:
             logger.error(f"GitHub indexing failed: {type(e).__name__}: {e}")
+
+
+async def _index_connector_background(
+    tenant_id: uuid.UUID,
+    provider: str,
+    encrypted_token: str,
+):
+    """Background task: Index connector content after OAuth connection."""
+    from app.db.session import AsyncSessionLocal
+    from app.services.initial_indexing import (
+        index_bitbucket_repos,
+        index_clickup_tasks,
+        index_confluence_pages,
+        index_gitlab_projects,
+        index_google_drive_docs,
+        index_jira_tickets,
+        index_linear_issues,
+        index_notion_pages,
+        index_slack_messages,
+    )
+
+    indexers = {
+        "slack": index_slack_messages,
+        "jira": index_jira_tickets,
+        "confluence": index_confluence_pages,
+        "notion": index_notion_pages,
+        "google_drive": index_google_drive_docs,
+        "clickup": index_clickup_tasks,
+        "linear": index_linear_issues,
+        "gitlab": index_gitlab_projects,
+        "bitbucket": index_bitbucket_repos,
+    }
+
+    indexer_fn = indexers.get(provider)
+    if not indexer_fn:
+        logger.warning(f"No indexer for provider {provider}")
+        return
+
+    async with AsyncSessionLocal() as db:
+        try:
+            result = await indexer_fn(db, tenant_id, encrypted_token)
+            logger.info(f"{provider} indexing complete: {result}")
+        except Exception as e:
+            logger.error(f"{provider} indexing failed: {type(e).__name__}: {e}")
