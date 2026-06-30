@@ -40,7 +40,8 @@ class Auth0Service:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"https://{self.settings.auth0_domain}/oauth/token",
-                json={
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                data={
                     "client_id": self.settings.auth0_client_id,
                     "client_secret": self.settings.auth0_client_secret,
                     "code": code,
@@ -50,8 +51,12 @@ class Auth0Service:
             )
 
             if response.status_code != 200:
-                logger.error(f"Token exchange failed: {response.text}")
-                raise ValueError(f"Token exchange failed: {response.status_code}")
+                logger.error(
+                    f"Auth0 token exchange failed: {response.status_code} - {response.text}"
+                )
+                raise ValueError(
+                    f"Token exchange failed: {response.status_code} - {response.text}"
+                )
 
             return response.json()
 
