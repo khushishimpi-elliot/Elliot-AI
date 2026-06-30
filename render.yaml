@@ -109,17 +109,11 @@ services:
       - key: CORS_ORIGINS
         value: https://elliot-ai-1.onrender.com,https://elliot-ai-dashboard.onrender.com
 
-      # Email (Gmail SMTP only - single provider)
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        value: shrushti.kadam@elliotsystems.com
-      - key: SMTP_PASS
+      # Email (Brevo HTTP API — primary, works on Render free tier)
+      - key: BREVO_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: shrushti.kadam@elliotsystems.com
+        value: elliotainoreply@gmail.com
 
       # Magic Link
       - key: MAGIC_LINK_BASE_URL

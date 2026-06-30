@@ -101,7 +101,8 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
-    # ── Email (SMTP) ──────────────────────────────────
+    # ── Email ─────────────────────────────────────────
+    brevo_api_key: str = ""
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
     smtp_user: str = ""
