@@ -34,19 +34,20 @@ export async function getConnectorStatus(
       return [];
     }
 
-    const data = (await response.json()) as {
-      connectors?: Record<string, { connected: boolean }>;
-    };
-    const connectors: ConnectorInfo[] = [];
+    const data = (await response.json()) as Array<{
+      provider: string;
+      status: string;
+    }>;
 
-    if (data.connectors) {
-      for (const [name, info] of Object.entries(data.connectors)) {
-        connectors.push({
-          provider: name,
-          status: info.connected ? "connected" : "not_connected",
-        });
-      }
+    if (!Array.isArray(data)) {
+      return [];
     }
+
+    const connectors: ConnectorInfo[] = data.map((connector) => ({
+      provider: connector.provider,
+      status:
+        connector.status === "connected" ? "connected" : "not_connected",
+    }));
 
     return connectors;
   } catch {

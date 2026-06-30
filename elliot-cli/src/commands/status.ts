@@ -38,13 +38,18 @@ export async function statusCommand(): Promise<void> {
     printInfo("Connectors:");
 
     const connectors = await getConnectorStatus(config);
-    if (Object.keys(connectors).length === 0) {
+    if (connectors.length === 0) {
       printInfo("  (No connector data available)");
     } else {
-      for (const [name, connected] of Object.entries(connectors)) {
-        const status = connected ? "✅ connected" : "❌ not connected";
-        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-        printInfo(`  ${displayName.padEnd(10)} ${status}`);
+      for (const connector of connectors) {
+        const statusIcon =
+          connector.status === "connected" ? "✅" : "❌";
+        const displayName =
+          connector.provider.charAt(0).toUpperCase() +
+          connector.provider.slice(1);
+        printInfo(
+          `  ${displayName.padEnd(10)} ${statusIcon} ${connector.status}`
+        );
       }
     }
 
