@@ -5,12 +5,12 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import magic_link, oauth_state, sso_entra, sso_google
-from app.services.email import send_magic_link_email
 from app.auth.jwt import issue_access_token
 from app.auth.schemas import MagicLinkRequest, MagicLinkResponse, TokenResponse
 from app.config import get_settings
 from app.db.session import get_db
 from app.services.auth0 import Auth0Service
+from app.services.email import send_magic_link_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -32,7 +32,10 @@ async def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
     if not sent:
         raise HTTPException(
             status_code=503,
-            detail="Email delivery failed. Check GMAIL_USER/GMAIL_APP_PASSWORD or RESEND_API_KEY on the server."
+            detail=(
+                "Email delivery failed. Check GMAIL_USER/GMAIL_APP_PASSWORD "
+                "or RESEND_API_KEY on the server."
+            ),
         )
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
 
