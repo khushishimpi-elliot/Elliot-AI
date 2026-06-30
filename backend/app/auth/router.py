@@ -33,8 +33,8 @@ async def request_magic_link(payload: MagicLinkRequest) -> MagicLinkResponse:
         raise HTTPException(
             status_code=503,
             detail=(
-                "Email delivery failed. Check GMAIL_USER/GMAIL_APP_PASSWORD "
-                "or RESEND_API_KEY on the server."
+                "Email delivery failed. Check SMTP_HOST, SMTP_USER, and SMTP_PASS "
+                "are configured on the server."
             ),
         )
     return MagicLinkResponse(sent=True, expires_in_seconds=ttl)
@@ -208,18 +208,19 @@ def auth0_logout(return_to: str | None = None) -> RedirectResponse:
 
 @router.get("/test-email")
 async def test_email_config() -> dict:
-    """Debug endpoint — shows email config state and attempts a test send."""
+    """Debug endpoint — shows SMTP config state and attempts a test send."""
     settings = get_settings()
     config_status = {
-        "gmail_user_set": bool(settings.gmail_user),
-        "gmail_app_password_set": bool(settings.gmail_app_password),
-        "resend_api_key_set": bool(settings.resend_api_key),
-        "resend_from_address": settings.resend_from_address,
+        "smtp_host_set": bool(settings.smtp_host),
+        "smtp_port": settings.smtp_port,
+        "smtp_user_set": bool(settings.smtp_user),
+        "smtp_pass_set": bool(settings.smtp_pass),
+        "email_from": settings.email_from,
         "magic_link_base_url": settings.magic_link_base_url,
-        "gmail_user": settings.gmail_user if settings.gmail_user else "(not set)",
+        "smtp_host": settings.smtp_host if settings.smtp_host else "(not set)",
     }
 
-    test_target = settings.gmail_user or "test@elliotsystems.com"
+    test_target = settings.smtp_user or "test@elliotsystems.com"
     sent = await send_magic_link_email(test_target, "https://example.com/auth/callback?token=test")
 
     return {

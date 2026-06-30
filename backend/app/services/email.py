@@ -1,14 +1,12 @@
-"""Email service — Gmail SMTP (dev/staging) with Resend fallback (production).
+"""Email service — SMTP provider with environment configuration.
 
-Switch to Resend for production by setting RESEND_API_KEY in environment.
-For Gmail SMTP set GMAIL_USER and GMAIL_APP_PASSWORD in environment.
+Uses SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM from environment.
+Supports Gmail, SendGrid, and other SMTP providers.
 """
 import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-import httpx
 
 from app.config import get_settings
 
@@ -35,91 +33,56 @@ padding:32px;background:#0D0D0D;color:#FFFFFF;border-radius:8px">
 
 
 async def send_magic_link_email(to_email: str, magic_link: str) -> bool:
-    """Send magic link email — uses Gmail SMTP if configured, else Resend."""
+    """Send magic link email via configured SMTP provider."""
     settings = get_settings()
     html = HTML_TEMPLATE.format(magic_link=magic_link)
 
-    # ── Gmail SMTP ────────────────────────────────────────────────────────────
-    if settings.gmail_user and settings.gmail_app_password:
-        return _send_via_gmail(
+    # ── SMTP (configured via SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) ──────
+    if settings.smtp_host and settings.smtp_user and settings.smtp_pass:
+        return _send_via_smtp(
             to_email=to_email,
             subject="Sign in to Elliot-AI",
             html=html,
-            gmail_user=settings.gmail_user,
-            gmail_app_password=settings.gmail_app_password,
+            smtp_host=settings.smtp_host,
+            smtp_port=settings.smtp_port,
+            smtp_user=settings.smtp_user,
+            smtp_pass=settings.smtp_pass,
+            email_from=settings.email_from,
         )
 
-    # ── Resend (production fallback) ──────────────────────────────────────────
-    if settings.resend_api_key:
-        return await _send_via_resend(
-            to_email=to_email,
-            subject="Sign in to Elliot-AI",
-            html=html,
-            api_key=settings.resend_api_key,
-            from_address=settings.resend_from_address,
-        )
-
-    # ── No email provider configured ─────────────────────────────────────────
-    logger.warning("No email provider configured (GMAIL_USER or RESEND_API_KEY missing)")
+    # ── No email provider configured ───────────────────────────────────────────
+    logger.warning("No email provider configured (SMTP_HOST/SMTP_USER/SMTP_PASS missing)")
     logger.info(f"Magic link for {to_email}: {magic_link}")
     return False
 
 
-def _send_via_gmail(
+def _send_via_smtp(
     to_email: str,
     subject: str,
     html: str,
-    gmail_user: str,
-    gmail_app_password: str,
+    smtp_host: str,
+    smtp_port: int,
+    smtp_user: str,
+    smtp_pass: str,
+    email_from: str,
 ) -> bool:
-    """Send email via Gmail SMTP using an App Password."""
+    """Send email via SMTP provider using STARTTLS."""
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"Elliot-AI <{gmail_user}>"
+        msg["From"] = f"Elliot-AI <{email_from}>"
         msg["To"] = to_email
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
-            server.login(gmail_user, gmail_app_password)
-            server.sendmail(gmail_user, to_email, msg.as_string())
+        # Connect with STARTTLS (port 587 standard)
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(email_from, to_email, msg.as_string())
 
-        logger.info(f"Magic link sent to {to_email} via Gmail SMTP")
+        logger.info(f"Magic link sent to {to_email} via {smtp_host}")
         return True
 
     except Exception as e:
-        logger.error(f"Gmail SMTP failed: {type(e).__name__}: {str(e)}")
-        return False
-
-
-async def _send_via_resend(
-    to_email: str,
-    subject: str,
-    html: str,
-    api_key: str,
-    from_address: str,
-) -> bool:
-    """Send email via Resend API."""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.resend.com/emails",
-                json={
-                    "from": from_address,
-                    "to": to_email,
-                    "subject": subject,
-                    "html": html,
-                },
-                headers={"Authorization": f"Bearer {api_key}"},
-            )
-
-        if response.status_code in (200, 201):
-            logger.info(f"Magic link sent to {to_email} via Resend")
-            return True
-
-        logger.error(f"Resend returned {response.status_code}: {response.text}")
-        return False
-
-    except Exception as e:
-        logger.error(f"Resend failed: {str(e)}")
+        logger.error(f"SMTP failed: {type(e).__name__}: {str(e)}")
         return False
