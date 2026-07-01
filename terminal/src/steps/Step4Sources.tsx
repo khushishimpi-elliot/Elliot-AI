@@ -41,8 +41,8 @@ const SCOPE_MAP: Record<string, string[]> = {
 };
 
 const SECTIONS = [
-  { id: "repositories", label: "Repositories", required: true, description: "Source code Elliot reads, reviews, and writes against." },
-  { id: "tickets", label: "Issue & ticket tracking", required: true, description: "Sprints, tickets and acceptance criteria for context." },
+  { id: "repositories", label: "Repositories", required: false, description: "Source code Elliot reads, reviews, and writes against." },
+  { id: "tickets", label: "Issue & ticket tracking", required: false, description: "Sprints, tickets and acceptance criteria for context." },
   { id: "docs", label: "Knowledge & documentation", required: false, description: "Wikis, specs and decisions ingested into the knowledge base." },
   { id: "databases", label: "Databases & schema", required: false, description: "Schema-aware context for queries and migrations." },
   { id: "communication", label: "Team communication", required: false, description: "Optional — surface decisions made in chat." },
@@ -104,9 +104,8 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     setModalSource(null);
   };
 
-  const requiredSources = SOURCES.filter((s) => SECTIONS.find((sec) => sec.id === s.category)?.required);
-  const connectedRequired = requiredSources.filter((s) => connectedSources.has(s.id)).length;
-  const canContinue = connectedRequired === requiredSources.length;
+  // Allow continue if at least ONE source is connected (minimum viable configuration)
+  const canContinue = connectedSources.size > 0;
 
   return (
     <div>
@@ -118,7 +117,7 @@ export default function Step4Sources({ onContinue }: Step4Props) {
           Connect & authorize your sources
         </h1>
         <p style={{ fontSize: "14px", fontWeight: "400", color: "var(--text-secondary)", maxWidth: "520px", fontFamily: "var(--font-sans)" }}>
-          Link the systems Elliot draws context from. OAuth is read-only by default and scoped per provider — review each grant before approving.
+          Connect at least one source for Elliot to read context from. Add more later anytime. OAuth is read-only by default and scoped per provider — review each grant before approving.
         </p>
       </div>
 
