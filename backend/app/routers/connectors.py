@@ -70,83 +70,92 @@ async def oauth_callback(
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """Handle OAuth callback from provider"""
-    if state not in oauth_states:
-        raise HTTPException(status_code=400, detail="Invalid or expired state")
-
-    state_data = oauth_states.pop(state)
-    tenant_id = uuid.UUID(state_data["tenant_id"])
-
-    try:
-        config = get_connector_config(provider)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-
-    try:
-        token_response = await exchange_code_for_token(config, code)
-    except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Token exchange failed: {str(e)}"
-        ) from e
-
-    access_token = token_response.get("access_token")
-    refresh_token = token_response.get("refresh_token")
-
-    if not access_token:
-        raise HTTPException(
-            status_code=400, detail="No access token in response"
-        )
-
-    encrypted_token = encrypt_token(access_token)
-    encrypted_refresh = (
-        encrypt_token(refresh_token) if refresh_token else None
-    )
-
-    result = await db.execute(
-        select(Connector).where(
-            (Connector.tenant_id == tenant_id) & (Connector.provider == provider)
-        )
-    )
-    connector = result.scalar_one_or_none()
-
-    if connector:
-        connector.oauth_token = encrypted_token
-        connector.oauth_refresh_token = encrypted_refresh
-        connector.status = "connected"
-        connector.scopes = config.scopes
-    else:
-        connector = Connector(
-            tenant_id=tenant_id,
-            provider=provider,
-            status="connected",
-            oauth_token=encrypted_token,
-            oauth_refresh_token=encrypted_refresh,
-            scopes=config.scopes,
-        )
-        db.add(connector)
-
-    await db.commit()
-
-    logger.info(f"Queuing {provider} indexing for tenant {tenant_id}")
-    if provider == "github":
-        background_tasks.add_task(
-            _index_github_background,
-            tenant_id=tenant_id,
-            connector_id=connector.id,
-        )
-    else:
-        background_tasks.add_task(
-            _index_connector_background,
-            tenant_id=tenant_id,
-            provider=provider,
-            encrypted_token=encrypted_token,
-        )
-
     settings = get_settings()
-    redirect_url = (
-        f"{settings.terminal_url}/connectors/callback?"
-        f"{urlencode({'provider': provider, 'status': 'success'})}"
-    )
-    return RedirectResponse(url=redirect_url)
+
+    try:
+        if state not in oauth_states:
+            raise ValueError("Invalid or expired state")
+
+        state_data = oauth_states.pop(state)
+        tenant_id = uuid.UUID(state_data["tenant_id"])
+
+        try:
+            config = get_connector_config(provider)
+        except ValueError as e:
+            raise ValueError(f"Unknown provider: {str(e)}") from e
+
+        try:
+            token_response = await exchange_code_for_token(config, code)
+        except Exception as e:
+            raise ValueError(f"Token exchange failed: {str(e)}") from e
+
+        access_token = token_response.get("access_token")
+        refresh_token = token_response.get("refresh_token")
+
+        if not access_token:
+            raise ValueError("No access token in response")
+
+        encrypted_token = encrypt_token(access_token)
+        encrypted_refresh = (
+            encrypt_token(refresh_token) if refresh_token else None
+        )
+
+        result = await db.execute(
+            select(Connector).where(
+                (Connector.tenant_id == tenant_id) & (Connector.provider == provider)
+            )
+        )
+        connector = result.scalar_one_or_none()
+
+        if connector:
+            connector.oauth_token = encrypted_token
+            connector.oauth_refresh_token = encrypted_refresh
+            connector.status = "connected"
+            connector.scopes = config.scopes
+        else:
+            connector = Connector(
+                tenant_id=tenant_id,
+                provider=provider,
+                status="connected",
+                oauth_token=encrypted_token,
+                oauth_refresh_token=encrypted_refresh,
+                scopes=config.scopes,
+            )
+            db.add(connector)
+
+        await db.commit()
+        await db.refresh(connector)
+
+        logger.info(f"Connected {provider} for tenant {tenant_id}, queuing indexing")
+        if provider == "github":
+            background_tasks.add_task(
+                _index_github_background,
+                tenant_id=tenant_id,
+                connector_id=connector.id,
+            )
+        else:
+            background_tasks.add_task(
+                _index_connector_background,
+                tenant_id=tenant_id,
+                provider=provider,
+                encrypted_token=encrypted_token,
+            )
+
+        # Success: redirect to callback page
+        redirect_url = (
+            f"{settings.terminal_url}/connectors/callback?"
+            f"{urlencode({'provider': provider, 'status': 'success'})}"
+        )
+        return RedirectResponse(url=redirect_url)
+
+    except Exception as e:
+        logger.error(f"OAuth callback failed for {provider}: {str(e)}")
+        # Failure: redirect with error
+        redirect_url = (
+            f"{settings.terminal_url}/connectors/callback?"
+            f"{urlencode({'provider': provider, 'status': 'error', 'message': str(e)[:100]})}"
+        )
+        return RedirectResponse(url=redirect_url)
 
 
 @router.delete("/{tenant_id}/{provider}")
@@ -172,6 +181,72 @@ async def disconnect_connector(
     await db.commit()
 
     return {"status": "disconnected"}
+
+
+@router.post("/{tenant_id}/{provider}/manual")
+async def manual_connect_connector(
+    tenant_id: uuid.UUID,
+    provider: str,
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+):
+    """Manually connect a connector with an existing token (bypasses OAuth)"""
+    if not token:
+        raise HTTPException(status_code=400, detail="Token required")
+
+    try:
+        config = get_connector_config(provider)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    encrypted_token = encrypt_token(token)
+
+    result = await db.execute(
+        select(Connector).where(
+            (Connector.tenant_id == tenant_id) & (Connector.provider == provider)
+        )
+    )
+    connector = result.scalar_one_or_none()
+
+    if connector:
+        connector.oauth_token = encrypted_token
+        connector.status = "connected"
+    else:
+        connector = Connector(
+            tenant_id=tenant_id,
+            provider=provider,
+            status="connected",
+            oauth_token=encrypted_token,
+            scopes=config.scopes,
+        )
+        db.add(connector)
+
+    await db.commit()
+
+    logger.info(f"Manually connected {provider} for tenant {tenant_id}")
+
+    # Trigger indexing
+    if provider == "github":
+        background_tasks.add_task(
+            _index_github_background,
+            tenant_id=tenant_id,
+            connector_id=connector.id,
+        )
+    else:
+        background_tasks.add_task(
+            _index_connector_background,
+            tenant_id=tenant_id,
+            provider=provider,
+            encrypted_token=encrypted_token,
+        )
+
+    return {
+        "provider": provider,
+        "status": "connected",
+        "tenant_id": str(tenant_id),
+        "message": f"{provider} connected successfully. Indexing started.",
+    }
 
 
 async def _index_github_background(
