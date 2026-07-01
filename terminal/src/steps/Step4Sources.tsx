@@ -61,8 +61,14 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     setModalSource(source);
   };
 
+  const saveConnected = (sources: Set<string>) => {
+    localStorage.setItem("elliot_connected_sources", JSON.stringify([...sources]));
+  };
+
   const handleConnectAll = () => {
-    setConnectedSources(new Set(SOURCES.map((s) => s.id)));
+    const all = new Set(SOURCES.map((s) => s.id));
+    setConnectedSources(all);
+    saveConnected(all);
   };
 
   const handleAuthorize = async () => {
@@ -86,7 +92,11 @@ export default function Step4Sources({ onContinue }: Step4Props) {
           const poll = setInterval(() => {
             if (popup?.closed) {
               clearInterval(poll);
-              setConnectedSources((prev) => new Set(prev).add(source.id));
+              setConnectedSources((prev) => {
+                const next = new Set(prev).add(source.id);
+                saveConnected(next);
+                return next;
+              });
             }
           }, 500);
           return;
@@ -97,7 +107,11 @@ export default function Step4Sources({ onContinue }: Step4Props) {
     }
 
     // Fallback: mark connected optimistically (dev mode / backend not yet live)
-    setConnectedSources((prev) => new Set(prev).add(source.id));
+    setConnectedSources((prev) => {
+      const next = new Set(prev).add(source.id);
+      saveConnected(next);
+      return next;
+    });
   };
 
   const handleCancel = () => {
