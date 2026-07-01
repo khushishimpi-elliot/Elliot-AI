@@ -35,8 +35,8 @@ export default function App() {
             localStorage.setItem("jwt", data.access_token);
             localStorage.setItem("email", data.email);
             localStorage.setItem("expires_in_seconds", data.expires_in_seconds);
+            window.history.replaceState({}, document.title, "/?step=2");
             setScreen("onboarding");
-            window.history.replaceState({}, document.title, "/");
           }
         } catch (error) {
           console.error("Auth callback failed:", error);
