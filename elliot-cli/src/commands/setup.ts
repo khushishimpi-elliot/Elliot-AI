@@ -32,13 +32,21 @@ function decodeJWT(token: string): { tenant_id?: string; sub?: string; email?: s
   try {
     const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error("Invalid JWT format");
+      throw new Error("Invalid JWT format (expected 3 parts separated by dots)");
     }
 
+    // Validate base64 encoding
     const decoded = Buffer.from(parts[1], "base64").toString("utf-8");
-    return JSON.parse(decoded);
-  } catch {
-    throw new Error("Failed to decode JWT token");
+    const payload = JSON.parse(decoded);
+
+    if (!payload.tenant_id) {
+      throw new Error("Missing tenant_id in JWT token");
+    }
+
+    return payload;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    throw new Error(`Failed to decode JWT token: ${msg}`);
   }
 }
 

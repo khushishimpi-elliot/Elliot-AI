@@ -5,7 +5,12 @@ export async function checkBackendHealth(
   backendUrl: string
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${backendUrl}/health`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+    const response = await fetch(`${backendUrl}/health`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
     return response.ok;
   } catch {
     return false;

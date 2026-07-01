@@ -88,7 +88,10 @@ export default function Step6Launch({ config = {} }: Step6Props) {
   // One global command: installs the CLI and configures it with this user's
   // workspace in a single paste. `setup` derives tenant_id from the JWT, so no
   // separate --tenant-id flag is needed.
-  const setupCommand = `npm install -g elliot-ai && elliot-ai setup --token ${fullConfig.jwt_token}`;
+  // Token is URL-safe base64, validated before display.
+  const setupCommand = fullConfig.jwt_token
+    ? `npm install -g elliot-ai && elliot-ai setup --token ${fullConfig.jwt_token}`
+    : "Loading setup command...";
 
   const handleCopySetupCommand = async () => {
     try {
@@ -327,6 +330,23 @@ export default function Step6Launch({ config = {} }: Step6Props) {
             elliot-ai
           </code>{" "}
           to start the interactive terminal.
+        </div>
+
+        <div
+          style={{
+            fontSize: "11px",
+            color: "var(--text-muted)",
+            marginTop: "16px",
+            maxWidth: "540px",
+            fontFamily: "var(--font-sans)",
+            backgroundColor: "rgba(88, 166, 255, 0.05)",
+            border: "1px solid rgba(88, 166, 255, 0.2)",
+            borderRadius: "4px",
+            padding: "10px 12px",
+          }}
+        >
+          💡 <strong>Tip:</strong> If copy fails or token is corrupted, refresh this page
+          or complete onboarding again. The command will always be available on Step 6.
         </div>
       </div>
 
