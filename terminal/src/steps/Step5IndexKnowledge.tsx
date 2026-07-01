@@ -17,7 +17,27 @@ interface Step5Props {
 export default function Step5IndexKnowledge({ onContinue }: Step5Props) {
   const [stats, setStats] = useState<IndexStats | null>(null);
   const [useMock, setUseMock] = useState(false);
-  const [mockProgress, setMockProgress] = useState([0, 0, 0, 0, 0]);
+
+  const connectedNames = (() => {
+    try {
+      const saved = localStorage.getItem("elliot_connected_sources");
+      if (saved) {
+        const ids: string[] = JSON.parse(saved);
+        const nameMap: Record<string, string> = {
+          github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket",
+          azure: "Azure Repos", jira: "Jira", linear: "Linear",
+          clickup: "ClickUp", azboards: "Azure Boards", confluence: "Confluence",
+          notion: "Notion", sharepoint: "SharePoint", gdrive: "Google Drive",
+          postgres: "PostgreSQL", mysql: "MySQL", vectordb: "Vector DB",
+          slack: "Slack", teams: "Microsoft Teams",
+        };
+        return ids.map((id) => nameMap[id] || id);
+      }
+    } catch { /* ignore */ }
+    return ["GitHub", "Jira", "Confluence", "Slack", "PostgreSQL"];
+  })();
+
+  const [mockProgress, setMockProgress] = useState(connectedNames.map(() => 0));
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Poll the real API
@@ -62,7 +82,7 @@ export default function Step5IndexKnowledge({ onContinue }: Step5Props) {
 
   const sources = stats
     ? stats.sources
-    : ["GitHub", "Jira", "Confluence", "Slack", "PostgreSQL"].map((name, i) => ({
+    : connectedNames.map((name, i) => ({
         name,
         progress: mockProgress[i],
         status: mockProgress[i] >= 100 ? "indexed" : "indexing",
